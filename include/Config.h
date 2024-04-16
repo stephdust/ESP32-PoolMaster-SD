@@ -9,9 +9,14 @@
 #define CONFIG_VERSION 50
 
 // WiFi credentials
-#define WIFI_NETWORK "YOUR_WIFI_NETWORK_ID"
-#define WIFI_PASSWORD "YOUR_WIFI_NETWORK_PWD"
-#define OTA_PWDHASH   "Your_OTA_password_hash"
+#define WIFI_NETWORK "CasaCopierres-Pool_2G"
+#define WIFI_PASSWORD "Elsa2011Andrea2017Clara2019"
+#define OTA_PWDHASH   "dsfjdkf787342Hjkhfed783243"
+#ifdef DEVT
+  #define HOSTNAME "PoolMaster_Dev"
+#else
+  #define HOSTNAME "PoolMaster"
+#endif 
 
 //IFTTT key to trigger event
 #define IFTTT_key "/Home/Pool/TriggerKey"
@@ -67,14 +72,14 @@
 //interval (in millisec) between MQTT publishement of measurement data
 #define PUBLISHINTERVAL 30000
 
-#define MQTT_SERVER_IP IPAddress(000, 000, 000, 000)
+#define MQTT_SERVER_IP IPAddress(192, 168, 1, 57)
 #define MQTT_SERVER_PORT 1883
 
 // Uncomment if MQTT broker needs login/pwd
-//#define MQTT_LOGIN 				
-//#define MQTT_SERVER_ID    "ESP32Pool"		   // MQTT server ID
-//#define MQTT_SERVER_LOGIN "Your_Login"
-//#define MQTT_SERVER_PWD   "Your_Pwd" 				
+#define MQTT_LOGIN 				
+#define MQTT_SERVER_ID    "ESP32Pool"		   // MQTT server ID
+#define MQTT_SERVER_LOGIN "mqtt-pool"
+#define MQTT_SERVER_PWD   "dhsj8732dhzez"
 
 // Topic used in DEVT or OPER mode
 

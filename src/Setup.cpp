@@ -225,7 +225,7 @@ void setup()
 
   // Clear status LEDs
 
-  Wire.beginTransmission(0x38);
+  Wire.beginTransmission(0x20);
   Wire.write((uint8_t)0xFF);
   Wire.endTransmission();
 
