@@ -2,7 +2,7 @@
 #define FIRMW "ESP-3.1"
 #define TFT_FIRMW "TFT-2.0"						   
 
-#define DEBUG_LEVEL DBG_INFO     // Possible levels : NONE/ERROR/WARNING/INFO/DEBUG/VERBOSE
+#define DEBUG_LEVEL DBG_DEBUG     // Possible levels : NONE/ERROR/WARNING/INFO/DEBUG/VERBOSE
 
 //Version of config stored in EEPROM
 //Random value. Change this value (to any other value) to revert the config to default values
@@ -11,7 +11,7 @@
 // WiFi credentials
 #define WIFI_NETWORK "CasaCopierres-Pool_2G"
 #define WIFI_PASSWORD "Elsa2011Andrea2017Clara2019"
-#define OTA_PWDHASH   "dsfjdkf787342Hjkhfed783243"
+#define OTA_PWDHASH   "22f2a8f58341f574df09863d6100e119" // "smallpass"
 #ifdef DEVT
   #define HOSTNAME "PoolMaster_Dev"
 #else
@@ -19,7 +19,7 @@
 #endif 
 
 //IFTTT key to trigger event
-#define IFTTT_key "/Home/Pool/TriggerKey"
+#define IFTTT_key "Home/Pool/API"
 
 // PID Directions (either DIRECT or REVERSE depending on Ph/Orp correction vs water properties)
 #define PhPID_DIRECTION REVERSE
