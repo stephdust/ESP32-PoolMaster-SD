@@ -1,0 +1,754 @@
+  sensor:
+    - name: "Set1"
+      state_topic: "Home/Pool/Set1"
+      value_template: "{{ value_json['FW'] }}"
+      unique_id: "poolmaster_set1"
+      icon: "mdi:cog-play"
+      json_attributes_topic: "Home/Pool/Set1"
+      availability:
+          - topic: "Home/Pool/Status"
+            value_template: "{{ value_json['PoolMaster Online'] }}"
+            payload_available: "1"
+            payload_not_available : "0"
+      device:
+        name: "PoolMaster"
+        sw_version: "3.0"
+        model: "PoolMaster ESP32"
+        manufacturer: "Gixy"
+        identifiers:
+          - 3091a77d-5096-45be-b2a6-e445d71bb192
+
+    - name: "Set2"
+      state_topic: "Home/Pool/Set2"
+      value_template: "{{ value_json['pHWS'] }}"
+      unique_id: "poolmaster_set2"
+      icon: "mdi:cog-play"
+      json_attributes_topic: "Home/Pool/Set2"
+      availability:
+          - topic: "Home/Pool/Status"
+            value_template: "{{ value_json['PoolMaster Online'] }}"
+            payload_available: "1"
+            payload_not_available : "0"
+      device:
+        name: "PoolMaster"
+        sw_version: "3.0"
+        model: "PoolMaster ESP32"
+        manufacturer: "Gixy"
+        identifiers:
+          - 3091a77d-5096-45be-b2a6-e445d71bb192
+  
+
+    - name: "Set3"
+      state_topic: "Home/Pool/Set3"
+      value_template: "{{ value_json['pHC0'] }}"
+      unique_id: "poolmaster_set3"
+      icon: "mdi:cog-play"
+      json_attributes_topic: "Home/Pool/Set3"
+      availability:
+          - topic: "Home/Pool/Status"
+            value_template: "{{ value_json['PoolMaster Online'] }}"
+            payload_available: "1"
+            payload_not_available : "0"
+      device:
+        name: "PoolMaster"
+        sw_version: "3.0"
+        model: "PoolMaster ESP32"
+        manufacturer: "Gixy"
+        identifiers:
+          - 3091a77d-5096-45be-b2a6-e445d71bb192
+  
+
+    - name: "Set4"
+      state_topic: "Home/Pool/Set4"
+      value_template: "{{ value_json['pHKp'] }}"
+      unique_id: "poolmaster_set4"
+      icon: "mdi:cog-play"
+      json_attributes_topic: "Home/Pool/Set4"
+      availability:
+          - topic: "Home/Pool/Status"
+            value_template: "{{ value_json['PoolMaster Online'] }}"
+            payload_available: "1"
+            payload_not_available : "0"
+      device:
+        name: "PoolMaster"
+        sw_version: "3.0"
+        model: "PoolMaster ESP32"
+        manufacturer: "Gixy"
+        identifiers:
+          - 3091a77d-5096-45be-b2a6-e445d71bb192
+  
+
+    - name: "Set5"
+      state_topic: "Home/Pool/Set5"
+      value_template: "{{ value_json['pHTV'] }}"
+      unique_id: "poolmaster_set5"
+      icon: "mdi:cog-play"
+      json_attributes_topic: "Home/Pool/Set5"
+      availability:
+          - topic: "Home/Pool/Status"
+            value_template: "{{ value_json['PoolMaster Online'] }}"
+            payload_available: "1"
+            payload_not_available : "0"
+      device:
+        name: "PoolMaster"
+        sw_version: "3.0"
+        model: "PoolMaster ESP32"
+        manufacturer: "Gixy"
+        identifiers:
+          - 3091a77d-5096-45be-b2a6-e445d71bb192
+  
+    - name: "Ph Sensor"
+      state_topic: "Home/Pool/Meas1"
+      value_template: "{{ value_json.pH | float | multiply(0.01) | round(2) }}"
+      device_class: "ph"
+      suggested_display_precision : 2
+      unique_id: "poolmaster_meas_ph"
+      state_class: "measurement"
+      icon: "mdi:ph"
+      availability:
+          - topic: "Home/Pool/Status"
+            value_template: "{{ value_json['PoolMaster Online'] }}"
+            payload_available: "1"
+            payload_not_available : "0"
+      expire_after: 120
+      device:
+        name: "PoolMaster"
+        sw_version: "3.0"
+        model: "PoolMaster ESP32"
+        manufacturer: "Gixy"
+        identifiers:
+          - 3091a77d-5096-45be-b2a6-e445d71bb192
+
+    - name: "ORP/Redox Sensor"
+      state_topic: "Home/Pool/Meas1"
+      value_template: "{{ value_json.Orp | round(2) }}"
+      device_class: "voltage"
+      suggested_display_precision : 0
+      unique_id: "poolmaster_meas_orp"
+      state_class: "measurement"
+      unit_of_measurement: "mV"
+      icon: "mdi:water-check"
+      availability:
+          - topic: "Home/Pool/Status"
+            value_template: "{{ value_json['PoolMaster Online'] }}"
+            payload_available: "1"
+            payload_not_available : "0"
+      expire_after: 120
+      device:
+        name: "PoolMaster"
+        sw_version: "3.0"
+        model: "PoolMaster ESP32"
+        manufacturer: "Gixy"
+        identifiers:
+          - 3091a77d-5096-45be-b2a6-e445d71bb192
+
+    - name: "Pump Pressure"
+      state_topic: "Home/Pool/Meas1"
+      value_template: "{{ value_json.PSI | float | multiply(0.01) | round(2)  }}"
+      device_class: "pressure"
+      suggested_display_precision : 2
+      unique_id: "poolmaster_meas_psi"
+      state_class: "measurement"
+      unit_of_measurement: "bar"
+      icon: "mdi:gauge-low"
+      availability:
+          - topic: "Home/Pool/Status"
+            value_template: "{{ value_json['PoolMaster Online'] }}"
+            payload_available: "1"
+            payload_not_available : "0"
+      expire_after: 120
+      device:
+        name: "PoolMaster"
+        sw_version: "3.0"
+        model: "PoolMaster ESP32"
+        manufacturer: "Gixy"
+        identifiers:
+          - 3091a77d-5096-45be-b2a6-e445d71bb192
+
+    - name: "Air Temperature"
+      state_topic: "Home/Pool/Meas1"
+      value_template: "{{ value_json.TE | float | multiply(0.01) | round(2) }}"
+      device_class: "temperature"
+      suggested_display_precision : 2
+      unique_id: "poolmaster_meas_TE"
+      state_class: "measurement"
+      unit_of_measurement: "°C"
+      icon: "mdi:sun-thermometer"
+      availability:
+          - topic: "Home/Pool/Status"
+            value_template: "{{ value_json['PoolMaster Online'] }}"
+            payload_available: "1"
+            payload_not_available : "0"
+      expire_after: 120
+      device:
+        name: "PoolMaster"
+        sw_version: "3.0"
+        model: "PoolMaster ESP32"
+        manufacturer: "Gixy"
+        identifiers:
+          - 3091a77d-5096-45be-b2a6-e445d71bb192
+
+    - name: "Water Temperature"
+      state_topic: "Home/Pool/Meas1"
+      value_template: "{{ value_json.Tmp | float | multiply(0.01) | round(2) }}"
+      device_class: "temperature"
+      suggested_display_precision : 2
+      unique_id: "poolmaster_meas_Tmp"
+      state_class: "measurement"
+      unit_of_measurement: "°C"
+      icon: "mdi:thermometer-water"
+      availability:
+          - topic: "Home/Pool/Status"
+            value_template: "{{ value_json['PoolMaster Online'] }}"
+            payload_available: "1"
+            payload_not_available : "0"
+      expire_after: 120
+      device:
+        name: "PoolMaster"
+        sw_version: "3.0"
+        model: "PoolMaster ESP32"
+        manufacturer: "Gixy"
+        identifiers:
+          - 3091a77d-5096-45be-b2a6-e445d71bb192
+
+  binary_sensor:
+    - name: "PSI Error"
+      state_topic: "Home/Pool/Meas2"
+      value_template: "{{ value_json.IO | int | bitwise_and(4) == 4 }}"
+      payload_on: "True"
+      payload_off: "False"
+      unique_id: "poolmaster_meas_psierror"
+      icon: "mdi:water-alert"
+      device_class: "problem"
+      availability:
+          - topic: "Home/Pool/Status"
+            value_template: "{{ value_json['PoolMaster Online'] }}"
+            payload_available: "1"
+            payload_not_available : "0"
+      expire_after: 120
+      device:
+        name: "PoolMaster"
+        sw_version: "3.0"
+        model: "PoolMaster ESP32"
+        manufacturer: "Gixy"
+        identifiers:
+          - 3091a77d-5096-45be-b2a6-e445d71bb192
+
+    - name: "Ph Pump"
+      state_topic: "Home/Pool/Meas2"
+      value_template: "{{ value_json.IO | int | bitwise_and(64) == 64 }}"
+      payload_on: "True"
+      payload_off: "False"
+      unique_id: "poolmaster_meas_phpump"
+      icon: "mdi:water-sync"
+      device_class: "running"
+      availability:
+          - topic: "Home/Pool/Status"
+            value_template: "{{ value_json['PoolMaster Online'] }}"
+            payload_available: "1"
+            payload_not_available : "0"
+      expire_after: 120
+      device:
+        name: "PoolMaster"
+        sw_version: "3.0"
+        model: "PoolMaster ESP32"
+        manufacturer: "Gixy"
+        identifiers:
+          - 3091a77d-5096-45be-b2a6-e445d71bb192
+
+    - name: "Chl Pump"
+      state_topic: "Home/Pool/Meas2"
+      value_template: "{{ value_json.IO | int | bitwise_and(32) == 32 }}"
+      payload_on: "True"
+      payload_off: "False"
+      unique_id: "poolmaster_meas_chlpump"
+      icon: "mdi:water-sync"
+      device_class: "running"
+      availability:
+          - topic: "Home/Pool/Status"
+            value_template: "{{ value_json['PoolMaster Online'] }}"
+            payload_available: "1"
+            payload_not_available : "0"
+      expire_after: 120
+      device:
+        name: "PoolMaster"
+        sw_version: "3.0"
+        model: "PoolMaster ESP32"
+        manufacturer: "Gixy"
+        identifiers:
+          - 3091a77d-5096-45be-b2a6-e445d71bb192
+
+  switch:
+    - name: "Pump"
+      command_topic: "Home/Pool/API"
+      qos: 1
+      payload_on: "{FiltPump: 1}"
+      payload_off: "{FiltPump: 0}"
+      state_topic: "Home/Pool/Meas2"
+      value_template: "{{ value_json.IO | int | bitwise_and(128) == 128 }}"
+      state_on: "True"
+      state_off: "False"
+      unique_id: "poolmaster_meas_io_pump"
+      icon: "mdi:pump"
+      optimistic: false
+      availability:
+          - topic: "Home/Pool/Status"
+            value_template: "{{ value_json['PoolMaster Online'] }}"
+            payload_available: "1"
+            payload_not_available : "0"
+      device:
+        name: "PoolMaster"
+        sw_version: "3.0"
+        model: "PoolMaster ESP32"
+        manufacturer: "Gixy"
+        identifiers:
+          - 3091a77d-5096-45be-b2a6-e445d71bb192
+
+    - name: "Filtration Mode (Auto/Manual)"
+      command_topic: "Home/Pool/API"
+      qos: 1
+      payload_on: "{Mode: 1}"
+      payload_off: "{Mode: 0}"
+      state_topic: "Home/Pool/Meas2"
+      value_template: "{{ value_json.IO2 | int | bitwise_and(32) == 32 }}"
+      state_on: "True"
+      state_off: "False"
+      unique_id: "poolmaster_meas_io2_filtermode"
+      icon: "mdi:auto-mode"
+      optimistic: false
+      availability:
+          - topic: "Home/Pool/Status"
+            value_template: "{{ value_json['PoolMaster Online'] }}"
+            payload_available: "1"
+            payload_not_available : "0"
+      device:
+        name: "PoolMaster"
+        sw_version: "3.0"
+        model: "PoolMaster ESP32"
+        manufacturer: "Gixy"
+        identifiers:
+          - 3091a77d-5096-45be-b2a6-e445d71bb192
+
+    - name: "Winter Mode"
+      command_topic: "Home/Pool/API"
+      qos: 1
+      payload_on: "{Winter: 1}"
+      payload_off: "{Winter: 0}"
+      state_topic: "Home/Pool/Meas2"
+      value_template: "{{ value_json.IO2 | int | bitwise_and(2) == 2 }}"
+      state_on: "True"
+      state_off: "False"
+      unique_id: "poolmaster_meas_io2_wintermode"
+      icon: "mdi:snowflake-alert"
+      optimistic: false
+      availability:
+          - topic: "Home/Pool/Status"
+            value_template: "{{ value_json['PoolMaster Online'] }}"
+            payload_available: "1"
+            payload_not_available : "0"
+
+      device:
+        name: "PoolMaster"
+        sw_version: "3.0"
+        model: "PoolMaster ESP32"
+        manufacturer: "Gixy"
+        identifiers:
+          - 3091a77d-5096-45be-b2a6-e445d71bb192
+
+    - name: "Ph PID"
+      command_topic: "Home/Pool/API"
+      qos: 1
+      payload_on: "{PhPID: 1}"
+      payload_off: "{PhPID: 0}"
+      state_topic: "Home/Pool/Meas2"
+      value_template: "{{ value_json.IO2 | int | bitwise_and(128) == 128 }}"
+      state_on: "True"
+      state_off: "False"
+      unique_id: "poolmaster_meas_io2_phpid"
+      icon: "mdi:chart-bell-curve-cumulative"
+      optimistic: false
+      availability:
+          - topic: "Home/Pool/Status"
+            value_template: "{{ value_json['PoolMaster Online'] }}"
+            payload_available: "1"
+            payload_not_available : "0"
+      device:
+        name: "PoolMaster"
+        sw_version: "3.0"
+        model: "PoolMaster ESP32"
+        manufacturer: "Gixy"
+        identifiers:
+          - 3091a77d-5096-45be-b2a6-e445d71bb192
+
+    - name: "ORP PID"
+      command_topic: "Home/Pool/API"
+      qos: 1
+      payload_on: "{OrpPID: 1}"
+      payload_off: "{OrpPID: 0}"
+      state_topic: "Home/Pool/Meas2"
+      value_template: "{{ value_json.IO2 | int | bitwise_and(64) == 64 }}"
+      state_on: "True"
+      state_off: "False"
+      unique_id: "poolmaster_meas_io2_orpid"
+      icon: "mdi:chart-bell-curve-cumulative"
+      optimistic: false
+      availability:
+          - topic: "Home/Pool/Status"
+            value_template: "{{ value_json['PoolMaster Online'] }}"
+            payload_available: "1"
+            payload_not_available : "0"
+      device:
+        name: "PoolMaster"
+        sw_version: "3.0"
+        model: "PoolMaster ESP32"
+        manufacturer: "Goxy"
+        identifiers:
+          - 3091a77d-5096-45be-b2a6-e445d71bb192
+
+    - name: "Robot"
+      command_topic: "Home/Pool/API"
+      qos: 1
+      payload_on: "{RobotPump: 1}"
+      payload_off: "{RobotPump: 0}"
+      state_topic: "Home/Pool/Meas2"
+      value_template: "{{ value_json.IO2 | int | bitwise_and(16) == 16 }}"
+      state_on: "True"
+      state_off: "False"
+      unique_id: "poolmaster_meas_io2_robotpump"
+      icon: "mdi:vacuum"
+      optimistic: false
+      availability:
+          - topic: "Home/Pool/Status"
+            value_template: "{{ value_json['PoolMaster Online'] }}"
+            payload_available: "1"
+            payload_not_available : "0"
+      device:
+        name: "PoolMaster"
+        sw_version: "3.0"
+        model: "PoolMaster ESP32"
+        manufacturer: "Gixy"
+        identifiers:
+          - 3091a77d-5096-45be-b2a6-e445d71bb192
+
+    - name: "Relay 0 (Lights)"
+      command_topic: "Home/Pool/API"
+      qos: 1
+      payload_on: "{Relay:[0,1]}"
+      payload_off: "{Relay:[0,0]}"
+      state_topic: "Home/Pool/Meas2"
+      value_template: "{{ value_json.IO2 | int | bitwise_and(8) == 8 }}"
+      state_on: "True"
+      state_off: "False"
+      unique_id: "poolmaster_meas_io2_relay0"
+      icon: "mdi:spotlight-beam"
+      optimistic: false
+      availability:
+          - topic: "Home/Pool/Status"
+            value_template: "{{ value_json['PoolMaster Online'] }}"
+            payload_available: "1"
+            payload_not_available : "0"
+      device:
+        name: "PoolMaster"
+        sw_version: "3.0"
+        model: "PoolMaster ESP32"
+        manufacturer: "Gixy"
+        identifiers:
+          - "3091a77d-5096-45be-b2a6-e445d71bb192"
+
+    - name: "Relay 1"
+      command_topic: "Home/Pool/API"
+      qos: 1
+      payload_on: "{Relay:[1,1]}"
+      payload_off: "{Relay:[1,0]}"
+      state_topic: "Home/Pool/Meas2"
+      value_template: "{{ value_json.IO2 | int | bitwise_and(4) == 4 }}"
+      state_on: "True"
+      state_off: "False"
+      unique_id: "poolmaster_meas_io2_relay1"
+      icon: "mdi:toggle-switch-off-outline"
+      optimistic: false
+      availability:
+          - topic: "Home/Pool/Status"
+            value_template: "{{ value_json['PoolMaster Online'] }}"
+            payload_available: "1"
+            payload_not_available : "0"
+      device:
+        name: "PoolMaster"
+        sw_version: "3.0"
+        model: "PoolMaster ESP32"
+        manufacturer: "Gixy"
+        identifiers:
+          - 3091a77d-5096-45be-b2a6-e445d71bb192
+
+  button:
+    - name: "Reboot"
+      command_topic: "Home/Pool/API"
+      qos: 1
+      payload_press: "{Reboot:1}"
+      unique_id: "poolmaster_meas_reboot"
+      icon: "mdi:restart"
+      availability:
+          - topic: "Home/Pool/Status"
+            value_template: "{{ value_json['PoolMaster Online'] }}"
+            payload_available: "1"
+            payload_not_available : "0"
+      device:
+        name: "PoolMaster"
+        sw_version: "3.0"
+        model: "PoolMaster ESP32"
+        manufacturer: "Gixy"
+        identifiers:
+          - 3091a77d-5096-45be-b2a6-e445d71bb192
+
+    - name: "Clear Errors"
+      command_topic: "Home/Pool/API"
+      qos: 1
+      payload_press: "{Clear:1}"
+      unique_id: "poolmaster_meas_clear"
+      icon: "mdi:eraser"
+      availability:
+          - topic: "Home/Pool/Status"
+            value_template: "{{ value_json['PoolMaster Online'] }}"
+            payload_available: "1"
+            payload_not_available : "0"
+      device:
+        name: "PoolMaster"
+        sw_version: "3.0"
+        model: "PoolMaster ESP32"
+        manufacturer: "Gixy"
+        identifiers:
+          - 3091a77d-5096-45be-b2a6-e445d71bb192
+
+    - name: "Reset pH Probe Calibration"
+      command_topic: "Home/Pool/API"
+      qos: 1
+      payload_press: "{RstpHCal:1}"
+      unique_id: "poolmaster_meas_resetph"
+      icon: "mdi:eraser"
+      availability:
+          - topic: "Home/Pool/Status"
+            value_template: "{{ value_json['PoolMaster Online'] }}"
+            payload_available: "1"
+            payload_not_available : "0"
+      device:
+        name: "PoolMaster"
+        sw_version: "3.0"
+        model: "PoolMaster ESP32"
+        manufacturer: "Gixy"
+        identifiers:
+          - 3091a77d-5096-45be-b2a6-e445d71bb192
+
+    - name: "Reset Orp Probe Calibration"
+      command_topic: "Home/Pool/API"
+      qos: 1
+      payload_press: "{RstOrpCal:1}"
+      unique_id: "poolmaster_meas_resetorp"
+      icon: "mdi:eraser"
+      availability:
+          - topic: "Home/Pool/Status"
+            value_template: "{{ value_json['PoolMaster Online'] }}"
+            payload_available: "1"
+            payload_not_available : "0"
+      device:
+        name: "PoolMaster"
+        sw_version: "3.0"
+        model: "PoolMaster ESP32"
+        manufacturer: "Gixy"
+        identifiers:
+          - 3091a77d-5096-45be-b2a6-e445d71bb192
+
+    - name: "Reset Pressure Probe Calibration"
+      command_topic: "Home/Pool/API"
+      qos: 1
+      payload_press: "{RstPSICal:1}"
+      unique_id: "poolmaster_meas_resetpsi"
+      icon: "mdi:eraser"
+      availability:
+          - topic: "Home/Pool/Status"
+            value_template: "{{ value_json['PoolMaster Online'] }}"
+            payload_available: "1"
+            payload_not_available : "0"
+      device:
+        name: "PoolMaster"
+        sw_version: "3.0"
+        model: "PoolMaster ESP32"
+        manufacturer: "Gixy"
+        identifiers:
+          - 3091a77d-5096-45be-b2a6-e445d71bb192
+
+
+  number:
+    - name: "Filtration Start Time (min)"
+      command_topic: "Home/Pool/API"
+      command_template: "{ FiltT0: {{value}} }"
+      min: 0
+      max: 24
+      mode: slider
+      step: 1
+      state_topic: "Home/Pool/Set1"
+      value_template: "{{ value_json.FStaM | int }}"
+      unique_id: "poolmaster_set_min_filtration_hour"
+      unit_of_measurement: "h"
+      icon: "mdi:clock-minus"
+      availability:
+          - topic: "Home/Pool/Status"
+            value_template: "{{ value_json['PoolMaster Online'] }}"
+            payload_available: "1"
+            payload_not_available : "0"
+      device:
+        name: "PoolMaster"
+        sw_version: "3.0"
+        model: "PoolMaster ESP32"
+        manufacturer: "Gixy"
+        identifiers:
+          - 3091a77d-5096-45be-b2a6-e445d71bb192
+
+    - name: "Filtration End Time (max)"
+      command_topic: "Home/Pool/API"
+      command_template: "{ FiltT1: {{value}} }"
+      min: 0
+      max: 24
+      mode: slider
+      step: 1
+      state_topic: "Home/Pool/Set1"
+      value_template: "{{ value_json.FStoM | int }}"
+      unique_id: "poolmaster_set_max_filtration_hour"
+      unit_of_measurement: "h"
+      icon: "mdi:clock-plus"
+      availability:
+          - topic: "Home/Pool/Status"
+            value_template: "{{ value_json['PoolMaster Online'] }}"
+            payload_available: "1"
+            payload_not_available : "0"
+      device:
+        name: "PoolMaster"
+        sw_version: "3.0"
+        model: "PoolMaster ESP32"
+        manufacturer: "Gixy"
+        identifiers:
+          - 3091a77d-5096-45be-b2a6-e445d71bb192
+
+    - name: "MQTT Publication (s)"
+      command_topic: "Home/Pool/API"
+      command_template: "{ PubPeriod: {{value}} }"
+      min: 1
+      max: 60
+      mode: slider
+      step: 1
+      state_topic: "Home/Pool/Set4"
+      value_template: "{{ value_json.PubP | int }}"
+      unique_id: "poolmaster_set_mqtt_pub"
+      unit_of_measurement: "s"
+      icon: "mdi:email-newsletter"
+      availability:
+          - topic: "Home/Pool/Status"
+            value_template: "{{ value_json['PoolMaster Online'] }}"
+            payload_available: "1"
+            payload_not_available : "0"
+      device:
+        name: "PoolMaster"
+        sw_version: "3.0"
+        model: "PoolMaster ESP32"
+        manufacturer: "Gixy"
+        identifiers:
+          - 3091a77d-5096-45be-b2a6-e445d71bb192
+
+    - name: "PSI High Threshold"
+      command_topic: "Home/Pool/API"
+      command_template: "{ PSIHigh: {{value}} }"
+      min: 1
+      max: 3
+      mode: slider
+      step: 0.1
+      state_topic: "Home/Pool/Set2"
+      value_template: "{{ value_json.PSIHT | float }}"
+      unique_id: "poolmaster_set_psi_high"
+      unit_of_measurement: "bar"
+      icon: "mdi:alert"
+      availability:
+          - topic: "Home/Pool/Status"
+            value_template: "{{ value_json['PoolMaster Online'] }}"
+            payload_available: "1"
+            payload_not_available : "0"
+      device:
+        name: "PoolMaster"
+        sw_version: "3.0"
+        model: "PoolMaster ESP32"
+        manufacturer: "Gixy"
+        identifiers:
+          - 3091a77d-5096-45be-b2a6-e445d71bb192
+
+    - name: "Delay PID (mn)"
+      command_topic: "Home/Pool/API"
+      command_template: "{ DelayPID: {{value}} }"
+      min: 1
+      max: 59
+      mode: slider
+      step: 1
+      state_topic: "Home/Pool/Set4"
+      value_template: "{{ value_json.Dpid | int }}"
+      unique_id: "poolmaster_set_delay_pid"
+      unit_of_measurement: "mn"
+      icon: "mdi:timer-sync"
+      availability:
+          - topic: "Home/Pool/Status"
+            value_template: "{{ value_json['PoolMaster Online'] }}"
+            payload_available: "1"
+            payload_not_available : "0"
+      device:
+        name: "PoolMaster"
+        sw_version: "3.0"
+        model: "PoolMaster ESP32"
+        manufacturer: "Gixy"
+        identifiers:
+          - 3091a77d-5096-45be-b2a6-e445d71bb192
+
+    - name: "pH Pump Flow Rate (L/s)"
+      command_topic: "Home/Pool/API"
+      command_template: "{ pHPumpFR: {{value}} }"
+      min: 1
+      max: 5
+      mode: slider
+      step: 0.1
+      state_topic: "Home/Pool/Set5"
+      value_template: "{{ value_json.pHFR | float }}"
+      unique_id: "poolmaster_set_ph_flowrate"
+      unit_of_measurement: "l/s"
+      icon: "mdi:needle"
+      availability:
+          - topic: "Home/Pool/Status"
+            value_template: "{{ value_json['PoolMaster Online'] }}"
+            payload_available: "1"
+            payload_not_available : "0"
+      device:
+        name: "PoolMaster"
+        sw_version: "3.0"
+        model: "PoolMaster ESP32"
+        manufacturer: "Gixy"
+        identifiers:
+          - 3091a77d-5096-45be-b2a6-e445d71bb192
+
+    - name: "Chl Pump Flow Rate (L/s)"
+      command_topic: "Home/Pool/API"
+      command_template: "{ ChlPumpFR: {{value}} }"
+      min: 1
+      max: 5
+      mode: slider
+      step: 0.1
+      state_topic: "Home/Pool/Set5"
+      value_template: "{{ value_json.OrpFR | float }}"
+      unique_id: "poolmaster_set_chl_flowrate"
+      unit_of_measurement: "l/s"
+      icon: "mdi:needle"
+      availability:
+          - topic: "Home/Pool/Status"
+            value_template: "{{ value_json['PoolMaster Online'] }}"
+            payload_available: "1"
+            payload_not_available : "0"
+      device:
+        name: "PoolMaster"
+        sw_version: "3.0"
+        model: "PoolMaster ESP32"
+        manufacturer: "Gixy"
+        identifiers:
+          - 3091a77d-5096-45be-b2a6-e445d71bb192

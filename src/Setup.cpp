@@ -35,7 +35,7 @@ StoreStruct storage =
   13, 8, 21, 8, 22, 20,
   2700, 2700, 30000,
   1800000, 1800000, 0, 0,
-  7.3, 720.0, 1.8, 0.7, 10.0, 18.0, 3.0, 3.51449558, -2.73006544, -929.75615, 2454.70009, 1.31, -0.1,
+  7.3, 720.0, 1.8, 0.7, 10.0, 18.0, 3.0, -2.218, 7, -964.32, 2410.8, 0.36, -0.14,
   2700000.0, 0.0, 0.0, 18000.0, 0.0, 0.0, 0.0, 0.0, 28.0, 7.3, 720., 1.3,
   25.0, 60.0, 20.0, 20.0, 1.5, 1.5
 };
@@ -455,8 +455,8 @@ bool loadConfig()
   storage.WaterTempLowThreshold = nvs.getDouble("WaterTempLow",10.);
   storage.WaterTemp_SetPoint    = nvs.getDouble("WaterTempSet",27.);
   storage.TempExternal          = nvs.getDouble("TempExternal",3.);
-  storage.pHCalibCoeffs0        = nvs.getDouble("pHCalibCoeffs0",4.3);
-  storage.pHCalibCoeffs1        = nvs.getDouble("pHCalibCoeffs1",-2.63);
+  storage.pHCalibCoeffs0        = nvs.getDouble("pHCalibCoeffs0",-2.218);
+  storage.pHCalibCoeffs1        = nvs.getDouble("pHCalibCoeffs1",7);
   storage.OrpCalibCoeffs0       = nvs.getDouble("OrpCalibCoeffs0",-1189.);
   storage.OrpCalibCoeffs1       = nvs.getDouble("OrpCalibCoeffs1",2564.);
   storage.PSICalibCoeffs0       = nvs.getDouble("PSICalibCoeffs0",1.11);

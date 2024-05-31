@@ -57,6 +57,7 @@ void InitTFT()
   myNex.writeNum(F("page1.vaR2.val"),0);
   myNex.writeStr(F("page3.vaMCFW.txt"),FIRMW);
   myNex.writeStr(F("page3.vaTFTFW.txt"),TFT_FIRMW);
+  myNex.writeNum(F("page0.vaHostName.txt"), HOSTNAME);
 }
 
 void UpdateWiFi(bool wifi){
@@ -105,9 +106,9 @@ void UpdateTFT()
       myNex.writeStr(F("page0.vapHPID.txt"), temp);
       temp = (OrpPID.GetMode() == 1) ? F("PID") : F("---");
       myNex.writeStr(F("page0.vaOrpPID.txt"), temp);
-      temp = String(storage.TempValue, 1) + (char)176 + F("C");
+      temp = String(storage.TempValue, 1);
       myNex.writeStr(F("page0.vaWT.txt"), temp);
-      temp = String(storage.TempExternal, 1) + (char)176 + F("C");
+      temp = String(storage.TempExternal, 1);
       myNex.writeStr(F("page0.vaAT.txt"), temp);
       temp = String(storage.PSIValue, 2) + F("b");
       myNex.writeStr(F("page0.vaPSI.txt"), temp);
