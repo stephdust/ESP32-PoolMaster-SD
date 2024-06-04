@@ -9,9 +9,9 @@
 #define CONFIG_VERSION 52
 
 // WiFi credentials
-#define WIFI_NETWORK "CasaCopierres-Pool_2G"
-#define WIFI_PASSWORD "Elsa2011Andrea2017Clara2019"
-#define OTA_PWDHASH   "22f2a8f58341f574df09863d6100e119" // "smallpass"
+#define WIFI_NETWORK "***"
+#define WIFI_PASSWORD "*****"
+#define OTA_PWDHASH   "*******"
 #ifdef DEVT
   #define HOSTNAME "PoolMaster_Dev"
 #else
