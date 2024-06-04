@@ -57,7 +57,7 @@ void InitTFT()
   myNex.writeNum(F("page1.vaR2.val"),0);
   myNex.writeStr(F("page3.vaMCFW.txt"),FIRMW);
   myNex.writeStr(F("page3.vaTFTFW.txt"),TFT_FIRMW);
-  myNex.writeNum(F("page0.vaHostName.txt"), HOSTNAME);
+  myNex.writeStr(F("page0.vaHostName.txt"), HOSTNAME);
 }
 
 void UpdateWiFi(bool wifi){
