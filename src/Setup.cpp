@@ -35,7 +35,7 @@ StoreStruct storage =
   13, 8, 21, 8, 22, 20,
   2700, 2700, 30000,
   1800000, 1800000, 0, 0,
-  7.3, 720.0, 1.8, 0.7, 10.0, 18.0, 3.0, -2.218, 7, -964.32, 2410.8, 0.36, -0.1673325,
+  7.3, 720.0, 1.8, 0.7, 10.0, 18.0, 3.0, -2.218, 7, -964.32, 2410.8, 0.377923399, -0.17634473,
   2700000.0, 0.0, 0.0, 18000.0, 0.0, 0.0, 0.0, 0.0, 28.0, 7.3, 720., 1.3,
   25.0, 60.0, 20.0, 20.0, 1.5, 1.5
 };
@@ -66,8 +66,8 @@ Preferences nvs;
 // In this case, all pumps start/Stop are managed by relays. pH, ORP and Robot pumps are interlocked with 
 // filtration pump
 Pump FiltrationPump(FILTRATION_PUMP, FILTRATION_PUMP);
-Pump PhPump(PH_PUMP, PH_PUMP, 1, FILTRATION_PUMP, storage.pHPumpFR, storage.pHTankVol, storage.AcidFill);
-Pump ChlPump(CHL_PUMP, CHL_PUMP, 1, FILTRATION_PUMP, storage.ChlPumpFR, storage.ChlTankVol, storage.ChlFill);
+Pump PhPump(PH_PUMP, PH_PUMP, PH_LEVEL, FILTRATION_PUMP, storage.pHPumpFR, storage.pHTankVol, storage.AcidFill);
+Pump ChlPump(CHL_PUMP, CHL_PUMP, CHL_LEVEL, FILTRATION_PUMP, storage.ChlPumpFR, storage.ChlTankVol, storage.ChlFill);
 Pump RobotPump(ROBOT_PUMP, ROBOT_PUMP, NO_TANK, FILTRATION_PUMP);
 
 // PIDs instances
