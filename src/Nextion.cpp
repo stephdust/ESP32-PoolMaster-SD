@@ -93,6 +93,14 @@ void UpdateTFT()
     if(TFT_Automode != storage.AutoMode) 
     { myNex.writeNum(F("page0.vaMode.val"),storage.AutoMode);
       TFT_Automode = storage.AutoMode;}
+    if(TFT_Winter != storage.WinterMode) 
+    { myNex.writeNum(F("page1.vaR2.val"),storage.WinterMode);
+      TFT_Winter = storage.WinterMode;}  
+      myNex.writeNum(F("page0.vapHLevel.val"),PhPump.TankLevel() ? 0:1);      
+      myNex.writeNum(F("page0.vaChlLevel.val"),ChlPump.TankLevel() ? 0:1);
+      myNex.writeNum(F("page0.vaPSIErr.val"),PSIError ? 1:0);
+      myNex.writeNum(F("page0.vaChlUTErr.val"),ChlPump.UpTimeError ? 1:0);
+      myNex.writeNum(F("page0.vapHUTErr.val"),PhPump.UpTimeError ? 1:0);  
 
     if(CurrentPage==0)
     {
@@ -106,9 +114,9 @@ void UpdateTFT()
       myNex.writeStr(F("page0.vapHPID.txt"), temp);
       temp = (OrpPID.GetMode() == 1) ? F("PID") : F("---");
       myNex.writeStr(F("page0.vaOrpPID.txt"), temp);
-      temp = String(storage.TempValue, 1);
+      temp = String(storage.TempValue, 1) + (char)176 + F("C");
       myNex.writeStr(F("page0.vaWT.txt"), temp);
-      temp = String(storage.TempExternal, 1);
+      temp = String(storage.TempExternal, 1) + (char)176 + F("C");
       myNex.writeStr(F("page0.vaAT.txt"), temp);
       temp = String(storage.PSIValue, 2) + F("b");
       myNex.writeStr(F("page0.vaPSI.txt"), temp);
@@ -116,11 +124,7 @@ void UpdateTFT()
       myNex.writeStr(F("page0.vapHTk.txt"), temp);
       temp = String((int)round(ChlPump.GetTankFill())) + (char)37 + F(" / ") + String(float(ChlPump.UpTime)/1000./60., 1) + F("min");
       myNex.writeStr(F("page0.vaChlTk.txt"), temp);
-      myNex.writeNum(F("page0.vapHLevel.val"),PhPump.TankLevel() ? 0:1);      
-      myNex.writeNum(F("page0.vaChlLevel.val"),ChlPump.TankLevel() ? 0:1);
-      myNex.writeNum(F("page0.vaPSIErr.val"),PSIError ? 1:0);
-      myNex.writeNum(F("page0.vaChlUTErr.val"),ChlPump.UpTimeError ? 1:0);
-      myNex.writeNum(F("page0.vapHUTErr.val"),PhPump.UpTimeError ? 1:0);
+
       if(abs(storage.PhValue-storage.Ph_SetPoint) <= 0.1) 
         myNex.writeNum("page0.vapHErr.val",0);
       if(abs(storage.PhValue-storage.Ph_SetPoint) > 0.1 && abs(storage.PhValue-storage.Ph_SetPoint) <= 0.2)  
@@ -148,10 +152,7 @@ void UpdateTFT()
         TFT_R0 = !TFT_R0;}
       if(digitalRead(RELAY_R1) != TFT_R1)
       { myNex.writeNum(F("page1.vaR1.val"), TFT_R1 ? 1:0);
-        TFT_R1 = !TFT_R1;}
-      if(TFT_Winter != storage.WinterMode) 
-      { myNex.writeNum(F("page1.vaR2.val"),storage.WinterMode);
-      TFT_Winter = storage.WinterMode;}  
+        TFT_R1 = !TFT_R1;}  
     } 
 
     if(CurrentPage == 2) {
