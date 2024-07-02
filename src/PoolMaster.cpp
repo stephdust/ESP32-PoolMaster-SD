@@ -3,6 +3,9 @@
 #include <Arduino.h>                // Arduino framework
 #include "Config.h"
 #include "PoolMaster.h"
+#ifdef OTA_DRIVE
+#include <otadrive_esp.h>
+#endif
 
 static WiFiClient wificlient;
 
@@ -51,8 +54,24 @@ void PoolMaster(void *pvParameters)
     td = millis();
     #endif    
 
-    // Handle OTA update
-    ArduinoOTA.handle();
+    #ifdef OTA_DRIVE
+        // Every 120 seconds
+        if (OTADRIVE.timeTick(120))
+        {
+        // retrive firmware info from OTAdrive server
+        auto inf = OTADRIVE.updateFirmwareInfo();
+
+        // update firmware if newer available
+        if (inf.available)
+        {
+            Debug.print(DBG_INFO,"New Firmware Available %dBytes, %s",inf.size, inf.version.c_str());   
+            OTADRIVE.updateFirmware();
+        }
+        }
+    #else
+        // Handle OTA update
+        ArduinoOTA.handle();
+    #endif
 
     //update pumps
     FiltrationPump.loop();

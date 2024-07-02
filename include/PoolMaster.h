@@ -18,10 +18,11 @@
 #include <WiFiClient.h>           // Base class that provides Client
 #include <WiFiUdp.h>              // UDP support
 #include <ESPmDNS.h>              // mDNS
-#include <ArduinoOTA.h>           // Over the Air WiFi update 
 #include "AsyncMqttClient.h"      // Async. MQTT client
 #include "ADS1115.h"              // ADS1115 sensors library
-
+#ifndef OTA_DRIVE
+#include <ArduinoOTA.h>           // Over the Air WiFi update 
+#endif
 // General shared data structure
 struct StoreStruct
 {

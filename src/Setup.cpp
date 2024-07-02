@@ -5,6 +5,9 @@
 
 #include "Config.h"
 #include "PoolMaster.h"
+#ifdef OTA_DRIVE
+#include <otadrive_esp.h>
+#endif
 
 #ifdef SIMU
 bool init_simu = true;
@@ -114,6 +117,9 @@ void ProcessCommand(void*);
 void SettingsPublish(void*);
 void MeasuresPublish(void*);
 void StatusLights(void*);
+#ifdef OTA_DRIVE
+void onUpdateProgress(int progress, int totalt);
+#endif
 
 // Setup
 void setup()
@@ -383,6 +389,11 @@ void setup()
     app_cpu
   );
 
+#ifdef OTA_DRIVE
+  // Initialize OTADrive
+  OTADRIVE.setInfo(APIKEY, FW_VER);
+  OTADRIVE.onUpdateFirmwareProgress(onUpdateProgress);
+#else
   // Initialize OTA (On The Air update)
   //-----------------------------------
   ArduinoOTA.setPort(OTA_PORT);
@@ -414,7 +425,7 @@ void setup()
   });
 
   ArduinoOTA.begin();
-
+#endif
   //display remaining RAM/Heap space.
   Debug.print(DBG_DEBUG,"[memCheck] Stack: %d bytes - Heap: %d bytes",stack_hwm(),freeRam());
 
@@ -673,7 +684,21 @@ void info(){
   Debug.print(DBG_INFO,"confixMAX_PRIORITIES: %d",configMAX_PRIORITIES);
   Debug.print(DBG_INFO,"configTICK_RATE_HZ  : %d",configTICK_RATE_HZ);
 }
-
+#ifdef OTA_DRIVE
+// put function definitions here:
+void onUpdateProgress(int progress, int totalt)
+{
+  static int last = 0;
+  int progressPercent = (100 * progress) / totalt;
+  Serial.print("*");
+  if (last != progressPercent && progressPercent % 10 == 0)
+  {
+    // print every 10%
+    Serial.printf("%d", progressPercent);
+  }
+  last = progressPercent;
+}
+#endif
 
 // Pseudo loop, which deletes loopTask of the Arduino framework
 void loop()
