@@ -18,10 +18,12 @@
 #include <WiFiClient.h>           // Base class that provides Client
 #include <WiFiUdp.h>              // UDP support
 #include <ESPmDNS.h>              // mDNS
+#include <ArduinoOTA.h>           // Over the Air WiFi update 
 #include "AsyncMqttClient.h"      // Async. MQTT client
 #include "ADS1115.h"              // ADS1115 sensors library
-#ifndef OTA_DRIVE
-#include <ArduinoOTA.h>           // Over the Air WiFi update 
+#ifdef ELEGANT_OTA
+#include <WebServer.h>            // Used for ElegantOTA
+#include <ElegantOTA.h>
 #endif
 // General shared data structure
 struct StoreStruct
@@ -34,6 +36,8 @@ struct StoreStruct
   double Ph_SetPoint, Orp_SetPoint, PSI_HighThreshold, PSI_MedThreshold, WaterTempLowThreshold, WaterTemp_SetPoint, TempExternal, pHCalibCoeffs0, pHCalibCoeffs1, OrpCalibCoeffs0, OrpCalibCoeffs1, PSICalibCoeffs0, PSICalibCoeffs1;
   double Ph_Kp, Ph_Ki, Ph_Kd, Orp_Kp, Orp_Ki, Orp_Kd, PhPIDOutput, OrpPIDOutput, TempValue, PhValue, OrpValue, PSIValue;
   double AcidFill, ChlFill, pHTankVol, ChlTankVol, pHPumpFR, ChlPumpFR;
+  bool FiltrationOn, ElectrolyseOn, LightOn, RobotOn;  //ajout
+  uint8_t SecureElectro, DelayElectro; //ajout
 } ;
 
 extern StoreStruct storage;
@@ -49,6 +53,9 @@ extern Pump FiltrationPump;
 extern Pump PhPump;
 extern Pump ChlPump;
 extern Pump RobotPump;
+extern Pump OrpProd;  //ajout
+
+extern WebServer server;
 
 //PIDs instances
 //Specify the links and initial tuning parameters
@@ -70,4 +77,5 @@ extern bool MQTTConnection;                            // MQTT connected flag
 extern bool EmergencyStopFiltPump;                     // Filtering pump stopped manually; needs to be cleared to restart
 extern bool AntiFreezeFiltering;                       // Filtration anti freeze mode
 extern bool PSIError;								   // Water pressure alarm
-extern bool cleaning_done;      					   // Robot clean-up done                        
+extern bool cleaning_done;      					   // Robot clean-up done   
+extern bool electrolyse_done;               // Electrolyse done for the day

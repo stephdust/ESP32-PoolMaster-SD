@@ -12,8 +12,9 @@
 //This option is especially useful in the case where the filtration pump is not managed by the Arduino. 
 //FlowRate is the flow rate of the pump in Liters/Hour, typically 1.5 or 3.0 L/hour for peristaltic pumps for pools. This is used to compute how much of the tank we have emptied out
 //TankVolume is used here to compute the percentage fill used
+//PumpType defines whether the underlying relay should work normally or momentarilly simulating a button press
 Pump::Pump(uint8_t PumpPin, uint8_t IsRunningSensorPin, uint8_t TankLevelPin, 
-           uint8_t Interlockpin, double FlowRate, double TankVolume, double TankFill)
+           uint8_t Interlockpin,  uint8_t PumpType, uint8_t High_State, uint8_t Low_State, double FlowRate, double TankVolume, double TankFill)
 {
   pumppin = PumpPin;
   isrunningsensorpin = IsRunningSensorPin;
@@ -22,11 +23,17 @@ Pump::Pump(uint8_t PumpPin, uint8_t IsRunningSensorPin, uint8_t TankLevelPin,
   flowrate = FlowRate; //in Liters per hour
   tankvolume = TankVolume; //in Liters
   tankfill = TankFill; // in percent
+  pumptype = PumpType; // Standard or momentary
+  on_state = High_State;
+  off_state = Low_State;
   StartTime = 0;
   LastStartTime = 0;
   StopTime = 0;
   UpTime = 0;        
   UpTimeError = 0;
+  MomentarySwitchStart = 0; // Contain the millis when the underlying relay was set to ON
+  PumpVirtualStatus = 0;
+  MomentarySwitchState = 0; // Is True when the underlying relay of the momentary switch is ON
   MaxUpTime = DefaultMaxUpTime;
   CurrMaxUpTime = MaxUpTime;
 }     
@@ -34,10 +41,18 @@ Pump::Pump(uint8_t PumpPin, uint8_t IsRunningSensorPin, uint8_t TankLevelPin,
 //Call this in the main loop, for every loop, as often as possible
 void Pump::loop()
 {
-  if(digitalRead(isrunningsensorpin) == PUMP_ON)
+  if(digitalRead(isrunningsensorpin) == on_state || ((pumptype == PUMP_MOMENTARY) && (PumpVirtualStatus == 1)))
   {
     UpTime += millis() - StartTime;
     StartTime = millis();
+  }
+
+  // Reset the underlying momentary switch relay  OFF
+  if ((pumptype == PUMP_MOMENTARY) && (MomentarySwitchState == 1) && ((millis() - MomentarySwitchStart) >= MOMENTARY_SWITCH_SHORT_CLICK_DELAY))
+  {
+    digitalWrite(pumppin, off_state);
+    Debug.print(DBG_INFO,"Stop Momentary switch"); 
+    MomentarySwitchState = 0;
   }
 
   if((CurrMaxUpTime > 0) && (UpTime >= CurrMaxUpTime))
@@ -46,40 +61,86 @@ void Pump::loop()
     UpTimeError = true;
   }
 
-  if(!this->Pump::TankLevel()) this->Pump::Stop();
+  if(!this->Pump::TankLevel())
+  {
+    Stop();
+  } 
 
   if(interlockpin != NO_INTERLOCK)
   {
     if(digitalRead(interlockpin) == INTERLOCK_NOK)
-       Stop();
+      Stop();
   }
 }
 
 //Switch pump ON if over time was not reached, tank is not empty and interlock is OK
 bool Pump::Start()
 {
-  if((digitalRead(isrunningsensorpin) == PUMP_OFF) 
-    && !UpTimeError
-    && this->Pump::TankLevel()
-    && ((interlockpin == NO_INTERLOCK) || (digitalRead(interlockpin) == INTERLOCK_OK)))    //if((digitalRead(pumppin) == false))
+  if (pumptype == PUMP_MOMENTARY) // If Pump is Momentary
   {
-    digitalWrite(pumppin, PUMP_ON);
-    StartTime = LastStartTime = millis(); 
-    return true; 
+    if((PumpVirtualStatus == 0) // Check that the Status is not already ON
+      && !UpTimeError
+      && this->Pump::TankLevel()
+      && ((interlockpin == NO_INTERLOCK) || (digitalRead(interlockpin) == INTERLOCK_OK)))    // if((digitalRead(pumppin) == false))
+    {
+        MomentarySwitchStart = millis();
+        digitalWrite(pumppin, on_state);
+        StartTime = LastStartTime = millis();
+        PumpVirtualStatus = 1;
+        MomentarySwitchState = 1;
+        Debug.print(DBG_INFO,"Start Momentary switch"); 
+        return true; 
+    }
+    else
+    {
+      Debug.print(DBG_DEBUG,"Momentary Pump Start called but problem to start (Status %d %d %d %d)",PumpVirtualStatus,UpTimeError,this->Pump::TankLevel(),digitalRead(interlockpin)); 
+      return false;
+    }
   }
-  else return false;
+  else 
+  {
+    if((digitalRead(isrunningsensorpin) == off_state) 
+      && !UpTimeError
+      && this->Pump::TankLevel()
+      && ((interlockpin == NO_INTERLOCK) || (digitalRead(interlockpin) == INTERLOCK_OK)))    //if((digitalRead(pumppin) == false))
+    {
+      digitalWrite(pumppin, on_state);
+      StartTime = LastStartTime = millis(); 
+      return true; 
+    }
+    else return false;
+  }
 }
 
 //Switch pump OFF
 bool Pump::Stop()
 {
-  if(digitalRead(isrunningsensorpin) == PUMP_ON)
+  if (pumptype == PUMP_MOMENTARY)
   {
-    digitalWrite(pumppin, PUMP_OFF);
-    UpTime += millis() - StartTime; 
-    return true;
+    if(PumpVirtualStatus == 1)
+    {
+      MomentarySwitchStart = millis();
+      digitalWrite(pumppin, on_state);
+      UpTime += millis() - StartTime;
+      PumpVirtualStatus = 0;
+      MomentarySwitchState = 1;
+      return true;
+    }
+    else
+    {
+      return false;
+    }
   }
-  else return false;
+  else
+  {  
+    if(digitalRead(isrunningsensorpin) == on_state)
+    {
+      digitalWrite(pumppin, off_state);
+      UpTime += millis() - StartTime; 
+      return true;
+    }
+    else return false;
+  }
 }
 
 //Reset the tracking of running time
@@ -175,5 +236,12 @@ bool Pump::Interlock()
 //pump status
 bool Pump::IsRunning()
 {
-  return (digitalRead(isrunningsensorpin) == PUMP_ON);
+  if (pumptype == PUMP_MOMENTARY)
+  {
+    return (PumpVirtualStatus == 1);
+  }
+  else
+  {
+    return (digitalRead(isrunningsensorpin) == on_state);
+  }
 }

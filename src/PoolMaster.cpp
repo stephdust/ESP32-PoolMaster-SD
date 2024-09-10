@@ -3,12 +3,19 @@
 #include <Arduino.h>                // Arduino framework
 #include "Config.h"
 #include "PoolMaster.h"
-#ifdef OTA_DRIVE
-#include <otadrive_esp.h>
+#ifdef SMTP
+#include <ESP_Mail_Client.h>
+#endif
+#ifdef ELEGANT_OTA
+static WiFiClient wificlient;
+WebServer server(80);
 #endif
 
-static WiFiClient wificlient;
-
+#ifdef SMTP
+SMTPSession smtp;
+Session_Config config;
+SMTP_Message message;
+#endif
 // Functions prototypes
 
 void readLocalTime(void);
@@ -22,15 +29,39 @@ void mqttErrorPublish(const char*);
 void PublishSettings(void);
 void UpdateTFT(void);
 void stack_mon(UBaseType_t&);
-void Send_IFTTTNotif(void);
+#ifdef SMTP
+void smtpCallback(SMTP_Status);
+bool SMTP_Connect(void);
+void Send_Email(void);
+#endif
 
 void PoolMaster(void *pvParameters)
 {
-                                                                                                                            bool DoneForTheDay = false;                     // Reset actions done once per day
+  bool DoneForTheDay = false;                     // Reset actions done once per day
   bool d_calc = false;                            // Filtration duration computed
 
   static UBaseType_t hwm=0;                       // free stack size
+  #ifdef SMTP
+  MailClient.networkReconnect(true);
+  #ifndef SILENT_MODE
+    smtp.debug(1);
+  #endif
+  smtp.callback(smtpCallback);
+  config.server.host_name = SMTP_HOST;
+  config.server.port = SMTP_PORT;
+  config.login.email = AUTHOR_LOGIN;
+  config.login.password = AUTHOR_PASSWORD;
+  config.login.user_domain = "127.0.0.1";
 
+  message.sender.name = F("PoolMaster");
+  message.sender.email = AUTHOR_EMAIL;
+  message.subject = F("PoolMaster Event");
+  message.addRecipient(F("Home"), RECIPIENT_EMAIL);
+  message.text.charSet = "us-ascii";
+  message.text.transfer_encoding = Content_Transfer_Encoding::enc_7bit;
+  message.priority = esp_mail_smtp_priority_low;
+  message.response.notify = esp_mail_smtp_notify_success | esp_mail_smtp_notify_failure | esp_mail_smtp_notify_delay;
+  #endif
   while(!startTasks);
   vTaskDelay(DT3);                                // Scheduling offset 
 
@@ -54,30 +85,23 @@ void PoolMaster(void *pvParameters)
     td = millis();
     #endif    
 
-    #ifdef OTA_DRIVE
-        // Every 120 seconds
-        if (OTADRIVE.timeTick(120))
-        {
-        // retrive firmware info from OTAdrive server
-        auto inf = OTADRIVE.updateFirmwareInfo();
+    // Handle OTA update
+    ArduinoOTA.handle();
 
-        // update firmware if newer available
-        if (inf.available)
-        {
-            Debug.print(DBG_INFO,"New Firmware Available %dBytes, %s",inf.size, inf.version.c_str());   
-            OTADRIVE.updateFirmware();
-        }
-        }
-    #else
-        // Handle OTA update
-        ArduinoOTA.handle();
-    #endif
+#ifdef ELEGANT_OTA
+    server.handleClient();
+    ElegantOTA.loop();
+#endif
 
     //update pumps
     FiltrationPump.loop();
     PhPump.loop();
     ChlPump.loop();
-    RobotPump.loop();  
+    RobotPump.loop(); 
+
+    #ifdef ELECTROLYSE  //ajout
+    OrpProd.loop(); 
+    #endif
 
     //reset time counters at midnight and send sync request to time server
     if (hour() == 0 && !DoneForTheDay)
@@ -94,6 +118,7 @@ void PoolMaster(void *pvParameters)
         ChlPump.ResetUpTime();
         ChlPump.SetTankFill(storage.ChlFill);
         RobotPump.ResetUpTime();
+        OrpProd.ResetUpTime();  //ajout
 
         EmergencyStopFiltPump = false;
         d_calc = false;
@@ -147,19 +172,38 @@ void PoolMaster(void *pvParameters)
     if(second() == 30 && d_calc) d_calc = false;
     #endif
 
+    //ajout : start filtration pump in manual mode
+    if (!EmergencyStopFiltPump && !FiltrationPump.IsRunning() && !storage.AutoMode && storage.FiltrationOn)
+        FiltrationPump.Start();
+
     //start filtration pump as scheduled
-    if (!EmergencyStopFiltPump && !FiltrationPump.IsRunning() && storage.AutoMode &&
+    if (!EmergencyStopFiltPump && !FiltrationPump.IsRunning() && storage.AutoMode && storage.FiltrationOn &&  //modifier
         !PSIError && hour() >= storage.FiltrationStart && hour() < storage.FiltrationStop )
         FiltrationPump.Start();
 
+    //ajout : start or stop, electrolyser if needed 
+    if (FiltrationPump.IsRunning() && storage.ElectrolyseOn)
+    {
+        bool ElectrolysEnabled = (!AntiFreezeFiltering && storage.TempValue >= (double)storage.SecureElectro && ((millis() - FiltrationPump.LastStartTime)/ 1000 / 60 >= (unsigned long)storage.DelayElectro)) ;
+    
+        if (!OrpProd.IsRunning() && ElectrolysEnabled && storage.OrpValue <= storage.Orp_SetPoint*0.9)
+            OrpProd.Start();
+          
+        if (OrpProd.IsRunning() && (!ElectrolysEnabled || storage.OrpValue >= storage.Orp_SetPoint*1.05))
+            OrpProd.Stop(); 
+    }
+
+    //ajout : stop electrolyser if pump is not running or electrolyse mode is off
+    if(OrpProd.IsRunning() && (!FiltrationPump.IsRunning() || !storage.ElectrolyseOn)) OrpProd.Stop();
+
     //start cleaning robot for 2 hours, 30mn after filtration start
-    if (FiltrationPump.IsRunning() && storage.AutoMode && !storage.WinterMode && !RobotPump.IsRunning() &&
+    if (FiltrationPump.IsRunning() && storage.RobotOn && !storage.WinterMode && !RobotPump.IsRunning() &&  //modifier
         ((millis() - FiltrationPump.LastStartTime) / 1000 / 60) >= ROBOT_DELAY && !cleaning_done)
     {
         RobotPump.Start();
         Debug.print(DBG_INFO,"Robot Start 30mn after Filtration");   
     }
-    if(RobotPump.IsRunning() && storage.AutoMode && ((millis() - RobotPump.LastStartTime) / 1000 / 60) >= ROBOT_DURATION)
+    if(RobotPump.IsRunning() && storage.RobotOn && ((millis() - RobotPump.LastStartTime) / 1000 / 60) >= ROBOT_DURATION)  //modiier
     {
         RobotPump.Stop();
         cleaning_done = true;
@@ -181,9 +225,10 @@ void PoolMaster(void *pvParameters)
     //stop filtration pump and PIDs as scheduled unless we are in AntiFreeze mode
     if (storage.AutoMode && FiltrationPump.IsRunning() && !AntiFreezeFiltering && (hour() >= storage.FiltrationStop || hour() < storage.FiltrationStart))
     {
-        SetPhPID(false);
-        SetOrpPID(false);
-        FiltrationPump.Stop();
+      SetPhPID(false);
+      SetOrpPID(false);
+      if(OrpProd.IsRunning()) OrpProd.Stop();  //ajout
+      FiltrationPump.Stop();
     }
 
     //Outside regular filtration hours, start filtration in case of cold Air temperatures (<-2.0deg)
@@ -200,8 +245,8 @@ void PoolMaster(void *pvParameters)
         AntiFreezeFiltering = false;
     }
 
-    //If filtration pump has been running for over 45secs but pressure is still low, stop the filtration pump, something is wrong, set error flag
-    if (FiltrationPump.IsRunning() && ((millis() - FiltrationPump.LastStartTime) > 45000) && (storage.PSIValue < storage.PSI_MedThreshold))
+    //If filtration pump has been running for over 2mn but pressure is still low, stop the filtration pump, something is wrong, set error flag
+    if (FiltrationPump.IsRunning() && ((millis() - FiltrationPump.LastStartTime) > 180000) && (storage.PSIValue < storage.PSI_MedThreshold))
     {
         FiltrationPump.Stop();
         PSIError = true;
@@ -220,8 +265,10 @@ void PoolMaster(void *pvParameters)
     //UPdate Nextion TFT
     UpdateTFT();
 
-    //Send IFTTT notifications if alarms occured
-    Send_IFTTTNotif();
+    #ifdef SMTP
+    //Send email if alarm(s) occured
+    Send_Email();
+    #endif
 
     #ifdef CHRONO
     t_act = millis() - td;
@@ -237,7 +284,7 @@ void PoolMaster(void *pvParameters)
   }
 }
 
-//Enable/Disable Chl PID
+//Enable/Disable pH PID
 void SetPhPID(bool Enable)
 {
   if (Enable)
@@ -282,83 +329,127 @@ void SetOrpPID(bool Enable)
   }
 }
 
-//Send notifications to IFTTT applet in case of alarm
-void Send_IFTTTNotif(){
-    static const String url1 = IFTTT_key;
-    String url2 = "";
+#ifdef SMTP
+bool SMTP_Connect(){
+  Debug.print(DBG_DEBUG,"SMTP Connection starts");
+  if (!smtp.connect(&config)){
+    Debug.print(DBG_ERROR,"SMTP Connection error, Status Code: %d, Error Code: %d, Reason: %s", smtp.statusCode(), smtp.errorCode(), smtp.errorReason().c_str());
+    return false;
+  } else Debug.print(DBG_INFO,"SMTP Connected");
+  if (!smtp.isLoggedIn()) Debug.print(DBG_ERROR,"Not yet logged in.");
+  else{
+    if (smtp.isAuthenticated()) Debug.print(DBG_INFO,"SMTP Successfully logged in.");
+    else Debug.print(DBG_ERROR,"SMTP Connected with no Auth.");
+  }
+  return true;
+}
+
+void Send_Email(){
+
+    char texte[80];
     static bool notif_sent[5] = {0,0,0,0,0};
 
     if(PSIError)
     {
-        if(!notif_sent[0])
-        {
-            if(wificlient.connect("maker.ifttt.com",80))
-            {
-                url2 = String("?value1=Water%20pressure&value2=");
-                if(storage.PSIValue <= storage.PSI_MedThreshold)
-                {
-                    url2 += String("Low");
-                } 
-                else if (storage.PSIValue >= storage.PSI_HighThreshold)
-                {
-                    url2 += String("High");
-                }
-                url2 += String("%20pressure:%20") + String(storage.PSIValue) + String("bar");
-                wificlient.print(String("POST ") + url1 + url2 + String(" HTTP/1.1\r\nHost: maker.ifttt.com\r\nConnection: close\r\n\r\n"));
-                notif_sent[0] = true;
-            }
-        }    
+      if(!notif_sent[0])
+      {
+        sprintf(texte,"Water pressure alert: %4.2fbar",storage.PSIValue);
+        message.text.content = texte;
+        if(SMTP_Connect()){   
+          if(!MailClient.sendMail(&smtp, &message))
+            Debug.print(DBG_ERROR,"Error, Status Code: %d, Error Code: %d, Reason: %s", smtp.statusCode(), smtp.errorCode(), smtp.errorReason().c_str());     
+          else notif_sent[0] = true;
+        }
+      }    
     } else notif_sent[0] = false;
 
     if(!ChlPump.TankLevel())
     {
-        if(!notif_sent[1])
-        {
-            if(wificlient.connect("maker.ifttt.com",80))
-            {
-                url2 = String("?value1=Chl%20level&value2=") + String(ChlPump.GetTankFill()) + String("%");
-                wificlient.print(String("POST ") + url1 + url2 + String(" HTTP/1.1\r\nHost: maker.ifttt.com\r\nConnection: close\r\n\r\n"));
-                notif_sent[1] = true;
-            }
-        }
+      if(!notif_sent[1])
+      {
+        sprintf(texte,"Chlorine level LOW: %3.0f %",ChlPump.GetTankFill());
+        message.text.content = texte;
+        if(SMTP_Connect()){
+          if(!MailClient.sendMail(&smtp, &message))
+            Debug.print(DBG_ERROR,"Error, Status Code: %d, Error Code: %d, Reason: %s", smtp.statusCode(), smtp.errorCode(), smtp.errorReason().c_str());    
+          else notif_sent[1] = true;
+        }  
+      }
     } else notif_sent[1] = false;
 
     if(!PhPump.TankLevel())
     {
-        if(!notif_sent[2])
-        {
-            if(wificlient.connect("maker.ifttt.com",80))
-            {
-                url2 = String("?value1=pH+%20level&value2=") + String(PhPump.GetTankFill()) + String("%");
-                wificlient.print(String("POST ") + url1 + url2 + String(" HTTP/1.1\r\nHost: maker.ifttt.com\r\nConnection: close\r\n\r\n"));
-                notif_sent[2] = true;
-            }
-        }
+      if(!notif_sent[2])
+      {
+        sprintf(texte,"Acid level LOW: %3.0f %",PhPump.GetTankFill());
+        message.text.content = texte;
+        if(SMTP_Connect()){ 
+          if(!MailClient.sendMail(&smtp, &message))
+            Debug.print(DBG_ERROR,"Error, Status Code: %d, Error Code: %d, Reason: %s", smtp.statusCode(), smtp.errorCode(), smtp.errorReason().c_str());    
+          else notif_sent[2] = true;
+        }  
+      }
+
     } else notif_sent[2] = false;
 
     if(ChlPump.UpTimeError)
     {
-        if(!notif_sent[3])
-        {
-            if(wificlient.connect("maker.ifttt.com",80))
-            {
-                url2 = String("?value1=Chl%20pump%20uptime&value2=") + String(round(ChlPump.UpTime/60000.)) + String("min");
-                wificlient.print(String("POST ") + url1 + url2 + String(" HTTP/1.1\r\nHost: maker.ifttt.com\r\nConnection: close\r\n\r\n"));
-                notif_sent[3] = true;
-            }
-        }
+      if(!notif_sent[3])
+      {
+        sprintf(texte,"Chlorine pump uptime: %2.0fmn",round(ChlPump.UpTime/60000.));
+        message.text.content = texte; 
+        if(SMTP_Connect()){       
+          if(!MailClient.sendMail(&smtp, &message))
+            Debug.print(DBG_ERROR,"Error, Status Code: %d, Error Code: %d, Reason: %s", smtp.statusCode(), smtp.errorCode(), smtp.errorReason().c_str());    
+          else notif_sent[3] = true;
+        }  
+      }
     } else notif_sent[3] = false;
 
     if(PhPump.UpTimeError)
     {
-        if(!notif_sent[4])
-        {
-            if(wificlient.connect("maker.ifttt.com",80))
-            {
-                url2 = String("?value1=pH+%20pump%20uptime&value2=") + String(round(PhPump.UpTime/60000.)) + String("min");
-                wificlient.print(String("POST ") + url1 + url2 + String(" HTTP/1.1\r\nHost: maker.ifttt.com\r\nConnection: close\r\n\r\n"));
-                notif_sent[4] = true;
-            }
-        }
-    } else notif_sent[4] = false;     
+      if(!notif_sent[4])
+      {
+        sprintf(texte,"Acid pump uptime: %2.0fmn",round(PhPump.UpTime/60000.));
+        message.text.content = texte;
+        if(SMTP_Connect()){
+          if(!MailClient.sendMail(&smtp, &message))
+            Debug.print(DBG_ERROR,"Error, Status Code: %d, Error Code: %d, Reason: %s", smtp.statusCode(), smtp.errorCode(), smtp.errorReason().c_str());    
+          else notif_sent[4] = true;
+        }  
+      }
+    } else notif_sent[4] = false; 
 }
+
+/* Callback function to get the Email sending status */
+void smtpCallback(SMTP_Status status){
+  /* Print the current status */
+  Debug.print(DBG_INFO,"Email send status: %d",status.info());
+
+  /* Print the sending result */
+  if (status.success()){
+    Debug.print(DBG_INFO,"Message sent success: %d", status.completedCount());
+    Debug.print(DBG_INFO,"Message sent failed: %d", status.failedCount());
+
+    for (size_t i = 0; i < smtp.sendingResult.size(); i++)
+    {
+      /* Get the result item */
+      SMTP_Result result = smtp.sendingResult.getItem(i);
+
+      // In case, ESP32, ESP8266 and SAMD device, the timestamp get from result.timestamp should be valid if
+      // your device time was synched with NTP server.
+      // Other devices may show invalid timestamp as the device time was not set i.e. it will show Jan 1, 1970.
+      // You can call smtp.setSystemTime(xxx) to set device time manually. Where xxx is timestamp (seconds since Jan 1, 1970)
+      
+      Debug.print(DBG_INFO,"Message No: %d", i + 1);
+      Debug.print(DBG_INFO,"Status: %s", result.completed ? "success" : "failed");
+      Debug.print(DBG_INFO,"Date/Time: %s", MailClient.Time.getDateTimeString(result.timestamp, "%B %d, %Y %H:%M:%S").c_str());
+      Debug.print(DBG_INFO,"Recipient: %s", result.recipients.c_str());
+      Debug.print(DBG_INFO,"Subject: %s", result.subject.c_str());
+    }
+
+    // Clear sending result as the memory usage will grow up.
+    smtp.sendingResult.clear();
+  }
+}
+#endif

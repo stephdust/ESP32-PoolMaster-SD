@@ -195,26 +195,62 @@ void ProcessCommand(void *pvParameters)
             Debug.print(DBG_DEBUG,"Calibration completed. Coeffs are: %10.2f, %10.2f",storage.PSICalibCoeffs0,storage.PSICalibCoeffs1);
           }
         }
-        //"Mode" command which sets regulation and filtration to manual or auto modes
+        // "Mode" 
+        // command which sets regulation and filtration to manual or auto modes
         else if (command.containsKey(F("Mode")))
         {
-          if ((int)command[F("Mode")] == 0)
+          if ((bool)command[F("Mode")] == 0)  // mode 0 = Manu
           {
             storage.AutoMode = 0;
-
-            //Stop PIDs
-            SetPhPID(false);
-            SetOrpPID(false);
+            EmergencyStopFiltPump = 0;
           }
           else
           {
-            storage.AutoMode = 1;
+            if(!storage.AutoMode && !storage.WinterMode)  // mode 1 = Auto
+            {
+              storage.AutoMode = 1;
+              storage.FiltrationOn = 1; 
+              storage.ElectrolyseOn = 1; 
+              EmergencyStopFiltPump = false;
+            }
           }
           saveParam("AutoMode",storage.AutoMode);
+          saveParam("FiltrationOn",storage.FiltrationOn);
+          saveParam("ElectrolyseOn",storage.ElectrolyseOn);
+        }
+        // "FiltPump" 
+        // command which starts or stops the filtration pump
+        else if (command.containsKey(F("FiltPump"))) 
+        {
+          if ((int)command[F("FiltPump")] == 0)
+          {
+            EmergencyStopFiltPump = true;
+            storage.AutoMode = 0;
+            storage.FiltrationOn  = 0;
+            storage.ElectrolyseOn = 0 ;
+          }
+          else 
+          {
+            if (!storage.WinterMode)
+            {
+              EmergencyStopFiltPump = false;
+              storage.FiltrationOn  = 1;
+            }
+          }
+          saveParam("AutoMode",storage.AutoMode);
+          saveParam("FiltrationOn",storage.FiltrationOn);
+          saveParam("ElectrolyseOn",storage.ElectrolyseOn);
+        }
+        // "Electro"
+        // command which (un)enables Electrolyser
+        else if (command.containsKey(F("Electro"))) 
+        {
+          storage.ElectrolyseOn=((bool)command[F("Electro")] == 1)&&(storage.FiltrationOn == 1);
+          saveParam("ElectrolyseOn",storage.ElectrolyseOn);
         }
         else if (command.containsKey(F("Winter"))) //"Winter" command which activate/deactivate Winter Mode
         {
-          (bool)command[F("Winter")] ? storage.WinterMode = true : storage.WinterMode = false;
+          storage.WinterMode=((bool)command[F("Winter")]) && (!storage.FiltrationOn);
           saveParam("WinterMode",storage.WinterMode);
           PublishSettings(); 
         }
@@ -399,32 +435,20 @@ void ProcessCommand(void *pvParameters)
         {
           PublishSettings();
         }         
-        else if (command.containsKey(F("FiltPump"))) //"FiltPump" command which starts or stops the filtration pump
-        {
-          if ((int)command[F("FiltPump")] == 0)
-          {
-            EmergencyStopFiltPump = true;
-            FiltrationPump.Stop();  //stop filtration pump
-
-            //Stop PIDs
-            SetPhPID(false);
-            SetOrpPID(false);
-          }
-          else
-          {
-            EmergencyStopFiltPump = false;
-            FiltrationPump.Start();   //start filtration pump
-          }
-        }
         else if (command.containsKey(F("RobotPump"))) //"RobotPump" command which starts or stops the Robot pump
         {
-          if ((int)command[F("RobotPump")] == 0){
-            RobotPump.Stop();    //stop robot pump
+           (bool)command[F("RobotPump")], storage.RobotOn ? 1 : 0;
+ /*          
+          if ((int)command[F("RobotPump")] == 0){  //modifier
+            storage.RobotOn=0;  //ajouter
+            /*RobotPump.Stop();    //modifier : stop robot pump
             cleaning_done = true;
           } else {
-            RobotPump.Start();   //start robot pump
+            storage.RobotOn=1;  //ajouter
+            /*RobotPump.Start();   //start robot pump
             cleaning_done = false;
-          }  
+          }  */
+          saveParam("RobotOn",storage.RobotOn);
         }
         else if (command.containsKey(F("PhPump"))) //"PhPump" command which starts or stops the Acid pump
         {
@@ -474,6 +498,7 @@ void ProcessCommand(void *pvParameters)
           {
             case 0:
               (bool)command[F("Relay")][1] ? digitalWrite(RELAY_R0, LOW) : digitalWrite(RELAY_R0, HIGH);
+              saveParam("LightOn",storage.LightOn);
               break;
             case 1:
               (bool)command[F("Relay")][1] ? digitalWrite(RELAY_R1, LOW) : digitalWrite(RELAY_R1, HIGH);
@@ -497,12 +522,25 @@ void ProcessCommand(void *pvParameters)
             ChlPump.ClearErrors();
 
           mqttErrorPublish(""); // publish clearing of error(s)
-
-          //start filtration pump if within scheduled time slots
+/*
+          //supprimer : start filtration pump if within scheduled time slots
           if (!EmergencyStopFiltPump && storage.AutoMode && (hour() >= storage.FiltrationStart) && (hour() < storage.FiltrationStop))
             FiltrationPump.Start();
+*/
         }
-        //Publish Update on the MQTT broker the status of our variables
+
+        //"ElectroSecure" command which is called when electrolyser is configured
+        //First parameter is secure temp, second parameter is timer for starting electrolyser
+        else if (command.containsKey(F("ElectroSecure")))
+        {
+          storage.SecureElectro = (int8_t)command[F("ElectroSecure")][0];
+          storage.DelayElectro = (int8_t)command[F("ElectroSecure")][1];
+          saveParam("SecureElectro",storage.SecureElectro);
+          saveParam("DelayElectro",storage.DelayElectro);
+          PublishSettings();
+        }
+
+        // Publish Update on the MQTT broker the status of our variables
         PublishMeasures();
       }
     }

@@ -5,9 +5,6 @@
 
 #include "Config.h"
 #include "PoolMaster.h"
-#ifdef OTA_DRIVE
-#include <otadrive_esp.h>
-#endif
 
 #ifdef SIMU
 bool init_simu = true;
@@ -35,14 +32,27 @@ StoreStruct storage =
 { 
   CONFIG_VERSION,
   0, 0, 1, 0,
-  13, 8, 21, 8, 22, 20,
+  8, 11, 19, 8, 22, 20,
   2700, 2700, 30000,
   1800000, 1800000, 0, 0,
-  7.3, 720.0, 1.8, 0.7, 10.0, 18.0, 3.0, -2.218, 7, -964.32, 2410.8, 0.377923399, -0.17634473,
+  7.3, 720.0, 1.8, 0.3, 16.0, 27.0, 3.0, -2.49, 6.87, 431.03, 0, 0.377923399, -0.17634473,
   2700000.0, 0.0, 0.0, 18000.0, 0.0, 0.0, 0.0, 0.0, 28.0, 7.3, 720., 1.3,
-  25.0, 60.0, 20.0, 20.0, 1.5, 1.5
+  100.0, 100.0, 20.0, 20.0, 1.5, 1.5,
+  0, 0, 0, 0, 15, 2  //ajout
 };
-
+/*
+struct StoreStruct
+{
+  uint8_t ConfigVersion;   // This is for testing if first time using eeprom or not
+  bool Ph_RegulationOnOff, Orp_RegulationOnOff, AutoMode, WinterMode;
+  uint8_t FiltrationDuration, FiltrationStart, FiltrationStop, FiltrationStartMin, FiltrationStopMax, DelayPIDs;
+  unsigned long PhPumpUpTimeLimit, ChlPumpUpTimeLimit,PublishPeriod;
+  unsigned long PhPIDWindowSize, OrpPIDWindowSize, PhPIDwindowStartTime, OrpPIDwindowStartTime;
+  double Ph_SetPoint, Orp_SetPoint, PSI_HighThreshold, PSI_MedThreshold, WaterTempLowThreshold, WaterTemp_SetPoint, TempExternal, pHCalibCoeffs0, pHCalibCoeffs1, OrpCalibCoeffs0, OrpCalibCoeffs1, PSICalibCoeffs0, PSICalibCoeffs1;
+  double Ph_Kp, Ph_Ki, Ph_Kd, Orp_Kp, Orp_Ki, Orp_Kd, PhPIDOutput, OrpPIDOutput, TempValue, PhValue, OrpValue, PSIValue;
+  double AcidFill, ChlFill, pHTankVol, ChlTankVol, pHPumpFR, ChlPumpFR;
+} ;
+*/
 tm timeinfo;
 
 // Various global flags
@@ -52,6 +62,7 @@ bool AntiFreezeFiltering = false;               // Filtration anti freeze mode
 bool EmergencyStopFiltPump = false;             // flag will be (re)set by double-tapp button
 bool PSIError = false;                          // Water pressure OK
 bool cleaning_done = false;                     // daily cleaning done   
+bool electrolyse_done = false;                  // Electrolyse is done for the day
 
 // Queue object to store incoming JSON commands (up to 10)
 QueueHandle_t queueIn;
@@ -68,10 +79,11 @@ Preferences nvs;
 // The four pumps of the system (instanciate the Pump class)
 // In this case, all pumps start/Stop are managed by relays. pH, ORP and Robot pumps are interlocked with 
 // filtration pump
-Pump FiltrationPump(FILTRATION_PUMP, FILTRATION_PUMP);
-Pump PhPump(PH_PUMP, PH_PUMP, PH_LEVEL, FILTRATION_PUMP, storage.pHPumpFR, storage.pHTankVol, storage.AcidFill);
-Pump ChlPump(CHL_PUMP, CHL_PUMP, CHL_LEVEL, FILTRATION_PUMP, storage.ChlPumpFR, storage.ChlTankVol, storage.ChlFill);
-Pump RobotPump(ROBOT_PUMP, ROBOT_PUMP, NO_TANK, FILTRATION_PUMP);
+Pump FiltrationPump(FILTRATION_PUMP, FILTRATION_PUMP, NO_TANK, NO_INTERLOCK,PUMP_STD,PUMP_ON,PUMP_OFF);
+Pump PhPump(PH_PUMP, PH_PUMP, NO_TANK, FILTRATION_PUMP, PUMP_STD,PUMP_OFF,PUMP_ON,storage.pHPumpFR, storage.pHTankVol, storage.AcidFill);
+Pump ChlPump(CHL_PUMP, CHL_PUMP, PH_LEVEL, FILTRATION_PUMP, PUMP_STD,PUMP_OFF,PUMP_ON,storage.ChlPumpFR, storage.ChlTankVol, storage.ChlFill);
+Pump RobotPump(ROBOT_PUMP, ROBOT_PUMP, NO_TANK, FILTRATION_PUMP,PUMP_STD,PUMP_OFF,PUMP_ON);
+Pump OrpProd(ORP_PROD, ORP_PROD, NO_TANK, FILTRATION_PUMP,PUMP_MOMENTARY,PUMP_OFF,PUMP_ON);  //ajout
 
 // PIDs instances
 //Specify the direction and initial tuning parameters
@@ -117,9 +129,6 @@ void ProcessCommand(void*);
 void SettingsPublish(void*);
 void MeasuresPublish(void*);
 void StatusLights(void*);
-#ifdef OTA_DRIVE
-void onUpdateProgress(int progress, int totalt);
-#endif
 
 // Setup
 void setup()
@@ -172,16 +181,18 @@ void setup()
 
   pinMode(RELAY_R0, OUTPUT);
   pinMode(RELAY_R1, OUTPUT);
+  pinMode(ORP_PROD, OUTPUT);  
 
   pinMode(BUZZER, OUTPUT);
 
   // As the relays on the board are activated by a LOW level, set all levels HIGH at startup
-  digitalWrite(FILTRATION_PUMP,HIGH);
+  digitalWrite(FILTRATION_PUMP,LOW); // This is a static relay which works with HIGH level
   digitalWrite(PH_PUMP,HIGH); 
   digitalWrite(CHL_PUMP,HIGH);
   digitalWrite(ROBOT_PUMP,HIGH);
   digitalWrite(RELAY_R0,HIGH);
   digitalWrite(RELAY_R1,HIGH);
+  digitalWrite(ORP_PROD,HIGH);
 
 // Warning: pins used here have no pull-ups, provide external ones
   pinMode(CHL_LEVEL, INPUT);
@@ -260,6 +271,8 @@ void setup()
 
   RobotPump.SetMaxUpTime(0);          //no runtime limit for the robot pump
 
+  OrpProd.SetMaxUpTime(0);     //ajout : no runtime limit for the electrolyser
+
   PhPump.SetFlowRate(storage.pHPumpFR);
   PhPump.SetTankVolume(storage.pHTankVol);
   PhPump.SetTankFill(storage.AcidFill);
@@ -316,7 +329,7 @@ void setup()
   xTaskCreatePinnedToCore(
     PoolMaster,
     "PoolMaster",
-    3072,
+    5120,
     NULL,
     1,
     nullptr,
@@ -389,11 +402,22 @@ void setup()
     app_cpu
   );
 
-#ifdef OTA_DRIVE
-  // Initialize OTADrive
-  OTADRIVE.setInfo(APIKEY, FW_VER);
-  OTADRIVE.onUpdateFirmwareProgress(onUpdateProgress);
-#else
+#ifdef ELEGANT_OTA
+// ELEGANTOTA Configuration
+  server.on("/", []() {
+    server.send(200, "text/plain", "Hi! This is ElegantOTA Demo.");
+  });
+
+
+  ElegantOTA.begin(&server);    // Start ElegantOTA
+  server.begin();
+  Serial.println("HTTP server started");
+  // Set Authentication Credentials
+#ifdef ELEGANT_OTA_AUTH
+  ElegantOTA.setAuth(ELEGANT_OTA_USERNAME, ELEGANT_OTA_PASSWORD);
+#endif
+#endif
+
   // Initialize OTA (On The Air update)
   //-----------------------------------
   ArduinoOTA.setPort(OTA_PORT);
@@ -425,7 +449,7 @@ void setup()
   });
 
   ArduinoOTA.begin();
-#endif
+
   //display remaining RAM/Heap space.
   Debug.print(DBG_DEBUG,"[memCheck] Stack: %d bytes - Heap: %d bytes",stack_hwm(),freeRam());
 
@@ -490,6 +514,12 @@ bool loadConfig()
   storage.ChlTankVol            = nvs.getDouble("ChlTankVol",20.);
   storage.pHPumpFR              = nvs.getDouble("pHPumpFR",1.5);
   storage.ChlPumpFR             = nvs.getDouble("ChlPumpFR",1.5);
+  storage.FiltrationOn          = nvs.getBool("FiltrationOn",0);  //ajout
+  storage.ElectrolyseOn         = nvs.getBool("ElectrolyseOn",0);  //ajout
+  storage.LightOn               = nvs.getBool("LightOn",0);  //ajout
+  storage.RobotOn               = nvs.getBool("RobotOn",0);  //ajout
+  storage.SecureElectro         = nvs.getUChar("SecureElectro",15);  //ajout
+  storage.DelayElectro          = nvs.getUChar("DelayElectro",2);  //ajout
 
   nvs.end();
 
@@ -566,6 +596,12 @@ bool saveConfig()
   i += nvs.putDouble("ChlTankVol",storage.ChlTankVol);
   i += nvs.putDouble("pHPumpFR",storage.pHPumpFR);
   i += nvs.putDouble("ChlPumpFR",storage.ChlPumpFR);
+  i += nvs.putBool("FiltrationOn",storage.FiltrationOn);  //ajout
+  i += nvs.putBool("ElectrolyseOn",storage.ElectrolyseOn);  //ajout
+  i += nvs.putBool("LightOn",storage.LightOn);  //ajout
+  i += nvs.putBool("RobotOn",storage.RobotOn);  //ajout
+  i += nvs.putUChar("SecureElectro",storage.SecureElectro);  //ajout
+  i += nvs.putUChar("DelayElectro",storage.DelayElectro);  //ajout
 
   nvs.end();
 
@@ -684,21 +720,6 @@ void info(){
   Debug.print(DBG_INFO,"confixMAX_PRIORITIES: %d",configMAX_PRIORITIES);
   Debug.print(DBG_INFO,"configTICK_RATE_HZ  : %d",configTICK_RATE_HZ);
 }
-#ifdef OTA_DRIVE
-// put function definitions here:
-void onUpdateProgress(int progress, int totalt)
-{
-  static int last = 0;
-  int progressPercent = (100 * progress) / totalt;
-  Serial.print("*");
-  if (last != progressPercent && progressPercent % 10 == 0)
-  {
-    // print every 10%
-    Serial.printf("%d", progressPercent);
-  }
-  last = progressPercent;
-}
-#endif
 
 // Pseudo loop, which deletes loopTask of the Arduino framework
 void loop()

@@ -15,6 +15,7 @@
 // BitMaps with GPIO states
 static uint8_t BitMap1 = 0;
 static uint8_t BitMap2 = 0;
+static uint8_t BitMap3 = 0;
 
 static const char* PoolTopicMeas1 = POOLTOPIC"Meas1";
 static const char* PoolTopicMeas2 = POOLTOPIC"Meas2";
@@ -32,6 +33,8 @@ void EncodeBitMap()
 {
   BitMap1 = 0;
   BitMap2 = 0;
+  BitMap3 = 0;
+
   BitMap1 |= (FiltrationPump.IsRunning() & 1) << 7;
   BitMap1 |= (PhPump.IsRunning() & 1) << 6;
   BitMap1 |= (ChlPump.IsRunning() & 1) << 5;
@@ -44,13 +47,21 @@ void EncodeBitMap()
   BitMap2 |= (PhPID.GetMode() & 1) << 7;
   BitMap2 |= (OrpPID.GetMode() & 1) << 6;
   BitMap2 |= (storage.AutoMode & 1) << 5;
-  BitMap2 |= (RobotPump.IsRunning() & 1) << 4;
-
+  BitMap2 |= (RobotPump.IsRunning() & 1) << 4;  // Different from ParisBrest
   BitMap2 |= !digitalRead(RELAY_R0) << 3;
   BitMap2 |= !digitalRead(RELAY_R1) << 2;
   BitMap2 |= (storage.WinterMode & 1) << 1;
-  BitMap2 |= (0 & 1U) << 0;      
+  BitMap2 |= (0 & 1U) << 0;     
 
+  BitMap3 |= (storage.AutoMode & 1) << 7;
+  BitMap3 |= (storage.FiltrationOn & 1) << 6;
+  BitMap3 |= (storage.ElectrolyseOn & 1) << 5;
+  BitMap3 |= (storage.WinterMode & 1) << 4;
+  BitMap3 |= !digitalRead(RELAY_R0) << 3;
+  BitMap3 |= !digitalRead(RELAY_R1) << 2;
+  BitMap3 |= (PhPID.GetMode() & 1) << 1;
+  BitMap3 |= (OrpPID.GetMode() & 1) << 0;
+   
 }
 
 void PublishTopic(const char* topic, JsonDocument& root)
@@ -293,13 +304,14 @@ void MeasuresPublish(void *pvParameters)
     {
         //send a JSON to MQTT broker. /!\ Split JSON if longer than 100 bytes
         //Will publish something like {"AcidF":100,"ChlF":100,"IO":11,"IO2":0}
-        const int capacity = JSON_OBJECT_SIZE(4);
+        const int capacity = JSON_OBJECT_SIZE(5);
         StaticJsonDocument<capacity> root;
 
         root["AcidF"] = PhPump.GetTankFill();
         root["ChlF"]  = ChlPump.GetTankFill();
         root["IO"]    = BitMap1;
         root["IO2"]   = BitMap2;
+        root["IO3"]   = BitMap3;
 
         PublishTopic(PoolTopicMeas2, root);
     }
