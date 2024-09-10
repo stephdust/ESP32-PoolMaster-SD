@@ -13,7 +13,7 @@ Compared to the initial project, the main differences are:
   <li> analog measurements done by external ADC I2C module (ADS1115), in async mode</li>
   <li> and more...
 </ul>
-<p> In addition of the original project, this fork includes:</p>
+<p> <b>In addition of the original project, this fork includes:</b></p>
 <ul>
   <li> Support for electrolyser instead of Chlorine pump</li>
   <li> Support for momentary relay mode to be able to simulate button press (exemple automatically switch on and off an Intex SWG to produce chlorine)</li>
