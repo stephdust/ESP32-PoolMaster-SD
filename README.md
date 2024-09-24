@@ -38,38 +38,78 @@ Water temperature can be controlled by the system via dry contact relays.</p>
 <p>Project includes two PCBs, one for the main ESP32 MCU card and one for the pH/Orp board.<br>
 <img src="https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/Hardware.png" alt="Project Hardware"></p>
 <h3 id="software">Software</h3>
-<p>The project isn’t a fork of the original one due to the different structure of source files with PlatformIO ((.cpp, .h).</p>
+<p>The project isn’t a fork of the original one due to the different structure of source files with PlatformIO ((.cpp, .h).<br>
+It includes:</p>
+<ul>
+<li>Management of ESP32 and Wifi</li>
+<li>ESP32-Arduino framework with PlatformIO IDE</li>
+<li>Async MQTT Client</li>
+<li>JSON upgrade to version 6</li>
+<li>Async Analog measurement via external I2C ADS115</li>
+</ul>
 <p>The version V6, (aka ESP-2.0) implement direct usage of FreeRTOS functions for managing tasks and queues. There are 10 tasks sharing the app_CPU :</p>
 <ul>
+<li>The Arduino loopTask, with only the setup() function. When the setup is finished, the task deletes itself to recover memory;</li>
+<li>PoolMaster, running every 500ms, which mainly supervises the overall timing of the system;</li>
+<li>AnalogPoll, running every 125ms, to acquire analog measurements of pH, ORP and Pressure with an ADS115 sensor on an I2C bus;</li>
+<li>GetTemp, running every 1000ms, to acquire water and air temperatures with DS18B20 sensors on two 1Wire busses;</li>
+<li>ORPRegulation, running every 1000ms, to manage Chlorine pump;</li>
+<li>pHRegulation, running every 1000ms, to manage Acid/Soda pump;</li>
+<li>ProcessCommand, running every 500ms, to process commands received on /Home/Pool6/API MQTT Topic;</li>
+<li>SettingsPublish, running when notified only (e.g with external command), to publish settings on the MQTT topic;</li>
+<li>MeasuresPublish, running every 30s and when notified, to publish actual measures and status;</li>
+<li>StatusLights, running every 3000ms, to display a row of 8 status LEDs on the mother board, through a PCF8574A on the I2C bus.<br>
+<img src="https://github.com/Gixy31/ESP32-PoolMaster/blob/main/docs/Profiling.jpg" alt="enter image description here"></li>
+</ul>
+<h3 id="mqtt-api">MQTT API</h3>
+<p>Every 30 seconds (by default), the system will publish on the “PoolTopicMeas1” and “PoolTopicMeas2”(see in code below) the following payloads in Json format:<br>
+{“Tmp”:818,“pH”:321,“PSI”:56,“Orp”:583,“FilUpT”:8995,“PhUpT”:0,“ChlUpT”:0}<br>
+{“AcidF”:100,“ChlF”:100,“IO”:11,“IO2”:0}<br>
+Tmp: measured Water temperature value in °C x100 (8.18°C in the above example payload)<br>
+pH: measured pH value x100 (3.21 in the above example payload)<br>
+Orp: measured Orp (aka Redox) value in mV (583mV in the above example payload)<br>
+PSI: measured Water pressure value in bar x100 (0.56bar in the above example payload)<br>
+FiltUpT: current running time of Filtration pump in seconds (reset every 24h. 8995secs in the above example payload)<br>
+PhUpT: current running time of Ph pump in seconds (reset every 24h. 0secs in the above example payload)<br>
+ChlUpT: current running time of Chl pump in seconds (reset every 24h. 0secs in the above example payload)<br>
+AcidF: percentage fill estimate of acid tank (“pHTank” command must have been called when a new acid tank was set in place in order to have accurate value)<br>
+ChlF: percentage fill estimate of Chlorine tank (“ChlTank” command must have been called when a new Chlorine tank was set in place in order to have accurate value)<br>
+IO: a variable of type BYTE where each individual bit is the state of a digital input on the Arduino. These are :</p>
+<ul>
+<li>FiltPump: current state of Filtration Pump (0=on, 1=off)</li>
+<li>PhPump: current state of Ph Pump (0=on, 1=off)</li>
+<li>ChlPump: current state of Chl Pump (0=on, 1=off)</li>
+<li>PhlLevel: current state of Acid tank level (0=empty, 1=ok)</li>
+<li>ChlLevel: current state of Chl tank level (0=empty, 1=ok)</li>
+<li>PSIError: over-pressure error</li>
+<li>pHErr: pH pump overtime error flag</li>
+<li>ChlErr: Chl pump overtime error flag</li>
+</ul>
+<p>IO2: a variable of type BYTE where each individual bit is the state of a digital input on the Arduino. These are :</p>
+<ul>
 <li>
-<p>The Arduino loopTask, with only the setup() function. When the setup is finished, the task deletes itself to recover memory;</p>
+<p>pHPID: current state of pH PID regulation loop (1=on, 0=off)</p>
 </li>
 <li>
-<p>PoolMaster, running every 500ms, which mainly supervises the overall timing of the system;</p>
+<p>OrpPID: current state of Orp PID regulation loop (1=on, 0=off)</p>
 </li>
 <li>
-<p>AnalogPoll, running every 125ms, to acquire analog measurements of pH, ORP and Pressure with an ADS115 sensor on an I2C bus;</p>
+<p>Mode: state of pH and Orp regulation mode (0=manual, 1=auto)</p>
 </li>
 <li>
-<p>GetTemp, running every 1000ms, to acquire water and air temperatures with DS18B20 sensors on two 1Wire busses;</p>
+<p>Heat: state of water heat command (0=off, 1=on)</p>
 </li>
 <li>
-<p>ORPRegulation, running every 1000ms, to manage Chlorine pump;</p>
+<p>R1: state of Relay1 (0=off, 1=on)</p>
 </li>
 <li>
-<p>pHRegulation, running every 1000ms, to manage Acid/Soda pump;</p>
+<p>R2: state of Relay2 (0=off, 1=on)</p>
 </li>
 <li>
-<p>ProcessCommand, running every 500ms, to process commands received on /Home/Pool6/API MQTT Topic;</p>
+<p>R6: state of Relay6 (0=off, 1=on)</p>
 </li>
 <li>
-<p>SettingsPublish, running when notified only (e.g with external command), to publish settings on the MQTT topic;</p>
-</li>
-<li>
-<p>MeasuresPublish, running every 30s and when notified, to publish actual measures and status;</p>
-</li>
-<li>
-<p>StatusLights, running every 3000ms, to display a row of 8 status LEDs on the mother board, through a PCF8574A on the I2C bus.</p>
+<p>R7: state of Relay7 (0=off, 1=on)</p>
 </li>
 <li>
 <p>Support for ElegantOTA for remote upgrade</p>
