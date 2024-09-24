@@ -16,7 +16,7 @@ Gixy’s project is a redesign for ESP32 of an initial project by Loic74650 <a h
 <p>The main unit interfaces with a 3.5’’ Nextion touchscreen for local information and control.<br>
 It includes Wifi connectivity to communicate via MQTT and SMTP. Project includes configuration files for various home automation systems such as Home Assistant, Jeedom, NodeRed, Grafana, etc.</p>
 <p>Finally code and PCB are made with high flexibility to precisely tailor the features to the user.</p>
-<p><img src="https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/System%20Wiring.png" alt="System Wiring"></p>
+<p><img src="https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/Ecosystem.png" alt="Ecosystem"></p>
 <h2 id="project-details">Project Details</h2>
 <h3 id="features">Features</h3>
 <p>System continuously monitors various metrics and periodically reports them over MQTT and touchscreen:</p>
