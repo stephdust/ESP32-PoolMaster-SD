@@ -1,6 +1,6 @@
 <h2>ESP32 PoolMaster</h2>
 <h4>Brief description</h4>
-<p> This project is a software port to an ESP32 platform of the PoolMaster project from Loic74650 (https://github.com/Loic74650/PoolMaster)<br />
+<p>  This project is a software port to an ESP32 platform of the PoolMaster project from Loic74650 (https://github.com/Loic74650/PoolMaster)<br />
 Compared to the initial project, the main differences are:
 <ul>
   <li> ESP32 MCU with WiFi (multiple access points)</li>
@@ -12,7 +12,13 @@ Compared to the initial project, the main differences are:
   <li> manage only 2 relays (+ the four pumps)</li>
   <li> analog measurements done by external ADC I2C module (ADS1115), in async mode</li>
   <li> and more...
-</ul>  <br />
+</ul>
+<p> <b>In addition of the original project, this fork includes:</b></p>
+<ul>
+  <li> Support for electrolyser instead of Chlorine pump</li>
+  <li> Support for momentary relay mode to be able to simulate button press (exemple automatically switch on and off an Intex SWG to produce chlorine)</li>
+</ul>
+<br />
   The project isn't a fork of the original one due to the different structure of source files with PlatformIO ((.cpp, .h).
   A dedicated board has been designed to host all components. There are 8 LEDs at the bottom to display status, warnings and alarms.
   <br /><br />
