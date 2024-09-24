@@ -62,6 +62,9 @@ It includes:</p>
 <img src="https://github.com/Gixy31/ESP32-PoolMaster/blob/main/docs/Profiling.jpg" alt="enter image description here"></li>
 </ul>
 <h3 id="mqtt-api">MQTT API</h3>
+<p>| Parameter | Type | Description |</p>
+<p>| :-------- | :------- | :------------------------- |</p>
+<p>|  <code>api_key</code>  |  <code>string</code>  |  <strong>Required</strong>. Your API key |</p>
 <p>Every 30 seconds (by default), the system will publish on the “PoolTopicMeas1” and “PoolTopicMeas2”(see in code below) the following payloads in Json format:<br>
 {“Tmp”:818,“pH”:321,“PSI”:56,“Orp”:583,“FilUpT”:8995,“PhUpT”:0,“ChlUpT”:0}<br>
 {“AcidF”:100,“ChlF”:100,“IO”:11,“IO2”:0}<br>
