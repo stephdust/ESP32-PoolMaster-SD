@@ -93,15 +93,15 @@ void PoolMaster(void *pvParameters)
     ElegantOTA.loop();
 #endif
 
-    //update pumps
+    //update pumps & relays
     FiltrationPump.loop();
     PhPump.loop();
     ChlPump.loop();
     RobotPump.loop(); 
 
-    #ifdef ELECTROLYSE  //ajout
+    RELAYR0.loop();
+    RELAYR1.loop();
     OrpProd.loop(); 
-    #endif
 
     //reset time counters at midnight and send sync request to time server
     if (hour() == 0 && !DoneForTheDay)
@@ -118,7 +118,10 @@ void PoolMaster(void *pvParameters)
         ChlPump.ResetUpTime();
         ChlPump.SetTankFill(storage.ChlFill);
         RobotPump.ResetUpTime();
-        OrpProd.ResetUpTime();  //ajout
+
+        RELAYR0.loop();
+        RELAYR1.loop();
+        OrpProd.ResetUpTime();
 
         EmergencyStopFiltPump = false;
         d_calc = false;
@@ -172,38 +175,35 @@ void PoolMaster(void *pvParameters)
     if(second() == 30 && d_calc) d_calc = false;
     #endif
 
-    //ajout : start filtration pump in manual mode
-    if (!EmergencyStopFiltPump && !FiltrationPump.IsRunning() && !storage.AutoMode && storage.FiltrationOn)
-        FiltrationPump.Start();
-
     //start filtration pump as scheduled
-    if (!EmergencyStopFiltPump && !FiltrationPump.IsRunning() && storage.AutoMode && storage.FiltrationOn &&  //modifier
+    if (!EmergencyStopFiltPump && !FiltrationPump.IsRunning() && storage.AutoMode &&
         !PSIError && hour() >= storage.FiltrationStart && hour() < storage.FiltrationStop )
         FiltrationPump.Start();
 
-    //ajout : start or stop, electrolyser if needed 
-    if (FiltrationPump.IsRunning() && storage.ElectrolyseOn)
+    //start & stop electrolyse as needed
+    if (FiltrationPump.IsRunning() && storage.ElectrolyseMode)
     {
-        bool ElectrolysEnabled = (!AntiFreezeFiltering && storage.TempValue >= (double)storage.SecureElectro && ((millis() - FiltrationPump.LastStartTime)/ 1000 / 60 >= (unsigned long)storage.DelayElectro)) ;
-    
-        if (!OrpProd.IsRunning() && ElectrolysEnabled && storage.OrpValue <= storage.Orp_SetPoint*0.9)
+        bool ElectrolyseCanStart = (!AntiFreezeFiltering && storage.TempValue >= (double)storage.SecureElectro && ((millis() - FiltrationPump.LastStartTime)/ 1000 / 60 >= (unsigned long)storage.DelayElectro)) ;
+
+        if (!OrpProd.IsRunning() && ElectrolyseCanStart && storage.OrpValue <= storage.Orp_SetPoint*0.9) {
+            Debug.print(DBG_VERBOSE,"Start Electrolyse low chlorine: %d < %d",storage.OrpValue,storage.Orp_SetPoint*0.9);
             OrpProd.Start();
+        }
           
-        if (OrpProd.IsRunning() && (!ElectrolysEnabled || storage.OrpValue >= storage.Orp_SetPoint*1.05))
+        if (OrpProd.IsRunning() && (!ElectrolyseCanStart || storage.OrpValue >= storage.Orp_SetPoint*1.05)) {
+            Debug.print(DBG_VERBOSE,"Stop Electrolyse high chlorine: %d > %d",storage.OrpValue, storage.Orp_SetPoint*1.05);
             OrpProd.Stop(); 
+        }
     }
 
-    //ajout : stop electrolyser if pump is not running or electrolyse mode is off
-    if(OrpProd.IsRunning() && (!FiltrationPump.IsRunning() || !storage.ElectrolyseOn)) OrpProd.Stop();
-
     //start cleaning robot for 2 hours, 30mn after filtration start
-    if (FiltrationPump.IsRunning() && storage.RobotOn && !storage.WinterMode && !RobotPump.IsRunning() &&  //modifier
+    if (FiltrationPump.IsRunning() && storage.AutoMode && !storage.WinterMode && !RobotPump.IsRunning() &&
         ((millis() - FiltrationPump.LastStartTime) / 1000 / 60) >= ROBOT_DELAY && !cleaning_done)
     {
         RobotPump.Start();
         Debug.print(DBG_INFO,"Robot Start 30mn after Filtration");   
     }
-    if(RobotPump.IsRunning() && storage.RobotOn && ((millis() - RobotPump.LastStartTime) / 1000 / 60) >= ROBOT_DURATION)  //modiier
+    if(RobotPump.IsRunning() && storage.AutoMode && ((millis() - RobotPump.LastStartTime) / 1000 / 60) >= ROBOT_DURATION)
     {
         RobotPump.Stop();
         cleaning_done = true;
@@ -217,18 +217,20 @@ void PoolMaster(void *pvParameters)
         (hour() >= storage.FiltrationStart) && (hour() < storage.FiltrationStop) &&
         storage.TempValue >= storage.WaterTempLowThreshold)
     {
-        //Start PIDs
-        SetPhPID(true);
-        SetOrpPID(true);
+        //Start PIDs if enabled in configuration
+        if (storage.pHPIDEnabled)
+          SetPhPID(true);
+
+        if (storage.OrpPIDEnabled)
+          SetOrpPID(true);
     }
 
     //stop filtration pump and PIDs as scheduled unless we are in AntiFreeze mode
     if (storage.AutoMode && FiltrationPump.IsRunning() && !AntiFreezeFiltering && (hour() >= storage.FiltrationStop || hour() < storage.FiltrationStart))
     {
-      SetPhPID(false);
-      SetOrpPID(false);
-      if(OrpProd.IsRunning()) OrpProd.Stop();  //ajout
-      FiltrationPump.Stop();
+        SetPhPID(false);
+        SetOrpPID(false);
+        FiltrationPump.Stop();
     }
 
     //Outside regular filtration hours, start filtration in case of cold Air temperatures (<-2.0deg)

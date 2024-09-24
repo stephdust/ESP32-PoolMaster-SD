@@ -20,10 +20,10 @@ NB: all timings are in milliseconds
 #define RELAY_VERSION "1.0.0"
 
 //Constants used in some of the functions below
-#define RELAY_ON  1
-#define RELAY_OFF 0
-#define RELAY_INTERLOCK_OK  1
-#define RELAY_INTERLOCK_NOK 0
+#define RELAY_ACTIVE_HIGH  1
+#define RELAY_ACTIVE_LOW  0
+#define STATE_ON  1
+#define STATE_OFF 0
 #define RELAY_NO_INTERLOCK 255
 #define RELAY_STD  1            // Underlying relay works normally
 #define RELAY_MOMENTARY  2      // Underlying relay activate and deactive shortly after to simulate button press
@@ -35,7 +35,7 @@ NB: all timings are in milliseconds
 class Relay{
   public:
 
-    Relay(uint8_t, uint8_t, uint8_t = RELAY_NO_INTERLOCK,  uint8_t = RELAY_STD, uint8_t = RELAY_ON, uint8_t = RELAY_OFF, double = 0., double = 0., double =100.);    
+    Relay(uint8_t, uint8_t, uint8_t = RELAY_NO_INTERLOCK,  uint8_t = RELAY_STD, uint8_t = RELAY_ACTIVE_LOW, uint8_t = RELAY_ACTIVE_LOW);    
     void loop();
     bool Start();
     bool Stop();
@@ -43,14 +43,14 @@ class Relay{
     bool Interlock();
     void SetMaxUpTime(unsigned long Max);
     void ResetUpTime();
-
+    bool GetOffLevel();
     void ClearErrors();
     
     unsigned long UpTime;
     unsigned long MaxUpTime;
     unsigned long CurrMaxUpTime;
     bool UpTimeError;
-    bool PumpVirtualStatus;
+    bool RelayVirtualStatus;
     bool MomentarySwitchState;
     unsigned long StartTime;
     unsigned long LastStartTime;
@@ -63,7 +63,9 @@ class Relay{
     uint8_t isrunningsensorpin;
     uint8_t interlockpin;
     uint8_t relaytype;
-    uint8_t on_state;
-    uint8_t off_state;
+    uint8_t relay_on_state;
+    uint8_t relay_off_state;
+    uint8_t interlock_on_state;
+    uint8_t interlock_off_state;
 };
 #endif

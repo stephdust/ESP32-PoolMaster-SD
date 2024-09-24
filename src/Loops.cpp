@@ -288,7 +288,7 @@ void StatusLights(void *pvParameters)
         else status &= 0xFE;
     Debug.print(DBG_VERBOSE,"Status LED : 0x%02x",status);
     lockI2C();
-    Wire.beginTransmission(0x20);
+    Wire.beginTransmission(PCF8574_ADDR);
     Wire.write(~status);
     Wire.endTransmission();
     unlockI2C();

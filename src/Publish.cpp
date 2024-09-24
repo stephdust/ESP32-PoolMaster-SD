@@ -48,19 +48,19 @@ void EncodeBitMap()
   BitMap2 |= (OrpPID.GetMode() & 1) << 6;
   BitMap2 |= (storage.AutoMode & 1) << 5;
   BitMap2 |= (RobotPump.IsRunning() & 1) << 4;  // Different from ParisBrest
-  BitMap2 |= !digitalRead(RELAY_R0) << 3;
-  BitMap2 |= !digitalRead(RELAY_R1) << 2;
+  BitMap2 |= (RELAYR0.IsRunning() & 1) << 3;
+  BitMap2 |= (RELAYR1.IsRunning() & 1) << 2;
   BitMap2 |= (storage.WinterMode & 1) << 1;
   BitMap2 |= (0 & 1U) << 0;     
 
-  BitMap3 |= (storage.AutoMode & 1) << 7;
-  BitMap3 |= (storage.FiltrationOn & 1) << 6;
-  BitMap3 |= (storage.ElectrolyseOn & 1) << 5;
-  BitMap3 |= (storage.WinterMode & 1) << 4;
-  BitMap3 |= !digitalRead(RELAY_R0) << 3;
-  BitMap3 |= !digitalRead(RELAY_R1) << 2;
-  BitMap3 |= (PhPID.GetMode() & 1) << 1;
-  BitMap3 |= (OrpPID.GetMode() & 1) << 0;
+  BitMap3 |= (0 & 1U) << 7;
+  BitMap3 |= (0 & 1U) << 6;
+  BitMap3 |= (0 & 1U) << 5;
+  BitMap3 |= (0 & 1U) << 4;
+  BitMap3 |= (storage.ElectrolyseMode & 1) << 3;
+  BitMap3 |= (OrpProd.IsRunning() & 1) << 2;
+  BitMap3 |= (storage.pHPIDEnabled & 1) << 1;
+  BitMap3 |= (storage.OrpPIDEnabled & 1) << 0;
    
 }
 
@@ -189,14 +189,16 @@ void SettingsPublish(void *pvParameters)
     if (mqttClient.connected())
     {
         //send a JSON to MQTT broker. /!\ Split JSON if longer than 100 bytes
-        const int capacity = JSON_OBJECT_SIZE(4);
+        const int capacity = JSON_OBJECT_SIZE(6);
         StaticJsonDocument<capacity> root;
 
         root["pHTV"]  = storage.pHTankVol;           //Acid tank nominal volume (Liters)
         root["ChlTV"] = storage.ChlTankVol;          //Chl tank nominal volume (Liters)
         root["pHFR"]  = storage.pHPumpFR;            //Acid pump flow rate (L/hour)
         root["OrpFR"] = storage.ChlPumpFR;           //Chl pump flow rate (L/hour)
-
+        root["SWGSec"] = storage.SecureElectro;           //SWG Chlorine Generator Secure Temperature (°C)
+        root["SWGDel"] = storage.DelayElectro;           //SWG Chlorine Generator Delay before start after pump (mn)
+        
         PublishTopic(PoolTopicSet5, root);
     }
     else

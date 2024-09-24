@@ -28,6 +28,7 @@ String Firmw = FIRMW;
 //Settings structure and its default values
 // si pH+ : Kp=2250000.
 // si pH- : Kp=2700000.
+#ifdef EXT_ADS1115
 StoreStruct storage =
 { 
   CONFIG_VERSION,
@@ -38,21 +39,24 @@ StoreStruct storage =
   7.3, 720.0, 1.8, 0.3, 16.0, 27.0, 3.0, -2.49, 6.87, 431.03, 0, 0.377923399, -0.17634473,
   2700000.0, 0.0, 0.0, 18000.0, 0.0, 0.0, 0.0, 0.0, 28.0, 7.3, 720., 1.3,
   100.0, 100.0, 20.0, 20.0, 1.5, 1.5,
-  0, 0, 0, 0, 15, 2  //ajout
+  15, 2,  //ajout
+  0, 1, 0
 };
-/*
-struct StoreStruct
-{
-  uint8_t ConfigVersion;   // This is for testing if first time using eeprom or not
-  bool Ph_RegulationOnOff, Orp_RegulationOnOff, AutoMode, WinterMode;
-  uint8_t FiltrationDuration, FiltrationStart, FiltrationStop, FiltrationStartMin, FiltrationStopMax, DelayPIDs;
-  unsigned long PhPumpUpTimeLimit, ChlPumpUpTimeLimit,PublishPeriod;
-  unsigned long PhPIDWindowSize, OrpPIDWindowSize, PhPIDwindowStartTime, OrpPIDwindowStartTime;
-  double Ph_SetPoint, Orp_SetPoint, PSI_HighThreshold, PSI_MedThreshold, WaterTempLowThreshold, WaterTemp_SetPoint, TempExternal, pHCalibCoeffs0, pHCalibCoeffs1, OrpCalibCoeffs0, OrpCalibCoeffs1, PSICalibCoeffs0, PSICalibCoeffs1;
-  double Ph_Kp, Ph_Ki, Ph_Kd, Orp_Kp, Orp_Ki, Orp_Kd, PhPIDOutput, OrpPIDOutput, TempValue, PhValue, OrpValue, PSIValue;
-  double AcidFill, ChlFill, pHTankVol, ChlTankVol, pHPumpFR, ChlPumpFR;
-} ;
-*/
+#else
+StoreStruct storage =
+{ 
+  CONFIG_VERSION,
+  0, 0, 1, 0,
+  13, 8, 21, 8, 22, 20,
+  2700, 2700, 30000,
+  1800000, 1800000, 0, 0,
+  7.3, 720.0, 1.8, 0.7, 10.0, 18.0, 3.0, 3.61078313, -3.88020422, -966.946396, 2526.88809, 1.31, -0.1,
+  2700000.0, 0.0, 0.0, 18000.0, 0.0, 0.0, 0.0, 0.0, 28.0, 7.3, 720., 1.3,
+  25.0, 60.0, 20.0, 20.0, 1.5, 1.5,
+  15, 2,  //ajout
+  0, 1, 0
+};
+#endif
 tm timeinfo;
 
 // Various global flags
@@ -62,7 +66,6 @@ bool AntiFreezeFiltering = false;               // Filtration anti freeze mode
 bool EmergencyStopFiltPump = false;             // flag will be (re)set by double-tapp button
 bool PSIError = false;                          // Water pressure OK
 bool cleaning_done = false;                     // daily cleaning done   
-bool electrolyse_done = false;                  // Electrolyse is done for the day
 
 // Queue object to store incoming JSON commands (up to 10)
 QueueHandle_t queueIn;
@@ -79,11 +82,15 @@ Preferences nvs;
 // The four pumps of the system (instanciate the Pump class)
 // In this case, all pumps start/Stop are managed by relays. pH, ORP and Robot pumps are interlocked with 
 // filtration pump
-Pump FiltrationPump(FILTRATION_PUMP, FILTRATION_PUMP, NO_TANK, NO_INTERLOCK,PUMP_STD,PUMP_ON,PUMP_OFF);
-Pump PhPump(PH_PUMP, PH_PUMP, NO_TANK, FILTRATION_PUMP, PUMP_STD,PUMP_OFF,PUMP_ON,storage.pHPumpFR, storage.pHTankVol, storage.AcidFill);
-Pump ChlPump(CHL_PUMP, CHL_PUMP, PH_LEVEL, FILTRATION_PUMP, PUMP_STD,PUMP_OFF,PUMP_ON,storage.ChlPumpFR, storage.ChlTankVol, storage.ChlFill);
-Pump RobotPump(ROBOT_PUMP, ROBOT_PUMP, NO_TANK, FILTRATION_PUMP,PUMP_STD,PUMP_OFF,PUMP_ON);
-Pump OrpProd(ORP_PROD, ORP_PROD, NO_TANK, FILTRATION_PUMP,PUMP_MOMENTARY,PUMP_OFF,PUMP_ON);  //ajout
+Pump FiltrationPump(FILTRATION_PUMP, FILTRATION_PUMP, NO_TANK, NO_INTERLOCK,RELAY_ACTIVE_HIGH);
+Pump PhPump(PH_PUMP, PH_PUMP, NO_TANK, FILTRATION_PUMP, RELAY_ACTIVE_LOW,FiltrationPump.GetOnLevel(),storage.pHPumpFR, storage.pHTankVol, storage.AcidFill);
+Pump ChlPump(CHL_PUMP, CHL_PUMP, PH_LEVEL, FILTRATION_PUMP, RELAY_ACTIVE_LOW,FiltrationPump.GetOnLevel(),storage.ChlPumpFR, storage.ChlTankVol, storage.ChlFill);
+Pump RobotPump(ROBOT_PUMP, ROBOT_PUMP, NO_TANK, FILTRATION_PUMP,RELAY_ACTIVE_LOW,FiltrationPump.GetOnLevel());
+
+// The Relay to activate and deactivate Orp production
+Relay RELAYR0(RELAY_R0, RELAY_R0, NO_INTERLOCK,RELAY_STD,RELAY_ACTIVE_LOW,RELAY_ACTIVE_LOW);
+Relay RELAYR1(RELAY_R1, RELAY_R1, NO_INTERLOCK,RELAY_STD,RELAY_ACTIVE_LOW,RELAY_ACTIVE_LOW);
+Relay OrpProd(ORP_PROD, ORP_PROD, FILTRATION_PUMP,RELAY_MOMENTARY,RELAY_ACTIVE_LOW,FiltrationPump.GetOnLevel()); // OrpProd works at relay active low but the interlock pump works at relay active high
 
 // PIDs instances
 //Specify the direction and initial tuning parameters
@@ -139,6 +146,8 @@ void setup()
   // Set appropriate debug level. The level is defined in PoolMaster.h
   Debug.setDebugLevel(DEBUG_LEVEL);
   Debug.timestampOn();
+  Debug.debugLabelOn();
+  Debug.formatTimestampOn();
 
   //get board info
   info();
@@ -174,27 +183,9 @@ void setup()
   }  
 
   //Define pins directions
-  pinMode(FILTRATION_PUMP, OUTPUT);
-  pinMode(PH_PUMP, OUTPUT);
-  pinMode(CHL_PUMP, OUTPUT);
-  pinMode(ROBOT_PUMP,OUTPUT);
-
-  pinMode(RELAY_R0, OUTPUT);
-  pinMode(RELAY_R1, OUTPUT);
-  pinMode(ORP_PROD, OUTPUT);  
-
   pinMode(BUZZER, OUTPUT);
 
-  // As the relays on the board are activated by a LOW level, set all levels HIGH at startup
-  digitalWrite(FILTRATION_PUMP,LOW); // This is a static relay which works with HIGH level
-  digitalWrite(PH_PUMP,HIGH); 
-  digitalWrite(CHL_PUMP,HIGH);
-  digitalWrite(ROBOT_PUMP,HIGH);
-  digitalWrite(RELAY_R0,HIGH);
-  digitalWrite(RELAY_R1,HIGH);
-  digitalWrite(ORP_PROD,HIGH);
-
-// Warning: pins used here have no pull-ups, provide external ones
+  // Warning: pins used here have no pull-ups, provide external ones
   pinMode(CHL_LEVEL, INPUT);
   pinMode(PH_LEVEL, INPUT);
 
@@ -242,7 +233,7 @@ void setup()
 
   // Clear status LEDs
 
-  Wire.beginTransmission(0x20);
+  Wire.beginTransmission(PCF8574_ADDR);
   Wire.write((uint8_t)0xFF);
   Wire.endTransmission();
 
@@ -251,7 +242,6 @@ void setup()
   storage.OrpPIDwindowStartTime = millis();
 
   // Limit the PIDs output range in order to limit max. pumps runtime (safety first...)
-
   PhPID.SetTunings(storage.Ph_Kp, storage.Ph_Ki, storage.Ph_Kd);
   PhPID.SetControllerDirection(PhPID_DIRECTION);
   PhPID.SetSampleTime((int)storage.PhPIDWindowSize);
@@ -262,7 +252,7 @@ void setup()
   OrpPID.SetSampleTime((int)storage.OrpPIDWindowSize);
   OrpPID.SetOutputLimits(0, storage.OrpPIDWindowSize);  //Whatever happens, don't allow continuous injection of Chl for more than a PID Window
 
- // PIDs off at start
+  // PIDs off at start
   SetPhPID (false);
   SetOrpPID(false);
 
@@ -284,9 +274,9 @@ void setup()
   ChlPump.SetMaxUpTime(storage.ChlPumpUpTimeLimit * 1000);
 
   // Start filtration pump at power-on if within scheduled time slots -- You can choose not to do this and start pump manually
-  if (storage.AutoMode && (hour() >= storage.FiltrationStart) && (hour() < storage.FiltrationStop))
-    FiltrationPump.Start();
-  else FiltrationPump.Stop();
+  //if (storage.AutoMode && (hour() >= storage.FiltrationStart) && (hour() < storage.FiltrationStop))
+  //  FiltrationPump.Start();
+  //else FiltrationPump.Stop();
 
   // Robot pump off at start
   RobotPump.Stop();
@@ -405,7 +395,7 @@ void setup()
 #ifdef ELEGANT_OTA
 // ELEGANTOTA Configuration
   server.on("/", []() {
-    server.send(200, "text/plain", "Hi! This is ElegantOTA Demo.");
+    server.send(200, "text/plain", "NA");
   });
 
 
@@ -490,12 +480,12 @@ bool loadConfig()
   storage.WaterTempLowThreshold = nvs.getDouble("WaterTempLow",10.);
   storage.WaterTemp_SetPoint    = nvs.getDouble("WaterTempSet",27.);
   storage.TempExternal          = nvs.getDouble("TempExternal",3.);
-  storage.pHCalibCoeffs0        = nvs.getDouble("pHCalibCoeffs0",-2.218);
-  storage.pHCalibCoeffs1        = nvs.getDouble("pHCalibCoeffs1",7);
-  storage.OrpCalibCoeffs0       = nvs.getDouble("OrpCalibCoeffs0",-1189.);
-  storage.OrpCalibCoeffs1       = nvs.getDouble("OrpCalibCoeffs1",2564.);
-  storage.PSICalibCoeffs0       = nvs.getDouble("PSICalibCoeffs0",1.11);
-  storage.PSICalibCoeffs1       = nvs.getDouble("PSICalibCoeffs1",0.);
+  storage.pHCalibCoeffs0        = nvs.getDouble("pHCalibCoeffs0",-2.49);
+  storage.pHCalibCoeffs1        = nvs.getDouble("pHCalibCoeffs1",6.87);
+  storage.OrpCalibCoeffs0       = nvs.getDouble("OrpCalibCoeffs0",431.03);
+  storage.OrpCalibCoeffs1       = nvs.getDouble("OrpCalibCoeffs1",0);
+  storage.PSICalibCoeffs0       = nvs.getDouble("PSICalibCoeffs0",0.377923399);
+  storage.PSICalibCoeffs1       = nvs.getDouble("PSICalibCoeffs1",-0.17634473);
   storage.Ph_Kp                 = nvs.getDouble("Ph_Kp",2000000.);
   storage.Ph_Ki                 = nvs.getDouble("Ph_Ki",0.);
   storage.Ph_Kd                 = nvs.getDouble("Ph_Kd",0.);
@@ -514,12 +504,12 @@ bool loadConfig()
   storage.ChlTankVol            = nvs.getDouble("ChlTankVol",20.);
   storage.pHPumpFR              = nvs.getDouble("pHPumpFR",1.5);
   storage.ChlPumpFR             = nvs.getDouble("ChlPumpFR",1.5);
-  storage.FiltrationOn          = nvs.getBool("FiltrationOn",0);  //ajout
-  storage.ElectrolyseOn         = nvs.getBool("ElectrolyseOn",0);  //ajout
-  storage.LightOn               = nvs.getBool("LightOn",0);  //ajout
-  storage.RobotOn               = nvs.getBool("RobotOn",0);  //ajout
   storage.SecureElectro         = nvs.getUChar("SecureElectro",15);  //ajout
   storage.DelayElectro          = nvs.getUChar("DelayElectro",2);  //ajout
+  storage.ElectrolyseMode       = nvs.getUChar("ElectrolyseMode",0);  //ajout
+  storage.pHPIDEnabled          = nvs.getUChar("pHPIDEnabled",15);  //ajout
+  storage.OrpPIDEnabled         = nvs.getUChar("OrpPIDEnabled",2);  //ajout
+
 
   nvs.end();
 
@@ -539,6 +529,8 @@ bool loadConfig()
               storage.PhPIDOutput,storage.OrpPIDOutput,storage.TempValue,storage.PhValue,storage.OrpValue,storage.PSIValue);
   Debug.print(DBG_INFO,"%3.0f, %3.0f, %3.0f, %3.0f, %3.1f, %3.1f ",storage.AcidFill,storage.ChlFill,storage.pHTankVol,storage.ChlTankVol,
               storage.pHPumpFR,storage.ChlPumpFR);
+  Debug.print(DBG_INFO,"%d, %d, %d, %d %d",storage.SecureElectro,storage.DelayElectro,storage.ElectrolyseMode,storage.pHPIDEnabled,
+              storage.OrpPIDEnabled);
 
   return (storage.ConfigVersion == CONFIG_VERSION);
 }
@@ -596,13 +588,11 @@ bool saveConfig()
   i += nvs.putDouble("ChlTankVol",storage.ChlTankVol);
   i += nvs.putDouble("pHPumpFR",storage.pHPumpFR);
   i += nvs.putDouble("ChlPumpFR",storage.ChlPumpFR);
-  i += nvs.putBool("FiltrationOn",storage.FiltrationOn);  //ajout
-  i += nvs.putBool("ElectrolyseOn",storage.ElectrolyseOn);  //ajout
-  i += nvs.putBool("LightOn",storage.LightOn);  //ajout
-  i += nvs.putBool("RobotOn",storage.RobotOn);  //ajout
   i += nvs.putUChar("SecureElectro",storage.SecureElectro);  //ajout
   i += nvs.putUChar("DelayElectro",storage.DelayElectro);  //ajout
-
+  i += nvs.putUChar("ElectrolyseMode",storage.ElectrolyseMode);  //ajout
+  i += nvs.putUChar("pHPIDEnabled",storage.pHPIDEnabled);  //ajout
+  i += nvs.putUChar("OrpPIDEnabled",storage.OrpPIDEnabled);  //ajout
   nvs.end();
 
   Debug.print(DBG_INFO,"Bytes saved: %d / %d\n",i,sizeof(storage));

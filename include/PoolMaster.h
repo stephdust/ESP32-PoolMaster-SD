@@ -11,6 +11,7 @@
 #include <stdlib.h>               // Definitions  for common types, variables, and functions
 #include <ArduinoJson.h>          // JSON library
 #include <Pump.h>                 // Simple library to handle home-pool filtration and peristaltic pumps
+#include <Relay.h>                 // Simple library to handle home-pool filtration and peristaltic pumps
 #include <DallasTemperature.h>    // Maxim (Dallas DS18B20) Temperature temperature sensor library
 #include <esp_task_wdt.h>         // ESP task management library
 #include <Preferences.h>          // Non Volatile Storage management (ESP)
@@ -36,8 +37,8 @@ struct StoreStruct
   double Ph_SetPoint, Orp_SetPoint, PSI_HighThreshold, PSI_MedThreshold, WaterTempLowThreshold, WaterTemp_SetPoint, TempExternal, pHCalibCoeffs0, pHCalibCoeffs1, OrpCalibCoeffs0, OrpCalibCoeffs1, PSICalibCoeffs0, PSICalibCoeffs1;
   double Ph_Kp, Ph_Ki, Ph_Kd, Orp_Kp, Orp_Ki, Orp_Kd, PhPIDOutput, OrpPIDOutput, TempValue, PhValue, OrpValue, PSIValue;
   double AcidFill, ChlFill, pHTankVol, ChlTankVol, pHPumpFR, ChlPumpFR;
-  bool FiltrationOn, ElectrolyseOn, LightOn, RobotOn;  //ajout
   uint8_t SecureElectro, DelayElectro; //ajout
+  bool ElectrolyseMode,pHPIDEnabled,OrpPIDEnabled;
 } ;
 
 extern StoreStruct storage;
@@ -53,7 +54,11 @@ extern Pump FiltrationPump;
 extern Pump PhPump;
 extern Pump ChlPump;
 extern Pump RobotPump;
-extern Pump OrpProd;  //ajout
+
+// The Relay to activate and deactivate Orp production
+extern Relay RELAYR0;
+extern Relay RELAYR1;
+extern Relay OrpProd;
 
 extern WebServer server;
 
@@ -78,4 +83,3 @@ extern bool EmergencyStopFiltPump;                     // Filtering pump stopped
 extern bool AntiFreezeFiltering;                       // Filtration anti freeze mode
 extern bool PSIError;								   // Water pressure alarm
 extern bool cleaning_done;      					   // Robot clean-up done   
-extern bool electrolyse_done;               // Electrolyse done for the day
