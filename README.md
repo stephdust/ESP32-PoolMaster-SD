@@ -33,8 +33,8 @@ Water temperature can be controlled by the system via dry contact relays.</p>
 <p>Defined time-slots and water temperature are used to start/stop the filtration pump for a daily given amount of time (a relay starts/stops the filtration pump). A winter starts the filtration if temperature reaches -2°C until it rises back above +2°C.</p>
 <p>Tank-levels are estimated based on the running-time and flow-rate of each pump. Additionnally a low level contact can be plugged into the system.</p>
 <h3 id="pcb">PCB</h3>
-<p>Project includes two PCBs, one for the main ESP32 MCU and one for the pH/Orp board.</p>
-<p><img src="https://github.com/Gixy31/ESP32-PoolMaster/blob/main/pH_Orp%20Board%20V2/Top.jpg" alt="pH/Orp Board v2"></p>
+<p>Project includes two PCBs, one for the main ESP32 MCU and one for the pH/Orp board.<br>
+<img src="https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/Hardware.png" alt="Project Hardware"></p>
 <ul>
 <li>Support for ElegantOTA for remote upgrade</li>
 <li>Support for momentary relay mode to simulate button press. This allows controlling push button operated devices (exemple automatically switch on and off an Intex Salt Water Cholrine Generator)</li>
