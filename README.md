@@ -165,17 +165,17 @@ It includes:</p>
 <tr>
 <td>7</td>
 <td align="left">FiltPump</td>
-<td align="left">current state of Filtration Pump (0=on, 1=off)</td>
+<td align="left">current state of Filtration Pump (1=on, 0=off)</td>
 </tr>
 <tr>
 <td>6</td>
 <td align="left">PhPump</td>
-<td align="left">current state of Ph Pump (0=on, 1=off)</td>
+<td align="left">current state of Ph Pump (1=on, 0=off)</td>
 </tr>
 <tr>
 <td>5</td>
 <td align="left">ChlPump</td>
-<td align="left">current state of Chl Pump (0=on, 1=off)</td>
+<td align="left">current state of Chl Pump (1=on, 0=off)</td>
 </tr>
 <tr>
 <td>4</td>
@@ -233,17 +233,17 @@ It includes:</p>
 <tr>
 <td>4</td>
 <td align="left">RobotPump</td>
-<td align="left">current state of Robot Pump (0=on, 1=off)</td>
+<td align="left">current state of Robot Pump (1=on, 0=off)</td>
 </tr>
 <tr>
 <td>3</td>
 <td align="left">RELAYR0</td>
-<td align="left">current state of spare Relay0 (0=on, 1=off)</td>
+<td align="left">current state of spare Relay0 (1=on, 0=off)</td>
 </tr>
 <tr>
 <td>2</td>
 <td align="left">RELAYR1</td>
-<td align="left">current state of spare Relay1 (0=on, 1=off)</td>
+<td align="left">current state of spare Relay1 (1=on, 0=off)</td>
 </tr>
 <tr>
 <td>1</td>
@@ -254,6 +254,59 @@ It includes:</p>
 <td>0</td>
 <td align="left">NA</td>
 <td align="left">Unused</td>
+</tr>
+</tbody>
+</table><pre class=" language-http"><code class="prism  language-http">IO3
+</code></pre>
+
+<table>
+<thead>
+<tr>
+<th>Bit</th>
+<th align="left">Parameter</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>7</td>
+<td align="left"></td>
+<td align="left">Unused</td>
+</tr>
+<tr>
+<td>6</td>
+<td align="left"></td>
+<td align="left">Unused</td>
+</tr>
+<tr>
+<td>5</td>
+<td align="left"></td>
+<td align="left">Unused</td>
+</tr>
+<tr>
+<td>4</td>
+<td align="left"></td>
+<td align="left">Unused</td>
+</tr>
+<tr>
+<td>3</td>
+<td align="left">SWGMode</td>
+<td align="left">current mode of Salt Water Chlorine Generator (0=no SWG, 1=SWG active)</td>
+</tr>
+<tr>
+<td>2</td>
+<td align="left">SWGState</td>
+<td align="left">current state of Salt Water Chlorine Generator (0=off, 1=on)</td>
+</tr>
+<tr>
+<td>1</td>
+<td align="left">pHPIDEnabled</td>
+<td align="left">current mode of pH PID (0=stop, 1=PID active)</td>
+</tr>
+<tr>
+<td>0</td>
+<td align="left">OrpPIDEnabled</td>
+<td align="left">current mode of Orp PID (0=stop, 1=PID active)</td>
 </tr>
 </tbody>
 </table><pre class=" language-http"><code class="prism  language-http">POOLTOPIC/Set1
