@@ -34,12 +34,49 @@ Water temperature can be controlled by the system via dry contact relays.</p>
 <p>Defined time-slots and water temperature are used to start/stop the filtration pump for a daily given amount of time (a relay starts/stops the filtration pump). A winter starts the filtration if temperature reaches -2°C until it rises back above +2°C.</p>
 <p>Tank-levels are estimated based on the running-time and flow-rate of each pump. Additionnally a low level contact can be plugged into the system.</p>
 <h3 id="hardware">Hardware</h3>
-<p>Project includes two PCBs, one for the main ESP32 MCU and one for the pH/Orp board.<br>
+<p>A dedicated board has been designed to host all components. There are 8 LEDs at the bottom to display status, warnings and alarms.</p>
+<p>Project includes two PCBs, one for the main ESP32 MCU card and one for the pH/Orp board.<br>
 <img src="https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/Hardware.png" alt="Project Hardware"></p>
 <h3 id="software">Software</h3>
+<p>The project isn’t a fork of the original one due to the different structure of source files with PlatformIO ((.cpp, .h).</p>
+<p>The version V6, (aka ESP-2.0) implement direct usage of FreeRTOS functions for managing tasks and queues. There are 10 tasks sharing the app_CPU :</p>
 <ul>
-<li>Support for ElegantOTA for remote upgrade</li>
-<li>Support for momentary relay mode to simulate button press. This allows controlling push button operated devices (exemple automatically switch on and off an Intex Salt Water Cholrine Generator)</li>
+<li>
+<p>The Arduino loopTask, with only the setup() function. When the setup is finished, the task deletes itself to recover memory;</p>
+</li>
+<li>
+<p>PoolMaster, running every 500ms, which mainly supervises the overall timing of the system;</p>
+</li>
+<li>
+<p>AnalogPoll, running every 125ms, to acquire analog measurements of pH, ORP and Pressure with an ADS115 sensor on an I2C bus;</p>
+</li>
+<li>
+<p>GetTemp, running every 1000ms, to acquire water and air temperatures with DS18B20 sensors on two 1Wire busses;</p>
+</li>
+<li>
+<p>ORPRegulation, running every 1000ms, to manage Chlorine pump;</p>
+</li>
+<li>
+<p>pHRegulation, running every 1000ms, to manage Acid/Soda pump;</p>
+</li>
+<li>
+<p>ProcessCommand, running every 500ms, to process commands received on /Home/Pool6/API MQTT Topic;</p>
+</li>
+<li>
+<p>SettingsPublish, running when notified only (e.g with external command), to publish settings on the MQTT topic;</p>
+</li>
+<li>
+<p>MeasuresPublish, running every 30s and when notified, to publish actual measures and status;</p>
+</li>
+<li>
+<p>StatusLights, running every 3000ms, to display a row of 8 status LEDs on the mother board, through a PCF8574A on the I2C bus.</p>
+</li>
+<li>
+<p>Support for ElegantOTA for remote upgrade</p>
+</li>
+<li>
+<p>Support for momentary relay mode to simulate button press. This allows controlling push button operated devices (exemple automatically switch on and off an Intex Salt Water Cholrine Generator)</p>
+</li>
 </ul>
 <p>The project isn’t a fork of the original one due to the different structure of source files with PlatformIO ((.cpp, .h). A dedicated board has been designed to host all components. There are 8 LEDs at the bottom to display status, warnings and alarms.</p>
 <p>In version ESP-3.0, the display function has been very simplified (twice less code), using Nextion variables only to deport the logic into the Nextion and updating the display only when it is ON.</p>
