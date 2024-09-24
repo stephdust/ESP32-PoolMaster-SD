@@ -119,8 +119,8 @@ void PoolMaster(void *pvParameters)
         ChlPump.SetTankFill(storage.ChlFill);
         RobotPump.ResetUpTime();
 
-        RELAYR0.loop();
-        RELAYR1.loop();
+        RELAYR0.ResetUpTime();
+        RELAYR1.ResetUpTime();
         OrpProd.ResetUpTime();
 
         EmergencyStopFiltPump = false;
