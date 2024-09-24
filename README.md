@@ -61,7 +61,45 @@ It includes:</p>
 <li>StatusLights, running every 3000ms, to display a row of 8 status LEDs on the mother board, through a PCF8574A on the I2C bus.<br>
 <img src="https://github.com/Gixy31/ESP32-PoolMaster/blob/main/docs/Profiling.jpg" alt="enter image description here"></li>
 </ul>
+<h3 id="touchscreen-control">TouchScreen control</h3>
+<p><img src="https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/Nextion_HomeScreen.png" alt="Nextion Home"><br>
+<img src="https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/Nextion_ControlScreen.png" alt="Control Screen"><br>
+<img src="https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/Nextion_SettingsScreen.png" alt="Nextion Settings"></p>
+<h3 id="home-automation-integration">Home Automation Integration</h3>
+<h3 id="tips">Tips</h3>
+<p>Before attempting to regulate your pool water with this automated system, it is essential that you start with:</p>
+<ol>
+<li>testing your water quality (using liquid kits and/or test strips for instance) and balancing it properly (pH, Chlorine, Alkalinity, Hardness). Proper water balancing will greatly ease the pH stability and regulation</li>
+<li>calibrating the pH probe using calibrated buffer solutions (pay attention to the water temperature which plays a big role in pH readings)</li>
+<li>adjusting pH to 7.4</li>
+<li>List item</li>
+<li>once above steps 1 to 3 are ok, you can start regulating ORP</li>
+</ol>
+<p>Notes:</p>
+<ul>
+<li>the ORP sensor should theoretically not be calibrated nore temperature compensated (by nature its 0mV pivot point cannot shift)</li>
+<li>the ORP reading is strongly affected by the pH value and the water temperature. Make sure pH is adjusted at 7.4</li>
+<li>prefer platinium ORP probes for setpoints &gt;500mV (ie. Pools and spas)</li>
+<li>the response time of ORP sensors can be fast in reference buffer solutions (10 secs) and yet very slow in pool water (minutes or more) as it depends on the water composition</li>
+</ul>
+<h3 id="details-on-the-pid-regulation">Details on the PID regulation</h3>
+<p>In this project the Arduino PID library is used to start/stop the chemicals pumps in a cyclic manner, similar to a “PWM” signal.<br>
+The period of the cycle is defined by the WINDOW SIZE parameter which is fixed (in Milliseconds). What the PID library does is vary the duty cycle of the cycle.<br>
+If the computed error in the PID loop is null or negative, the duty cycle is set to zero (the ouput of the function PID.Compute()) and the pump is never actuated.<br>
+If the error is positive, the duty cycle is set to a value between 0 and a max value (equal to the WINDOW SIZE, ie. the pump is running full time).</p>
+<p>So in practice the ouput of the PID.Compute() function is a duration in milliseconds during which the pump will be activated for every cycle.<br>
+If for instance, the WINDOW SIZE is set to 3600000ms (ie. one hour) and the output of the PID is 600000ms (ie. 10mins), the pump will be activated for 10mins at the begining of every hour cycle.</p>
+<p>On the default Kp,Ki,Kd parameter values of the PID:<br>
+By default in this project, Ki and Kd are null for stability reasons and so the PID loop is only a P loop, ie. a proportional loop.<br>
+Adding some Ki and Kd to the PID loop may theoretically increase regulation performance but is also more complex to adjust and could result in instabilities. Since a P-only loop worked well enough and that safety considerations should be taken seriously in this project, I left it as is.</p>
+<p>For my 50m3 pool the Kp default values are 2000000 for the pH loop and 4500 for the Orp loop. They were chosen experimentally in the following way:</p>
+<p>I experimentally checked how much chemical was required to change the measured parameter (pH or Orp) by a certain amount. For instance I determined that 83ml of acid changed the pH by 0.1 for my 50m3 pool. The flow rate of the acid pump being 1.5L/hour, we can then determine for how many minutes the pump should be activated if the pH error is 0.1, which are (0.083*60/1.5) = 3.3minutes or roughly 200000ms.<br>
+And so for an error of 1 in the pH PID loop, the pump needs to be activated 10 times longer, ie. during 2000000ms, which should be taken as the Kp value. The same reasoning goes for the Kp value of the Orp PID loop.</p>
+<p>On the WINDOW SIZE:<br>
+Various parameters influence the speed at which an injected chemical in the pool water will result in a variation in the measured pH or Orp.<br>
+Experimentally I measured that in my case it can take up to 30minutes and therefore the injection cycle period should be at least 30mins or longer in order not to inject more chemical over the following cycles thinking that it required more when in fact the chemical reactions simply needed more time to take effect, which would eventually result in overshooting. So in my case I setlled for a safe one hour WINDOW SIZE (ie. 3600000ms)</p>
 <h3 id="mqtt-api">MQTT API</h3>
+<h4 id="get-information">Get Information</h4>
 <p>Every 30 seconds (configurable), the system will publish the following information:</p>
 <pre class=" language-http"><code class="prism  language-http">POOLTOPIC/Meas1
 </code></pre>
@@ -309,7 +347,8 @@ It includes:</p>
 <td align="left">current mode of Orp PID (0=stop, 1=PID active)</td>
 </tr>
 </tbody>
-</table><pre class=" language-http"><code class="prism  language-http">POOLTOPIC/Set1
+</table><p>In addition the system sends on-demand detailed configuration parameters:</p>
+<pre class=" language-http"><code class="prism  language-http">POOLTOPIC/Set1
 </code></pre>
 
 <table>
@@ -397,72 +436,156 @@ It includes:</p>
 <td align="left">Water pressure medium threshold (unused yet) (/!\ x100)</td>
 </tr>
 </tbody>
-</table><p>{“Tmp”:818,“pH”:321,“PSI”:56,“Orp”:583,“FilUpT”:8995,“PhUpT”:0,“ChlUpT”:0}<br>
-{“AcidF”:100,“ChlF”:100,“IO”:11,“IO2”:0}<br>
-Tmp: measured Water temperature value in °C x100 (8.18°C in the above example payload)<br>
-pH: measured pH value x100 (3.21 in the above example payload)<br>
-Orp: measured Orp (aka Redox) value in mV (583mV in the above example payload)<br>
-PSI: measured Water pressure value in bar x100 (0.56bar in the above example payload)<br>
-FiltUpT: current running time of Filtration pump in seconds (reset every 24h. 8995secs in the above example payload)<br>
-PhUpT: current running time of Ph pump in seconds (reset every 24h. 0secs in the above example payload)<br>
-ChlUpT: current running time of Chl pump in seconds (reset every 24h. 0secs in the above example payload)<br>
-AcidF: percentage fill estimate of acid tank (“pHTank” command must have been called when a new acid tank was set in place in order to have accurate value)<br>
-ChlF: percentage fill estimate of Chlorine tank (“ChlTank” command must have been called when a new Chlorine tank was set in place in order to have accurate value)<br>
-IO: a variable of type BYTE where each individual bit is the state of a digital input on the Arduino. These are :</p>
-<ul>
-<li>FiltPump: current state of Filtration Pump (0=on, 1=off)</li>
-<li>PhPump: current state of Ph Pump (0=on, 1=off)</li>
-<li>ChlPump: current state of Chl Pump (0=on, 1=off)</li>
-<li>PhlLevel: current state of Acid tank level (0=empty, 1=ok)</li>
-<li>ChlLevel: current state of Chl tank level (0=empty, 1=ok)</li>
-<li>PSIError: over-pressure error</li>
-<li>pHErr: pH pump overtime error flag</li>
-<li>ChlErr: Chl pump overtime error flag</li>
-</ul>
-<p>IO2: a variable of type BYTE where each individual bit is the state of a digital input on the Arduino. These are :</p>
-<ul>
-<li>
-<p>pHPID: current state of pH PID regulation loop (1=on, 0=off)</p>
-</li>
-<li>
-<p>OrpPID: current state of Orp PID regulation loop (1=on, 0=off)</p>
-</li>
-<li>
-<p>Mode: state of pH and Orp regulation mode (0=manual, 1=auto)</p>
-</li>
-<li>
-<p>Heat: state of water heat command (0=off, 1=on)</p>
-</li>
-<li>
-<p>R1: state of Relay1 (0=off, 1=on)</p>
-</li>
-<li>
-<p>R2: state of Relay2 (0=off, 1=on)</p>
-</li>
-<li>
-<p>R6: state of Relay6 (0=off, 1=on)</p>
-</li>
-<li>
-<p>R7: state of Relay7 (0=off, 1=on)</p>
-</li>
-<li>
-<p>Support for ElegantOTA for remote upgrade</p>
-</li>
-<li>
-<p>Support for momentary relay mode to simulate button press. This allows controlling push button operated devices (exemple automatically switch on and off an Intex Salt Water Cholrine Generator)</p>
-</li>
-</ul>
-<p>The project isn’t a fork of the original one due to the different structure of source files with PlatformIO ((.cpp, .h). A dedicated board has been designed to host all components. There are 8 LEDs at the bottom to display status, warnings and alarms.</p>
-<p>In version ESP-3.0, the display function has been very simplified (twice less code), using Nextion variables only to deport the logic into the Nextion and updating the display only when it is ON.</p>
-<p>A new version of the board allows the connection of the pH_Orp board from Loïc (<a href="https://github.com/Loic74650/pH_Orp_Board/tree/main">https://github.com/Loic74650/pH_Orp_Board/tree/main</a>) on an additional I2C connector. The sofware is modified accordingly. The configuration is defined in the config.h file. CAD_files 2 Gerber 3 files are provided.</p>
-<p>The version V6, (aka ESP-2.0) implement direct usage of FreeRTOS functions for managing tasks and queues. There are 10 tasks sharing the app_CPU : - The Arduino loopTask, with only the setup() function. When the setup is finished, the task deletes itself to recover memory; - PoolMaster, running every 500ms, which mainly supervises the overall timing of the system; - AnalogPoll, running every 125ms, to acquire analog measurements of pH, ORP and Pressure with an ADS115 sensor on an I2C bus; - GetTemp, running every 1000ms, to acquire water and air temperatures with DS18B20 sensors on two 1Wire busses; - ORPRegulation, running every 1000ms, to manage Chlorine pump; - pHRegulation, running every 1000ms, to manage Acid/Soda pump; - ProcessCommand, running every 500ms, to process commands received on /Home/Pool6/API MQTT Topic; - SettingsPublish, running when notified only (e.g with external command), to publish settings on the MQTT topic; - MeasuresPublish, running every 30s and when notified, to publish actual measures and status; - StatusLights, running every 3000ms, to display a row of 8 status LEDs on the mother board, through a PCF8574A on the I2C bus.</p>
-<p><img src="/docs/Profiling.jpg" alt=""></p>
-<p><img src="/docs/PoolMaster_board.JPG" alt="" title="Board"></p>
-<p>![](/docs/Page 0.JPG)</p>
-<p>![](/docs/Page 1.JPG)</p>
-<p>![](/docs/Page 3.JPG)</p>
-<h2 id="poolmaster-5.0.0">PoolMaster 5.0.0</h2>
-<h2 id="arduino-mega2560-or-controllino-maxi-phorp-chlorine-regulation-system-for-home-pools">Arduino Mega2560 (or Controllino-Maxi) Ph/Orp (Chlorine) regulation system for home pools</h2>
-<p><img src="/docs/PoolMaster_2.jpg" alt="" title="Overview"></p>
-<p><img src="/docs/Grafana.png" alt="" title="Dashboard"></p>
+</table><h4 id="push-information">Push Information</h4>
+<p>Below are the Payloads/commands to publish on the “PoolTopicAPI” topic in Json format in order to launch actions :</p>
 
+<table>
+<thead>
+<tr>
+<th align="left">Parameter</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left">{“Mode”:1} or {“Mode”:0}</td>
+<td align="left">set “Mode” to manual (0) or Auto (1). In Auto, filtration starts/stops at set times of the day and pH and Orp are regulated</td>
+</tr>
+<tr>
+<td align="left">{“Heat”:1} or {“Heat”:0}</td>
+<td align="left">start/stop the regulation of the pool water temperature</td>
+</tr>
+<tr>
+<td align="left">{“FiltPump”:1} or {“FiltPump”:0}</td>
+<td align="left">manually start/stop the filtration pump</td>
+</tr>
+<tr>
+<td align="left">{“ChlPump”:1} or {“ChlPump”:0}</td>
+<td align="left">manually start/stop the Chl pump to add more Chlorine</td>
+</tr>
+<tr>
+<td align="left">{“PhPump”:1} or {“PhPump”:0}</td>
+<td align="left">manually start/stop the Acid pump to lower the Ph</td>
+</tr>
+<tr>
+<td align="left">{“PhPID”:1} or {“PhPID”:0}</td>
+<td align="left">start/stop the Ph PID regulation loop</td>
+</tr>
+<tr>
+<td align="left">{“OrpPID”:1} or {“OrpPID”:0}</td>
+<td align="left">start/stop the Orp PID regulation loop</td>
+</tr>
+<tr>
+<td align="left">{“PhCalib”:[4.02,3.8,9.0,9.11]}</td>
+<td align="left">multi-point linear regression calibration (minimum 1 point-couple, 6 max.) in the form [ProbeReading_0, BufferRating_0, xx, xx, ProbeReading_n, BufferRating_n]</td>
+</tr>
+<tr>
+<td align="left">{“OrpCalib”:[450,465,750,784]}</td>
+<td align="left">multi-point linear regression calibration (minimum 1 point-couple, 6 max.) in the form [ProbeReading_0, BufferRating_0, xx, xx, ProbeReading_n, BufferRating_n]</td>
+</tr>
+<tr>
+<td align="left">{“PhSetPoint”:7.4}</td>
+<td align="left">set the Ph setpoint, 7.4 in this example</td>
+</tr>
+<tr>
+<td align="left">{“OrpSetPoint”:750.0}</td>
+<td align="left">set the Orp setpoint, 750mV in this example</td>
+</tr>
+<tr>
+<td align="left">{“WSetPoint”:27.0}</td>
+<td align="left">set the water temperature setpoint, 27.0deg in this example</td>
+</tr>
+<tr>
+<td align="left">{“WTempLow”:10.0}</td>
+<td align="left">set the water low-temperature threshold below which there is no need to regulate Orp and Ph (ie. in winter)</td>
+</tr>
+<tr>
+<td align="left">{“OrpPIDParams”:[2857,0,0]}</td>
+<td align="left">respectively set Kp,Ki,Kd parameters of the Orp PID loop. In this example they are set to 2857, 0 and 0</td>
+</tr>
+<tr>
+<td align="left">{“PhPIDParams”:[1330000,0,0.0]}</td>
+<td align="left">respectively set Kp,Ki,Kd parameters of the Ph PID loop. In this example they are set to 1330000, 0 and 0</td>
+</tr>
+<tr>
+<td align="left">{“OrpPIDWSize”:3600000}</td>
+<td align="left">set the window size of the Orp PID loop in msec, 60mins in this example</td>
+</tr>
+<tr>
+<td align="left">{“PhPIDWSize”:1200000}</td>
+<td align="left">set the window size of the Ph PID loop in msec, 20mins in this example</td>
+</tr>
+<tr>
+<td align="left">{“Date”:[1,1,1,18,13,32,0]}</td>
+<td align="left">set date/time of RTC module in the following format: (Day of the month, Day of the week, Month, Year, Hour, Minute, Seconds), in this example: Monday 1st January 2018 - 13h32mn00secs</td>
+</tr>
+<tr>
+<td align="left">{“FiltT0”:9}</td>
+<td align="left">set the earliest hour (9:00 in this example) to run filtration pump. Filtration pump will not run beofre that hour</td>
+</tr>
+<tr>
+<td align="left">{“FiltT1”:20}</td>
+<td align="left">set the latest hour (20:00 in this example) to run filtration pump. Filtration pump will not run after that hour</td>
+</tr>
+<tr>
+<td align="left">{“PubPeriod”:30}</td>
+<td align="left">set the periodicity (in seconds) at which the system info (pumps states, tank levels states, measured values, etc) will be published to the MQTT broker</td>
+</tr>
+<tr>
+<td align="left">{“PumpsMaxUp”:1800}</td>
+<td align="left">set the Max Uptime (in secs) for the Ph and Chl pumps over a 24h period. If over, PID regulation is stopped and a warning flag is raised</td>
+</tr>
+<tr>
+<td align="left">{“Clear”:1}</td>
+<td align="left">reset the pH and Orp pumps overtime error flags in order to let the regulation loops continue. “Mode” also needs to be switched back to Auto (1) after an error flag was raised</td>
+</tr>
+<tr>
+<td align="left">{“DelayPID”:30}</td>
+<td align="left">Delay (in mins) after FiltT0 before the PID regulation loops will start. This is to let the Orp and pH readings stabilize first. 30mins in this example. Should not be &gt; 59mins</td>
+</tr>
+<tr>
+<td align="left">{“TempExt”:4.2}</td>
+<td align="left">Provide the system with the external temperature. Should be updated regularly and will be used to start filtration when temperature is less than 2°C. 4.2deg in this example</td>
+</tr>
+<tr>
+<td align="left">{“PSIHigh”:1.0}</td>
+<td align="left">set the water high-pressure threshold (1.0bar in this example). When water pressure is over that threshold, an error flag is set</td>
+</tr>
+<tr>
+<td align="left">{“pHTank”:[20,100]}</td>
+<td align="left">call this function when the Acid tank is replaced or refilled. First parameter is the tank volume in Liters, second parameter is its percentage fill (100% when full)</td>
+</tr>
+<tr>
+<td align="left">{“ChlTank”:[20,100]}</td>
+<td align="left">call this function when the Chlorine tank is replaced or refilled. First parameter is the tank volume in Liters, second parameter is its percentage fill (100% when full)</td>
+</tr>
+<tr>
+<td align="left">{“Relay”:[1,1]}</td>
+<td align="left">call this generic command to actuate spare relays. Parameter 1 is the relay number (R1 in this example), parameter 2 is the relay state (ON in this example). This command is useful to use spare relays for additional features (lighting, etc). Available relay numbers are 1,2,6,7,8,9</td>
+</tr>
+<tr>
+<td align="left">{“Reboot”:1}</td>
+<td align="left">call this command to reboot the controller (after 8 seconds from calling this command)</td>
+</tr>
+<tr>
+<td align="left">{“pHPumpFR”:1.5}</td>
+<td align="left">call this command to set pH pump flow rate un L/s. In this example 1.5L/s</td>
+</tr>
+<tr>
+<td align="left">{“ChlPumpFR”:3}</td>
+<td align="left">call this command to set Chl pump flow rate un L/s. In this example 3L/s</td>
+</tr>
+<tr>
+<td align="left">{“RstpHCal”:1}</td>
+<td align="left">call this command to reset the calibration coefficients of the pH probe</td>
+</tr>
+<tr>
+<td align="left">{“RstOrpCal”:1}</td>
+<td align="left">call this command to reset the calibration coefficients of the Orp probe</td>
+</tr>
+<tr>
+<td align="left">{“RstPSICal”:1}</td>
+<td align="left">call this command to reset the calibration coefficients of the pressure sensor</td>
+</tr>
+</tbody>
+</table>
