@@ -71,36 +71,44 @@ It includes:</p>
 <tr>
 <th align="left">Parameter</th>
 <th align="left">Description</th>
+<th>Unit</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td align="left"><code>TE</code></td>
-<td align="left">Measured air temperature (/!\ x100)</td>
+<td align="left">Measured air temperature</td>
+<td>(/!\ x100)</td>
 </tr>
 <tr>
 <td align="left"><code>Tmp</code></td>
-<td align="left">Measured water temperature (/!\ x100)</td>
+<td align="left">Measured water temperature</td>
+<td>(/!\ x100)</td>
 </tr>
 <tr>
 <td align="left"><code>pH</code></td>
-<td align="left">pH measurement (/!\ x100)</td>
+<td align="left">pH measurement</td>
+<td>(/!\ x100)</td>
 </tr>
 <tr>
 <td align="left"><code>PSI</code></td>
-<td align="left">Pump pressure PSI (/!\ x100)</td>
+<td align="left">Pump pressure PSI</td>
+<td>(/!\ x100)</td>
 </tr>
 <tr>
 <td align="left"><code>Orp</code></td>
 <td align="left">Orp measurement</td>
+<td></td>
 </tr>
 <tr>
 <td align="left"><code>PhUpT</code></td>
-<td align="left">pH peristaltic pump uptime (/!\ x100)</td>
+<td align="left">pH peristaltic pump uptime</td>
+<td>(/!\ x100)</td>
 </tr>
 <tr>
 <td align="left"><code>ChlUpT</code></td>
-<td align="left">Chlorine peristaltic pump uptime (/!\ x100)</td>
+<td align="left">Chlorine peristaltic pump uptime</td>
+<td>(/!\ x100)</td>
 </tr>
 </tbody>
 </table><pre class=" language-http"><code class="prism  language-http">POOLTOPIC/Meas2
@@ -111,36 +119,137 @@ It includes:</p>
 <tr>
 <th align="left">Parameter</th>
 <th align="left">Description</th>
+<th>Unit</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td align="left"><code>TE</code></td>
-<td align="left">Measured air temperature (/!\ x100)</td>
+<td align="left"><code>AcidF</code></td>
+<td align="left">pH tank fill percentage</td>
+<td></td>
 </tr>
 <tr>
-<td align="left"><code>Tmp</code></td>
-<td align="left">Measured water temperature (/!\ x100)</td>
+<td align="left"><code>ChlF</code></td>
+<td align="left">Chlorine tank fill percentage</td>
+<td></td>
 </tr>
 <tr>
-<td align="left"><code>pH</code></td>
-<td align="left">pH measurement (/!\ x100)</td>
+<td align="left"><code>IO</code></td>
+<td align="left">Bitmap1 (see below)</td>
+<td></td>
 </tr>
 <tr>
-<td align="left"><code>PSI</code></td>
-<td align="left">Pump pressure PSI (/!\ x100)</td>
+<td align="left"><code>IO2</code></td>
+<td align="left">Bitmap2 (see below)</td>
+<td></td>
 </tr>
 <tr>
-<td align="left"><code>Orp</code></td>
-<td align="left">Orp measurement</td>
+<td align="left"><code>IO3</code></td>
+<td align="left">Bitmap3 (see below)</td>
+<td></td>
+</tr>
+</tbody>
+</table><p>Bitmap are on/off states of various elements in the system:</p>
+
+<table>
+<thead>
+<tr>
+<th>Bit</th>
+<th align="left">Parameter</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>7</td>
+<td align="left">FiltPump</td>
+<td align="left">current state of Filtration Pump (0=on, 1=off)</td>
 </tr>
 <tr>
-<td align="left"><code>PhUpT</code></td>
-<td align="left">pH peristaltic pump uptime (/!\ x100)</td>
+<td>6</td>
+<td align="left">PhPump</td>
+<td align="left">current state of Ph Pump (0=on, 1=off)</td>
 </tr>
 <tr>
-<td align="left"><code>ChlUpT</code></td>
-<td align="left">Chlorine peristaltic pump uptime (/!\ x100)</td>
+<td>5</td>
+<td align="left">ChlPump</td>
+<td align="left">current state of Chl Pump (0=on, 1=off)</td>
+</tr>
+<tr>
+<td>4</td>
+<td align="left">PhlLevel</td>
+<td align="left">current state of Acid tank level (0=empty, 1=ok)</td>
+</tr>
+<tr>
+<td>3</td>
+<td align="left">ChlLevel</td>
+<td align="left">current state of Chl tank level (0=empty, 1=ok)</td>
+</tr>
+<tr>
+<td>2</td>
+<td align="left">PSIError</td>
+<td align="left">over-pressure error</td>
+</tr>
+<tr>
+<td>1</td>
+<td align="left">pHErr</td>
+<td align="left">pH pump overtime error flag</td>
+</tr>
+<tr>
+<td>0</td>
+<td align="left">ChlErr</td>
+<td align="left">Chl pump overtime error flag</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th>Bit</th>
+<th align="left">Parameter</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>7</td>
+<td align="left">pHPID</td>
+<td align="left">current state of pH PID regulation loop (1=on, 0=off)</td>
+</tr>
+<tr>
+<td>6</td>
+<td align="left">OrpPID</td>
+<td align="left">current state of Orp PID regulation loop (1=on, 0=off)</td>
+</tr>
+<tr>
+<td>5</td>
+<td align="left">Mode</td>
+<td align="left">state of pH and Orp regulation mode (0=manual, 1=auto)</td>
+</tr>
+<tr>
+<td>4</td>
+<td align="left">RobotPump</td>
+<td align="left">current state of Robot Pump (0=on, 1=off)</td>
+</tr>
+<tr>
+<td>3</td>
+<td align="left">RELAYR0</td>
+<td align="left">current state of spare Relay0 (0=on, 1=off)</td>
+</tr>
+<tr>
+<td>2</td>
+<td align="left">RELAYR1</td>
+<td align="left">current state of spare Relay1 (0=on, 1=off)</td>
+</tr>
+<tr>
+<td>1</td>
+<td align="left">Winter</td>
+<td align="left">current state of winter mode (0=summer, 1=winter)</td>
+</tr>
+<tr>
+<td>0</td>
+<td align="left">NA</td>
+<td align="left">Unused</td>
 </tr>
 </tbody>
 </table><pre class=" language-http"><code class="prism  language-http">POOLTOPIC/Set1
