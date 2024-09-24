@@ -62,11 +62,176 @@ It includes:</p>
 <img src="https://github.com/Gixy31/ESP32-PoolMaster/blob/main/docs/Profiling.jpg" alt="enter image description here"></li>
 </ul>
 <h3 id="mqtt-api">MQTT API</h3>
-<p>| Parameter | Type | Description |</p>
-<p>| :-------- | :------- | :------------------------- |</p>
-<p>|  <code>api_key</code>  |  <code>string</code>  |  <strong>Required</strong>. Your API key |</p>
-<p>Every 30 seconds (by default), the system will publish on the “PoolTopicMeas1” and “PoolTopicMeas2”(see in code below) the following payloads in Json format:<br>
-{“Tmp”:818,“pH”:321,“PSI”:56,“Orp”:583,“FilUpT”:8995,“PhUpT”:0,“ChlUpT”:0}<br>
+<p>Every 30 seconds (configurable), the system will publish the following information:</p>
+<pre class=" language-http"><code class="prism  language-http">POOLTOPIC/Meas1
+</code></pre>
+
+<table>
+<thead>
+<tr>
+<th align="left">Parameter</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><code>TE</code></td>
+<td align="left">Measured air temperature (/!\ x100)</td>
+</tr>
+<tr>
+<td align="left"><code>Tmp</code></td>
+<td align="left">Measured water temperature (/!\ x100)</td>
+</tr>
+<tr>
+<td align="left"><code>pH</code></td>
+<td align="left">pH measurement (/!\ x100)</td>
+</tr>
+<tr>
+<td align="left"><code>PSI</code></td>
+<td align="left">Pump pressure PSI (/!\ x100)</td>
+</tr>
+<tr>
+<td align="left"><code>Orp</code></td>
+<td align="left">Orp measurement</td>
+</tr>
+<tr>
+<td align="left"><code>PhUpT</code></td>
+<td align="left">pH peristaltic pump uptime (/!\ x100)</td>
+</tr>
+<tr>
+<td align="left"><code>ChlUpT</code></td>
+<td align="left">Chlorine peristaltic pump uptime (/!\ x100)</td>
+</tr>
+</tbody>
+</table><pre class=" language-http"><code class="prism  language-http">POOLTOPIC/Meas2
+</code></pre>
+
+<table>
+<thead>
+<tr>
+<th align="left">Parameter</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><code>TE</code></td>
+<td align="left">Measured air temperature (/!\ x100)</td>
+</tr>
+<tr>
+<td align="left"><code>Tmp</code></td>
+<td align="left">Measured water temperature (/!\ x100)</td>
+</tr>
+<tr>
+<td align="left"><code>pH</code></td>
+<td align="left">pH measurement (/!\ x100)</td>
+</tr>
+<tr>
+<td align="left"><code>PSI</code></td>
+<td align="left">Pump pressure PSI (/!\ x100)</td>
+</tr>
+<tr>
+<td align="left"><code>Orp</code></td>
+<td align="left">Orp measurement</td>
+</tr>
+<tr>
+<td align="left"><code>PhUpT</code></td>
+<td align="left">pH peristaltic pump uptime (/!\ x100)</td>
+</tr>
+<tr>
+<td align="left"><code>ChlUpT</code></td>
+<td align="left">Chlorine peristaltic pump uptime (/!\ x100)</td>
+</tr>
+</tbody>
+</table><pre class=" language-http"><code class="prism  language-http">POOLTOPIC/Set1
+</code></pre>
+
+<table>
+<thead>
+<tr>
+<th align="left">Parameter</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><code>FW</code></td>
+<td align="left">Firmware Version</td>
+</tr>
+<tr>
+<td align="left"><code>FSta</code></td>
+<td align="left">Computed filtration start hour, in the morning (hours)</td>
+</tr>
+<tr>
+<td align="left"><code>FStaM</code></td>
+<td align="left">Earliest Filtration start hour, in the morning (hours)</td>
+</tr>
+<tr>
+<td align="left"><code>FDu</code></td>
+<td align="left">Computed filtration duration based on water temperature (hours)</td>
+</tr>
+<tr>
+<td align="left"><code>FStoM</code></td>
+<td align="left">Latest hour for the filtration to run. Whatever happens, filtration won’t run later than this hour</td>
+</tr>
+<tr>
+<td align="left"><code>FSto</code></td>
+<td align="left">Computed filtration stop hour, equal to FSta + FDu (hour)</td>
+</tr>
+<tr>
+<td align="left"><code>pHUTL</code></td>
+<td align="left">Max allowed daily run time for the pH pump (/!\ mins)</td>
+</tr>
+<tr>
+<td align="left"><code>ChlUTL</code></td>
+<td align="left">Max allowed daily run time for the Chl pump (/!\ mins)</td>
+</tr>
+</tbody>
+</table><pre class=" language-http"><code class="prism  language-http">POOLTOPIC/Set2
+</code></pre>
+
+<table>
+<thead>
+<tr>
+<th align="left">Parameter</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><code>pHWS</code></td>
+<td align="left">pH PID window size (/!\ mins)</td>
+</tr>
+<tr>
+<td align="left"><code>ChlWS</code></td>
+<td align="left">Orp PID window size (/!\ mins)</td>
+</tr>
+<tr>
+<td align="left"><code>pHSP</code></td>
+<td align="left">pH setpoint (/!\ x100)</td>
+</tr>
+<tr>
+<td align="left"><code>OrpSP</code></td>
+<td align="left">Orp setpoint</td>
+</tr>
+<tr>
+<td align="left"><code>WSP</code></td>
+<td align="left">Water temperature setpoint (/!\ x100)</td>
+</tr>
+<tr>
+<td align="left"><code>WLT</code></td>
+<td align="left">Water temperature low threshold to activate anti-freeze mode (/!\ x100)</td>
+</tr>
+<tr>
+<td align="left"><code>PSIHT</code></td>
+<td align="left">Water pressure high threshold to trigger error (/!\ x100)</td>
+</tr>
+<tr>
+<td align="left"><code>PSIMT</code></td>
+<td align="left">Water pressure medium threshold (unused yet) (/!\ x100)</td>
+</tr>
+</tbody>
+</table><p>{“Tmp”:818,“pH”:321,“PSI”:56,“Orp”:583,“FilUpT”:8995,“PhUpT”:0,“ChlUpT”:0}<br>
 {“AcidF”:100,“ChlF”:100,“IO”:11,“IO2”:0}<br>
 Tmp: measured Water temperature value in °C x100 (8.18°C in the above example payload)<br>
 pH: measured pH value x100 (3.21 in the above example payload)<br>
