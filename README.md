@@ -150,6 +150,8 @@ It includes:</p>
 </tr>
 </tbody>
 </table><p>Bitmap are on/off states of various elements in the system:</p>
+<pre class=" language-http"><code class="prism  language-http">IO
+</code></pre>
 
 <table>
 <thead>
@@ -201,7 +203,9 @@ It includes:</p>
 <td align="left">Chl pump overtime error flag</td>
 </tr>
 </tbody>
-</table>
+</table><pre class=" language-http"><code class="prism  language-http">IO2
+</code></pre>
+
 <table>
 <thead>
 <tr>
