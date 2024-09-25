@@ -52,61 +52,83 @@ It includes:</p>
 <table>
 <thead>
 <tr>
+<th>Ref</th>
 <th align="left">Task</th>
 <th align="left">Description</th>
 <th>Run every</th>
+<th>Offset</th>
 </tr>
 </thead>
 <tbody>
 <tr>
+<td></td>
 <td align="left"><code>Arduino Loop</code></td>
 <td align="left">with only the setup() function. When the setup is finished, the task deletes itself to recover memory</td>
-<td><code>Startup</code></td>
+<td></td>
+<td></td>
 </tr>
 <tr>
-<td align="left"><code>PoolMaster</code></td>
-<td align="left">mainly supervises the overall timing of the system</td>
-<td><code>500ms</code></td>
-</tr>
-<tr>
+<td>T1</td>
 <td align="left"><code>AnalogPoll</code></td>
 <td align="left">acquire analog measurements of pH, ORP and Pressure with an ADS115 sensor on an I2C bus</td>
 <td><code>125ms</code></td>
+<td><code>0</code></td>
 </tr>
 <tr>
+<td>T2</td>
+<td align="left"><code>PoolServer</code></td>
+<td align="left">process commands received on API MQTT Topic</td>
+<td><code>500ms</code></td>
+<td><code>190</code></td>
+</tr>
+<tr>
+<td>T3</td>
+<td align="left"><code>PoolMaster</code></td>
+<td align="left">mainly supervises the overall timing of the system</td>
+<td><code>500ms</code></td>
+<td><code>310</code></td>
+</tr>
+<tr>
+<td>T4</td>
 <td align="left"><code>GetTemp</code></td>
 <td align="left">acquire water and air temperatures with DS18B20 sensors on two 1Wire busses</td>
 <td><code>1000ms</code></td>
+<td><code>1000/(1&lt;&lt;(12-TEMPERATURE_RESOLUTION))</code></td>
 </tr>
 <tr>
+<td>T5</td>
 <td align="left"><code>ORPRegulation</code></td>
 <td align="left">manage Chlorine pump</td>
 <td><code>1000ms</code></td>
+<td></td>
 </tr>
 <tr>
+<td>T6</td>
 <td align="left"><code>pHRegulation</code></td>
 <td align="left">manage Acid/Soda pump</td>
 <td><code>1000ms</code></td>
+<td></td>
 </tr>
 <tr>
-<td align="left"><code>ProcessCommand</code></td>
-<td align="left">process commands received on API MQTT Topic</td>
-<td><code>500ms</code></td>
-</tr>
-<tr>
-<td align="left"><code>SettingsPublish</code></td>
-<td align="left">publish settings on the MQTT topic (Set1 - Set5)</td>
-<td><code>When notifed</code></td>
-</tr>
-<tr>
-<td align="left"><code>MeasuresPublish</code></td>
-<td align="left">publish measurement on the MQTT topic (Meas1 - Meas2)</td>
-<td><code>30s</code></td>
-</tr>
-<tr>
+<td>T7</td>
 <td align="left"><code>StatusLights</code></td>
 <td align="left">display a row of 8 status LEDs on the mother board, through a PCF8574A on the I2C bus</td>
 <td><code>3000ms</code></td>
+<td></td>
+</tr>
+<tr>
+<td>T3</td>
+<td align="left"><code>PublishMeasures</code></td>
+<td align="left">publish measurement on the MQTT topic (Meas1 - Meas2)</td>
+<td><code>30s</code></td>
+<td></td>
+</tr>
+<tr>
+<td>T3</td>
+<td align="left"><code>PublishSettings</code></td>
+<td align="left">publish settings on the MQTT topic (Set1 - Set5)</td>
+<td><code>When notifed</code></td>
+<td></td>
 </tr>
 </tbody>
 </table><p><img src="https://github.com/Gixy31/ESP32-PoolMaster/blob/main/docs/Profiling.jpg" alt="enter image description here"></p>
