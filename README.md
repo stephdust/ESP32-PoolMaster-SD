@@ -113,9 +113,7 @@ It includes:</p>
 <h3 id="touchscreen-control">TouchScreen control</h3>
 <p><img src="https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/Nextion_Screens.png" alt="Nextion TouchScreen HMI"></p>
 <h3 id="home-automation-integration">Home Automation Integration</h3>
-<p><img src="https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/Phone%20Interface.jpg" alt="Home Assistant"><br>
-<img src="https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/Grafana.png" alt="enter image description here"><br>
-<img src="https://github.com/Loic74650/PoolMaster/blob/master/docs/JeedomInterface.jpg" alt="enter image description here"></p>
+<p><img src="https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/Grafana%20and%20App.png" alt="Home Automation Integration"></p>
 <h3 id="tips">Tips</h3>
 <p>Before attempting to regulate your pool water with this automated system, it is essential that you start with:</p>
 <ol>
