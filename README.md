@@ -48,19 +48,68 @@ It includes:</p>
 <li>Async Analog measurement via external I2C ADS115</li>
 </ul>
 <p>The version V6, (aka ESP-2.0) implement direct usage of FreeRTOS functions for managing tasks and queues. There are 10 tasks sharing the app_CPU :</p>
-<ul>
-<li>The Arduino loopTask, with only the setup() function. When the setup is finished, the task deletes itself to recover memory;</li>
-<li>PoolMaster, running every 500ms, which mainly supervises the overall timing of the system;</li>
-<li>AnalogPoll, running every 125ms, to acquire analog measurements of pH, ORP and Pressure with an ADS115 sensor on an I2C bus;</li>
-<li>GetTemp, running every 1000ms, to acquire water and air temperatures with DS18B20 sensors on two 1Wire busses;</li>
-<li>ORPRegulation, running every 1000ms, to manage Chlorine pump;</li>
-<li>pHRegulation, running every 1000ms, to manage Acid/Soda pump;</li>
-<li>ProcessCommand, running every 500ms, to process commands received on /Home/Pool6/API MQTT Topic;</li>
-<li>SettingsPublish, running when notified only (e.g with external command), to publish settings on the MQTT topic;</li>
-<li>MeasuresPublish, running every 30s and when notified, to publish actual measures and status;</li>
-<li>StatusLights, running every 3000ms, to display a row of 8 status LEDs on the mother board, through a PCF8574A on the I2C bus.<br>
-<img src="https://github.com/Gixy31/ESP32-PoolMaster/blob/main/docs/Profiling.jpg" alt="enter image description here"></li>
-</ul>
+
+<table>
+<thead>
+<tr>
+<th align="left">Task</th>
+<th align="left">Description</th>
+<th>Run every</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><code>Arduino Loop</code></td>
+<td align="left">with only the setup() function. When the setup is finished, the task deletes itself to recover memory</td>
+<td></td>
+</tr>
+<tr>
+<td align="left"><code>PoolMaster</code></td>
+<td align="left">mainly supervises the overall timing of the system</td>
+<td>500ms</td>
+</tr>
+<tr>
+<td align="left"><code>AnalogPoll</code></td>
+<td align="left">acquire analog measurements of pH, ORP and Pressure with an ADS115 sensor on an I2C bus</td>
+<td>125ms</td>
+</tr>
+<tr>
+<td align="left"><code>GetTemp</code></td>
+<td align="left">acquire water and air temperatures with DS18B20 sensors on two 1Wire busses</td>
+<td>1000ms</td>
+</tr>
+<tr>
+<td align="left"><code>ORPRegulation</code></td>
+<td align="left">manage Chlorine pump</td>
+<td>1000ms</td>
+</tr>
+<tr>
+<td align="left"><code>pHRegulation</code></td>
+<td align="left">manage Acid/Soda pump</td>
+<td>1000ms</td>
+</tr>
+<tr>
+<td align="left"><code>ProcessCommand</code></td>
+<td align="left">process commands received on API MQTT Topic</td>
+<td>500ms</td>
+</tr>
+<tr>
+<td align="left"><code>SettingsPublish</code></td>
+<td align="left">publish settings on the MQTT topic (Set1 - Set5)</td>
+<td>When notifed</td>
+</tr>
+<tr>
+<td align="left"><code>MeasuresPublish</code></td>
+<td align="left">publish measurement on the MQTT topic (Meas1 - Meas2)</td>
+<td>30s</td>
+</tr>
+<tr>
+<td align="left"><code>StatusLights</code></td>
+<td align="left">display a row of 8 status LEDs on the mother board, through a PCF8574A on the I2C bus</td>
+<td>3000ms</td>
+</tr>
+</tbody>
+</table><p><img src="https://github.com/Gixy31/ESP32-PoolMaster/blob/main/docs/Profiling.jpg" alt="enter image description here"></p>
 <h3 id="touchscreen-control">TouchScreen control</h3>
 <p><img src="https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/Nextion_HomeScreen.png" alt="Nextion Home"><br>
 <img src="https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/Nextion_ControlScreen.png" alt="Control Screen"><br>
