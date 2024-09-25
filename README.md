@@ -93,42 +93,42 @@ It includes:</p>
 <td align="left"><code>GetTemp</code></td>
 <td align="left">acquire water and air temperatures with DS18B20 sensors on two 1Wire busses</td>
 <td><code>1000ms</code></td>
-<td><code>1000/(1&lt;&lt;(12-TEMPERATURE_RESOLUTION))</code></td>
+<td><code>440</code></td>
 </tr>
 <tr>
 <td>T5</td>
 <td align="left"><code>ORPRegulation</code></td>
 <td align="left">manage Chlorine pump</td>
 <td><code>1000ms</code></td>
-<td></td>
+<td><code>560</code></td>
 </tr>
 <tr>
 <td>T6</td>
 <td align="left"><code>pHRegulation</code></td>
 <td align="left">manage Acid/Soda pump</td>
 <td><code>1000ms</code></td>
-<td></td>
+<td><code>920</code></td>
 </tr>
 <tr>
 <td>T7</td>
 <td align="left"><code>StatusLights</code></td>
 <td align="left">display a row of 8 status LEDs on the mother board, through a PCF8574A on the I2C bus</td>
 <td><code>3000ms</code></td>
-<td></td>
+<td><code>100</code></td>
 </tr>
 <tr>
 <td>T3</td>
 <td align="left"><code>PublishMeasures</code></td>
 <td align="left">publish measurement on the MQTT topic (Meas1 - Meas2)</td>
 <td><code>30s</code></td>
-<td></td>
+<td><code>570</code></td>
 </tr>
 <tr>
 <td>T3</td>
 <td align="left"><code>PublishSettings</code></td>
 <td align="left">publish settings on the MQTT topic (Set1 - Set5)</td>
 <td><code>When notifed</code></td>
-<td></td>
+<td><code>940</code></td>
 </tr>
 </tbody>
 </table><p><img src="https://github.com/Gixy31/ESP32-PoolMaster/blob/main/docs/Profiling.jpg" alt="enter image description here"></p>
