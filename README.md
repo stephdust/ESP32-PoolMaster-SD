@@ -399,7 +399,7 @@ Experimentally I measured that in my case it can take up to 30minutes and theref
 <td align="left">current mode of Orp PID (0=stop, 1=PID active)</td>
 </tr>
 </tbody>
-</table><p>In addition the system sends on-demand detailed configuration parameters:</p>
+</table><p>In addition the system published on-demand settings :</p>
 <pre class=" language-http"><code class="prism  language-http">POOLTOPIC/Set1
 </code></pre>
 
@@ -486,6 +486,122 @@ Experimentally I measured that in my case it can take up to 30minutes and theref
 <tr>
 <td align="left"><code>PSIMT</code></td>
 <td align="left">Water pressure medium threshold (unused yet) (/!\ x100)</td>
+</tr>
+</tbody>
+</table><pre class=" language-http"><code class="prism  language-http">POOLTOPIC/Set3
+</code></pre>
+
+<table>
+<thead>
+<tr>
+<th align="left">Parameter</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><code>pHC0</code></td>
+<td align="left">pH sensor calibration coefficient C0</td>
+</tr>
+<tr>
+<td align="left"><code>pHC1</code></td>
+<td align="left">pH sensor calibration coefficient C1</td>
+</tr>
+<tr>
+<td align="left"><code>OrpC0</code></td>
+<td align="left">Orp sensor calibration coefficient C0</td>
+</tr>
+<tr>
+<td align="left"><code>OrpC1</code></td>
+<td align="left">Orp sensor calibration coefficient C1</td>
+</tr>
+<tr>
+<td align="left"><code>PSIC0</code></td>
+<td align="left">Pressure sensor calibration coefficient C0</td>
+</tr>
+<tr>
+<td align="left"><code>PSIC1</code></td>
+<td align="left">Pressure sensor calibration coefficient C1</td>
+</tr>
+</tbody>
+</table><pre class=" language-http"><code class="prism  language-http">POOLTOPIC/Set4
+</code></pre>
+
+<table>
+<thead>
+<tr>
+<th align="left">Parameter</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><code>pHKp</code></td>
+<td align="left">pH PID coeffcicient Kp</td>
+</tr>
+<tr>
+<td align="left"><code>pHKi</code></td>
+<td align="left">pH PID coeffcicient Ki</td>
+</tr>
+<tr>
+<td align="left"><code>pHKd</code></td>
+<td align="left">pH PID coeffcicient Kd</td>
+</tr>
+<tr>
+<td align="left"><code>OrpKp</code></td>
+<td align="left">Orp PID coeffcicient Kp</td>
+</tr>
+<tr>
+<td align="left"><code>OrpKi</code></td>
+<td align="left">Orp PID coeffcicient Ki</td>
+</tr>
+<tr>
+<td align="left"><code>OrpKd</code></td>
+<td align="left">Orp PID coeffcicient Kd</td>
+</tr>
+<tr>
+<td align="left"><code>Dpid</code></td>
+<td align="left">Delay from FSta for the water regulation/PIDs to start (mins)</td>
+</tr>
+<tr>
+<td align="left"><code>PubP</code></td>
+<td align="left">Settings publish period in sec</td>
+</tr>
+</tbody>
+</table><pre class=" language-http"><code class="prism  language-http">POOLTOPIC/Set5
+</code></pre>
+
+<table>
+<thead>
+<tr>
+<th align="left">Parameter</th>
+<th align="left">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left"><code>pHTV</code></td>
+<td align="left">Acid tank nominal volume (Liters)</td>
+</tr>
+<tr>
+<td align="left"><code>ChlTV</code></td>
+<td align="left">Chl tank nominal volume (Liters)</td>
+</tr>
+<tr>
+<td align="left"><code>pHFR</code></td>
+<td align="left">Acid pump flow rate (L/hour)</td>
+</tr>
+<tr>
+<td align="left"><code>OrpFR</code></td>
+<td align="left">Chl pump flow rate (L/hour)</td>
+</tr>
+<tr>
+<td align="left"><code>SWGSec</code></td>
+<td align="left">SWG Chlorine Generator Secure Temperature (°C)</td>
+</tr>
+<tr>
+<td align="left"><code>SWGDel</code></td>
+<td align="left">SWG Chlorine Generator Delay before start after pump (mn)</td>
 </tr>
 </tbody>
 </table><h4 id="push-information">Push Information</h4>
