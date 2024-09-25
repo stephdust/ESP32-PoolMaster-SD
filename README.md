@@ -2,39 +2,53 @@
 # ESP32 PoolMaster
 
 ## Brief description
+Complete pool management system which automates water maintenance and control.
+
+### Measurement and control
+System continuously monitors various metrics and periodically reports them over MQTT and touchscreen:
+ - Water and Air Temperature
+ - Water pressure
+ - pH (with temperature compensation)
+ - Orp
+ - Chlorine tank level
+ - pH tank level
+pH and Orp are continuously adjusted thanks to two peristaltic pumps controlled by two PID regulation loops.
+
+### Support many maintenance methods
+ - Liquid Chlore
+ - SWG (Salt Water Chlorine Generator) through external command and control
+ - Liquid active Oxygen
+
+Tank-levels are estimated based on the running-time and flow-rate of each pump. Additionnally a low level contact can be plugged into the system.
+ 
+### Control (local and remote)
+ - 3.5'' Nextion TFT touchscreen for local information and control
+ - MQTT integration with home automation systems (Home Assistant, Jeedom, NodeRed, InfluxDB, Grafana, etc.)
+ - Long term statistics
+ - Phone App templates for home automation systems
+
+### Automation
+ - Defined time-slots and water temperature are used to start/stop the filtration pump for a daily given amount of time (a relay starts/stops the filtration pump)
+ - Winter mode to starts the filtration if temperature reaches -2°C until it rises back above +2°C
+ - 2 spare relay outputs for controlling external equipment (heating, lighting, etc.)
+
+![Ecosystem](https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/Ecosystem.png)
+
+##  Project Details
+### Features
 This project is a fork of ESP32 Poolmaster by Gixy ([https://github.com/Gixy31/ESP32-PoolMaster](https://github.com/Gixy31/ESP32-PoolMaster)).
 Gixy's project is a redesign for ESP32 of an initial project by Loic74650 [(https://github.com/Loic74650/PoolMaster](https://github.com/Loic74650/PoolMaster)) which was intended for Atmega2560 MCUs.
 
 PoolMaster is a complete pool management system. It performs automatic water maintenance by measuring various water metrics and controling pool equipment (Pump, Heater, Lightning, pH and Orp pumps, etc.).
 
 Project includes ESP code and two PCB designs for:
-- The main control card
-- The pH/Orp aquisition card.
+- The main control board
+- The pH/Orp aquisition board
 
 The main unit interfaces with a 3.5'' Nextion touchscreen for local information and control.
 It includes Wifi connectivity to communicate via MQTT and SMTP. Project includes configuration files for various home automation systems such as Home Assistant, Jeedom, NodeRed, Grafana, etc.
 
 Finally code and PCB are made with high flexibility to precisely tailor the features to the user.
-
-![Ecosystem](https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/Ecosystem.png)
-
-##  Project Details
-### Features
-System continuously monitors various metrics and periodically reports them over MQTT and touchscreen:
- - Water and Air Temperature
- - Water pressure
- - pH
- - Orp
- - Chlorine tank level
- - pH tank level
-
-pH and Orp are adjusted thanks to two peristaltic pumps continuously controlled by two PID regulation loops.
-PoolMaster also supports Chlorine injection via Salt Water Chlorine Generator.
-Water temperature can be controlled by the system via dry contact relays.
-
-Defined time-slots and water temperature are used to start/stop the filtration pump for a daily given amount of time (a relay starts/stops the filtration pump). A winter starts the filtration if temperature reaches -2°C until it rises back above +2°C.
-
-Tank-levels are estimated based on the running-time and flow-rate of each pump. Additionnally a low level contact can be plugged into the system.
 
 ### Hardware
 A dedicated board has been designed to host all components. There are 8 LEDs at the bottom to display status, warnings and alarms.
@@ -69,9 +83,10 @@ The version V6, (aka ESP-2.0) implement direct usage of FreeRTOS functions for m
 
 ![enter image description here](https://github.com/Gixy31/ESP32-PoolMaster/blob/main/docs/Profiling.jpg)
 
-### TouchScreen control
+### 3.5'' TouchScreen control
 ![Nextion TouchScreen HMI](https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/Nextion_Screens.png)
 ### Home Automation Integration
+Example of integration in Grafana and Home Assistant
 ![Home Automation Integration](https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/Grafana%20and%20App.png)
 ###  Tips
 Before attempting to regulate your pool water with this automated system, it is essential that you start with:
@@ -117,13 +132,13 @@ POOLTOPIC/Meas1
 ```
 | Parameter |  Description                | Unit |
 | :-------- |  :------------------------- |------|
-| `TE` |  Measured air temperature |(/!\ x100)|
-| `Tmp` | Measured water temperature |(/!\ x100)|
-| `pH` |  pH measurement |(/!\ x100)|
-| `PSI` | Pump pressure PSI  |(/!\ x100)|
-| `Orp` |  Orp measurement|
-| `PhUpT` |  pH peristaltic pump uptime  |(/!\ x100)|
-| `ChlUpT` |  Chlorine peristaltic pump uptime  |(/!\ x100)|
+| `TE` |  Measured air temperature |°C (x100)|
+| `Tmp` | Measured water temperature |°C (x100)|
+| `pH` |  pH measurement |(x100)|
+| `PSI` | Pump pressure PSI  |b (x100)|
+| `Orp` |  Orp measurement|mV|
+| `PhUpT` |  pH peristaltic pump uptime  |mn (x100)|
+| `ChlUpT` |  Chlorine peristaltic pump uptime  |mn (x100)|
 
 
 ```http
@@ -131,8 +146,8 @@ POOLTOPIC/Meas2
 ```
 | Parameter |  Description                |Unit|
 | :-------- |  :------------------------- |----|
-| `AcidF` |  pH tank fill percentage||
-| `ChlF` | Chlorine tank fill percentage||
+| `AcidF` |  pH tank fill percentage|%|
+| `ChlF` | Chlorine tank fill percentage|%|
 | `IO` |  Bitmap1 (see below)||
 | `IO2` | Bitmap2 (see below)||
 | `IO3` |  Bitmap3 (see below)||
@@ -190,22 +205,22 @@ POOLTOPIC/Set1
 | `FDu` | Computed filtration duration based on water temperature (hours) |
 | `FStoM` |  Latest hour for the filtration to run. Whatever happens, filtration won't run later than this hour |
 | `FSto` |  Computed filtration stop hour, equal to FSta + FDu (hour) |
-| `pHUTL` |  Max allowed daily run time for the pH pump (/!\ mins) |
-| `ChlUTL` |  Max allowed daily run time for the Chl pump (/!\ mins) |
+| `pHUTL` |  Max allowed daily run time for the pH pump (mins) |
+| `ChlUTL` |  Max allowed daily run time for the Chl pump (mins) |
 
 ```http
 POOLTOPIC/Set2
 ```
 | Parameter |  Description                |
 | :-------- |  :------------------------- |
-| `pHWS` |  pH PID window size (/!\ mins) |
-| `ChlWS` | Orp PID window size (/!\ mins) |
-| `pHSP` |  pH setpoint (/!\ x100) |
+| `pHWS` |  pH PID window size (mins) |
+| `ChlWS` | Orp PID window size (mins) |
+| `pHSP` |  pH setpoint (x100) |
 | `OrpSP` | Orp setpoint |
-| `WSP` |  Water temperature setpoint (/!\ x100) |
-| `WLT` |  Water temperature low threshold to activate anti-freeze mode (/!\ x100) |
-| `PSIHT` |  Water pressure high threshold to trigger error (/!\ x100) |
-| `PSIMT` |  Water pressure medium threshold (unused yet) (/!\ x100) |
+| `WSP` |  Water temperature setpoint (x100) |
+| `WLT` |  Water temperature low threshold to activate anti-freeze mode (x100) |
+| `PSIHT` |  Water pressure high threshold to trigger error (x100) |
+| `PSIMT` |  Water pressure medium threshold (unused yet) (x100) |
  
 ```http
 POOLTOPIC/Set3
