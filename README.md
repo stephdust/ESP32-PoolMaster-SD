@@ -111,9 +111,7 @@ It includes:</p>
 </tbody>
 </table><p><img src="https://github.com/Gixy31/ESP32-PoolMaster/blob/main/docs/Profiling.jpg" alt="enter image description here"></p>
 <h3 id="touchscreen-control">TouchScreen control</h3>
-<p><img src="https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/Nextion_HomeScreen.png" alt="Nextion Home"><br>
-<img src="https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/Nextion_ControlScreen.png" alt="Control Screen"><br>
-<img src="https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/Nextion_SettingsScreen.png" alt="Nextion Settings"></p>
+<p><img src="https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/Nextion_Screens.png" alt="Nextion TouchScreen HMI"></p>
 <h3 id="home-automation-integration">Home Automation Integration</h3>
 <p><img src="https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/Phone%20Interface.jpg" alt="Home Assistant"><br>
 <img src="https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/Grafana.png" alt="enter image description here"><br>
