@@ -66,47 +66,47 @@ It includes:</p>
 <tr>
 <td align="left"><code>PoolMaster</code></td>
 <td align="left">mainly supervises the overall timing of the system</td>
-<td>500ms</td>
+<td><code>500ms</code></td>
 </tr>
 <tr>
 <td align="left"><code>AnalogPoll</code></td>
 <td align="left">acquire analog measurements of pH, ORP and Pressure with an ADS115 sensor on an I2C bus</td>
-<td>125ms</td>
+<td><code>125ms</code></td>
 </tr>
 <tr>
 <td align="left"><code>GetTemp</code></td>
 <td align="left">acquire water and air temperatures with DS18B20 sensors on two 1Wire busses</td>
-<td>1000ms</td>
+<td><code>1000ms</code></td>
 </tr>
 <tr>
 <td align="left"><code>ORPRegulation</code></td>
 <td align="left">manage Chlorine pump</td>
-<td>1000ms</td>
+<td><code>1000ms</code></td>
 </tr>
 <tr>
 <td align="left"><code>pHRegulation</code></td>
 <td align="left">manage Acid/Soda pump</td>
-<td>1000ms</td>
+<td><code>1000ms</code></td>
 </tr>
 <tr>
 <td align="left"><code>ProcessCommand</code></td>
 <td align="left">process commands received on API MQTT Topic</td>
-<td>500ms</td>
+<td><code>500ms</code></td>
 </tr>
 <tr>
 <td align="left"><code>SettingsPublish</code></td>
 <td align="left">publish settings on the MQTT topic (Set1 - Set5)</td>
-<td>When notifed</td>
+<td><code>When notifed</code></td>
 </tr>
 <tr>
 <td align="left"><code>MeasuresPublish</code></td>
 <td align="left">publish measurement on the MQTT topic (Meas1 - Meas2)</td>
-<td>30s</td>
+<td><code>30s</code></td>
 </tr>
 <tr>
 <td align="left"><code>StatusLights</code></td>
 <td align="left">display a row of 8 status LEDs on the mother board, through a PCF8574A on the I2C bus</td>
-<td>3000ms</td>
+<td><code>3000ms</code></td>
 </tr>
 </tbody>
 </table><p><img src="https://github.com/Gixy31/ESP32-PoolMaster/blob/main/docs/Profiling.jpg" alt="enter image description here"></p>
