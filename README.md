@@ -61,7 +61,7 @@ It includes:</p>
 <tr>
 <td align="left"><code>Arduino Loop</code></td>
 <td align="left">with only the setup() function. When the setup is finished, the task deletes itself to recover memory</td>
-<td></td>
+<td><code>Startup</code></td>
 </tr>
 <tr>
 <td align="left"><code>PoolMaster</code></td>
