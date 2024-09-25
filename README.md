@@ -617,31 +617,51 @@ Experimentally I measured that in my case it can take up to 30minutes and theref
 <tbody>
 <tr>
 <td align="left">{“Mode”:1} or {“Mode”:0}</td>
-<td align="left">set “Mode” to manual (0) or Auto (1). In Auto, filtration starts/stops at set times of the day and pH and Orp are regulated</td>
-</tr>
-<tr>
-<td align="left">{“Heat”:1} or {“Heat”:0}</td>
-<td align="left">start/stop the regulation of the pool water temperature</td>
+<td align="left">set “Mode” to manual (0) or Auto (1). In Auto, filtration starts/stops at set times of the day and pH and Orp are regulated (if pH/Orp PID Mode activated see below)</td>
 </tr>
 <tr>
 <td align="left">{“FiltPump”:1} or {“FiltPump”:0}</td>
 <td align="left">manually start/stop the filtration pump</td>
 </tr>
 <tr>
-<td align="left">{“ChlPump”:1} or {“ChlPump”:0}</td>
-<td align="left">manually start/stop the Chl pump to add more Chlorine</td>
+<td align="left">{“PhPIDEnabled”:1} or {“PhPIDEnabled”:0}</td>
+<td align="left">set " PID Mode" for pH regulation to manual (0) or Auto (1). In Auto mode the pH PID regulation loop (see below) turns on and off automatically.</td>
+</tr>
+<tr>
+<td align="left">{“PhPID”:1} or {“PhPID”:0}</td>
+<td align="left">start/stop the Ph PID regulation loop which directly controls the pH pump.</td>
 </tr>
 <tr>
 <td align="left">{“PhPump”:1} or {“PhPump”:0}</td>
 <td align="left">manually start/stop the Acid pump to lower the Ph</td>
 </tr>
 <tr>
-<td align="left">{“PhPID”:1} or {“PhPID”:0}</td>
-<td align="left">start/stop the Ph PID regulation loop</td>
+<td align="left">{“OrpPIDEnabled”:1} or {“OrpPIDEnabled”:0}</td>
+<td align="left">set " PID Mode" for Orp regulation to manual (0) or Auto (1). In Auto mode the Orp PID regulation loop (see below) turns on and off automatically.</td>
 </tr>
 <tr>
 <td align="left">{“OrpPID”:1} or {“OrpPID”:0}</td>
-<td align="left">start/stop the Orp PID regulation loop</td>
+<td align="left">start/stop the Orp PID regulation loop which directly controls the Chlorine pump.</td>
+</tr>
+<tr>
+<td align="left">{“ChlPump”:1} or {“ChlPump”:0}</td>
+<td align="left">manually start/stop the Chl pump to add more Chlorine</td>
+</tr>
+<tr>
+<td align="left">{“ElectrolyseMode”:1} or {“ElectrolyseMode”:0}</td>
+<td align="left">set auto mode for Chlorine production via Salt Water Chlorine Generation. In Auto mode the Orp regulates itself (when filtration pump on) with Salt Water Chlorine Generator.</td>
+</tr>
+<tr>
+<td align="left">{“Electrolyse”:1} or {“Electrolyse”:0}</td>
+<td align="left">start/stop the Salt Water Chlorine Generator device (if exists)</td>
+</tr>
+<tr>
+<td align="left">{"ElectroSecure:16}</td>
+<td align="left">set the minimum temperature for Salt Water Chlorine Generation system to operate</td>
+</tr>
+<tr>
+<td align="left">{"ElectroDelay:2}</td>
+<td align="left">set the delay between filtration pump start and Salt Water Chlorine Generation system start.</td>
 </tr>
 <tr>
 <td align="left">{“PhCalib”:[4.02,3.8,9.0,9.11]}</td>
@@ -662,6 +682,10 @@ Experimentally I measured that in my case it can take up to 30minutes and theref
 <tr>
 <td align="left">{“WSetPoint”:27.0}</td>
 <td align="left">set the water temperature setpoint, 27.0deg in this example</td>
+</tr>
+<tr>
+<td align="left">{“Winter”:1} or {“Winter”:0}</td>
+<td align="left">set “Winter” mode to On or Off. Mainly deactivate all the regulation. Only pump continues to operate. Pump will start operating when temperature reaches -2°C and stop if temperature rises back to +2°C.</td>
 </tr>
 <tr>
 <td align="left">{“WTempLow”:10.0}</td>
@@ -697,7 +721,7 @@ Experimentally I measured that in my case it can take up to 30minutes and theref
 </tr>
 <tr>
 <td align="left">{“PubPeriod”:30}</td>
-<td align="left">set the periodicity (in seconds) at which the system info (pumps states, tank levels states, measured values, etc) will be published to the MQTT broker</td>
+<td align="left">set the periodicity (in seconds) at which the system measurement (pumps states, tank levels states, measured values, etc) will be published to the MQTT broker</td>
 </tr>
 <tr>
 <td align="left">{“PumpsMaxUp”:1800}</td>
@@ -729,11 +753,15 @@ Experimentally I measured that in my case it can take up to 30minutes and theref
 </tr>
 <tr>
 <td align="left">{“Relay”:[1,1]}</td>
-<td align="left">call this generic command to actuate spare relays. Parameter 1 is the relay number (R1 in this example), parameter 2 is the relay state (ON in this example). This command is useful to use spare relays for additional features (lighting, etc). Available relay numbers are 1,2,6,7,8,9</td>
+<td align="left">call this generic command to actuate spare relays. Parameter 1 is the relay number (R1 in this example), parameter 2 is the relay state (ON in this example). This command is useful to use spare relays for additional features (lighting, etc). Available relay numbers are 1 and 2</td>
 </tr>
 <tr>
 <td align="left">{“Reboot”:1}</td>
 <td align="left">call this command to reboot the controller (after 8 seconds from calling this command)</td>
+</tr>
+<tr>
+<td align="left">{“Settings”:1}</td>
+<td align="left">force settings (Set1-Set5) publication to MQTT to refresh values</td>
 </tr>
 <tr>
 <td align="left">{“pHPumpFR”:1.5}</td>
