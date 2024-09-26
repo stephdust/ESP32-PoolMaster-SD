@@ -12,6 +12,7 @@ System continuously monitors various metrics and periodically reports them over 
  - Orp
  - Chlorine tank level
  - pH tank level
+
 pH and Orp are continuously adjusted thanks to two peristaltic pumps controlled by two PID regulation loops.
 
 ### Support many maintenance methods
@@ -37,13 +38,12 @@ Tank-levels are estimated based on the running-time and flow-rate of each pump. 
 ##  Project Details
 ### Features
 This project is a fork of ESP32 Poolmaster by Gixy ([https://github.com/Gixy31/ESP32-PoolMaster](https://github.com/Gixy31/ESP32-PoolMaster)).
-Gixy's project is a redesign for ESP32 of an initial project by Loic74650 [(https://github.com/Loic74650/PoolMaster](https://github.com/Loic74650/PoolMaster)) which was intended for Atmega2560 MCUs.
 
-PoolMaster is a complete pool management system. It performs automatic water maintenance by measuring various water metrics and controling pool equipment (Pump, Heater, Lightning, pH and Orp pumps, etc.).
+Gixy's project is a redesign for ESP32 of an initial project by Loic74650 [(https://github.com/Loic74650/PoolMaster](https://github.com/Loic74650/PoolMaster)) which was intended for Atmega2560 MCUs.
 
 Project includes ESP code and two PCB designs for:
 - The main control board
-- The pH/Orp aquisition board
+- The pH/Orp acquisition board
 
 The main unit interfaces with a 3.5'' Nextion touchscreen for local information and control.
 It includes Wifi connectivity to communicate via MQTT and SMTP. Project includes configuration files for various home automation systems such as Home Assistant, Jeedom, NodeRed, Grafana, etc.
@@ -53,11 +53,10 @@ Finally code and PCB are made with high flexibility to precisely tailor the feat
 ### Hardware
 A dedicated board has been designed to host all components. There are 8 LEDs at the bottom to display status, warnings and alarms.
 
-Project includes two PCBs, one for the main ESP32 MCU card and one for the pH/Orp board.
 ![Project Hardware](https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/Hardware.png)
 
 ### Software
-The project isn't a fork of the original one due to the different structure of source files with PlatformIO ((.cpp, .h). 
+The ESP32 project isn't a fork of the ATmega2560 original one due to the different structure of source files with PlatformIO ((.cpp, .h). 
 It includes:
  - Management of ESP32 and Wifi
  - ESP32-Arduino framework with PlatformIO IDE
@@ -93,11 +92,10 @@ Before attempting to regulate your pool water with this automated system, it is 
  1. testing your water quality (using liquid kits and/or test strips for instance) and balancing it properly (pH, Chlorine, Alkalinity, Hardness). Proper water balancing will greatly ease the pH stability and regulation
  2. calibrating the pH probe using calibrated buffer solutions (pay attention to the water temperature which plays a big role in pH readings)
  3. adjusting pH to 7.4
- 4. List item
- 5. once above steps 1 to 3 are ok, you can start regulating ORP
+ 4. once above steps 1 to 3 are ok, you can start regulating ORP
 
 Notes: 
- - the ORP sensor should theoretically not be calibrated nore temperature compensated (by nature its 0mV pivot point cannot shift) 
+ - the ORP sensor should theoretically not be calibrated nor temperature compensated (by nature its 0mV pivot point cannot shift) 
   - the ORP reading is strongly affected by the pH value and the water temperature. Make sure pH is adjusted at 7.4 
    - prefer platinium ORP probes for setpoints >500mV (ie. Pools and spas)
    - the response time of ORP sensors can be fast in reference buffer solutions (10 secs) and yet very slow in pool water (minutes or more) as it depends on the water composition
