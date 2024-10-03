@@ -82,15 +82,15 @@ Preferences nvs;
 // The four pumps of the system (instanciate the Pump class)
 // In this case, all pumps start/Stop are managed by relays. pH, ORP and Robot pumps are interlocked with 
 // filtration pump
-Pump FiltrationPump(FILTRATION_PUMP, FILTRATION_PUMP, NO_TANK, NO_INTERLOCK,RELAY_ACTIVE_HIGH);
-Pump PhPump(PH_PUMP, PH_PUMP, NO_TANK, FILTRATION_PUMP, RELAY_ACTIVE_LOW,FiltrationPump.GetOnLevel(),storage.pHPumpFR, storage.pHTankVol, storage.AcidFill);
-Pump ChlPump(CHL_PUMP, CHL_PUMP, PH_LEVEL, FILTRATION_PUMP, RELAY_ACTIVE_LOW,FiltrationPump.GetOnLevel(),storage.ChlPumpFR, storage.ChlTankVol, storage.ChlFill);
-Pump RobotPump(ROBOT_PUMP, ROBOT_PUMP, NO_TANK, FILTRATION_PUMP,RELAY_ACTIVE_LOW,FiltrationPump.GetOnLevel());
+Pump FiltrationPump(FILTRATION_PUMP, FILTRATION_PUMP, (uint8_t)NO_TANK, (uint8_t)NO_INTERLOCK, (uint8_t)RELAY_ACTIVE_HIGH, (uint8_t)RELAY_ACTIVE_HIGH);
+Pump PhPump(PH_PUMP, PH_PUMP, NO_LEVEL, FiltrationPump.GetRelayReference(), storage.pHPumpFR, storage.pHTankVol, storage.AcidFill);
+Pump ChlPump(CHL_PUMP, CHL_PUMP, NO_LEVEL, FiltrationPump.GetRelayReference(), storage.ChlPumpFR, storage.ChlTankVol, storage.ChlFill);
+Pump RobotPump(ROBOT_PUMP, ROBOT_PUMP, NO_TANK, FiltrationPump.GetRelayReference());
+Pump OrpProd(ORP_PROD, ORP_PROD, NO_TANK, FiltrationPump.GetRelayReference()); // OrpProd is interlocked with the Pump Relay
 
-// The Relay to activate and deactivate Orp production
-Relay RELAYR0(RELAY_R0, RELAY_R0, NO_INTERLOCK,RELAY_STD,RELAY_ACTIVE_LOW,RELAY_ACTIVE_LOW);
-Relay RELAYR1(RELAY_R1, RELAY_R1, NO_INTERLOCK,RELAY_STD,RELAY_ACTIVE_LOW,RELAY_ACTIVE_LOW);
-Relay OrpProd(ORP_PROD, ORP_PROD, FILTRATION_PUMP,RELAY_MOMENTARY,RELAY_ACTIVE_LOW,FiltrationPump.GetOnLevel()); // OrpProd works at relay active low but the interlock pump works at relay active high
+// The Relays to activate and deactivate function. OrpProd is interlocked with Pump relay
+Relay RELAYR0(RELAY_R0);
+Relay RELAYR1(RELAY_R1);
 
 // PIDs instances
 //Specify the direction and initial tuning parameters
@@ -232,7 +232,6 @@ void setup()
   TempInit();
 
   // Clear status LEDs
-
   Wire.beginTransmission(PCF8574_ADDR);
   Wire.write((uint8_t)0xFF);
   Wire.endTransmission();
@@ -258,10 +257,7 @@ void setup()
 
   //Initialize pump instances with stored config data
   FiltrationPump.SetMaxUpTime(0);     //no runtime limit for the filtration pump
-
   RobotPump.SetMaxUpTime(0);          //no runtime limit for the robot pump
-
-  OrpProd.SetMaxUpTime(0);     //ajout : no runtime limit for the electrolyser
 
   PhPump.SetFlowRate(storage.pHPumpFR);
   PhPump.SetTankVolume(storage.pHTankVol);
@@ -273,10 +269,12 @@ void setup()
   ChlPump.SetTankFill(storage.ChlFill);
   ChlPump.SetMaxUpTime(storage.ChlPumpUpTimeLimit * 1000);
 
+  OrpProd.SetRelayType(RELAY_BISTABLE); // Configure OrpProd relay as bistable (simulate a button press for turn on and turn off)
+
   // Start filtration pump at power-on if within scheduled time slots -- You can choose not to do this and start pump manually
-  //if (storage.AutoMode && (hour() >= storage.FiltrationStart) && (hour() < storage.FiltrationStop))
-  //  FiltrationPump.Start();
-  //else FiltrationPump.Stop();
+  if (storage.AutoMode && (hour() >= storage.FiltrationStart) && (hour() < storage.FiltrationStop))
+    FiltrationPump.Start();
+  else FiltrationPump.Stop();
 
   // Robot pump off at start
   RobotPump.Stop();

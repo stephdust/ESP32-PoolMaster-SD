@@ -11,44 +11,59 @@ NB: all timings are in milliseconds
 */
 
 #include "Arduino_DebugUtils.h"   // Debug.print
+#include "Relay.h"                // To handle underlying pump relays
 
 #ifndef PUMP_h
 #define PUMP_h
 #define PUMP_VERSION "1.0.2"
 
 //Constants used in some of the functions below
-#define RELAY_ACTIVE_HIGH  1
-#define RELAY_ACTIVE_LOW  0
-#define STATE_ON  1
-#define STATE_OFF 0
 #define TANK_FULL  0
 #define TANK_EMPTY 1
 #define NO_LEVEL 170          // Pump with tank but without level switch
 #define NO_TANK 255           // Pump without tank
 #define NO_INTERLOCK 255  
+#define INTERLOCK_REFERENCE 170  //Interlock object was passed as a reference Pump&
 
-#define DefaultMaxUpTime 60*30*1000 //default value is 30 minutes  
- 
+#define DefaultMaxUpTime 60*30*1000 //default value is 30 minutes
+
 class Pump{
   public:
-    Pump(uint8_t, uint8_t, uint8_t = NO_TANK, uint8_t = NO_INTERLOCK,  uint8_t = RELAY_ACTIVE_LOW, uint8_t = RELAY_ACTIVE_LOW, double = 0., double = 0., double =100.);
+
+    Pump(uint8_t);
+    Pump(uint8_t, uint8_t);
+    Pump(uint8_t, uint8_t, uint8_t, Relay* = NULL,  double = 0., double = 0., double =100.);                         // Constructor to pass Interlock pump object for runtime change in the future
+    Pump(uint8_t, uint8_t, uint8_t, uint8_t,  double = 0., double = 0., double =100. );                             // Constructor compatible with version 1.0.1
+    Pump(uint8_t, uint8_t, uint8_t, uint8_t,  uint8_t , uint8_t ,  double = 0., double = 0., double =100. );        // Version 1.0.2 constructor
+
     void loop();
     bool Start();
-    bool Stop();
+    bool Stop();    
+
+    void SetRelayPin(uint8_t);
+    uint8_t GetRelayPin();
+    void SetRelayType(uint8_t); // Set Standard or bistable
+    Relay* GetRelayReference();
+    
     bool IsRunning();
+    
     bool TankLevel();
-    double GetTankUsage();    
-    void SetTankVolume(double Volume);
-    void SetFlowRate(double FlowRate);
-    bool Interlock();
-    void SetMaxUpTime(unsigned long Max);
-    void ResetUpTime();
     void SetTankFill(double);
     double GetTankFill();
-    bool GetOffLevel();
-    bool GetOnLevel();
+    void SetTankVolume(double Volume);
+    double GetTankUsage();    
+    void SetFlowRate(double FlowRate);
+    void SetMaxUpTime(unsigned long Max);
+    void ResetUpTime();
     void ClearErrors();
-    
+
+    void SetActiveLevel(uint8_t);
+    int GetActiveLevel();
+    int GetInactiveLevel();
+    void SetInterlockActiveLevel(uint8_t);
+
+    bool Interlock();
+       
     unsigned long UpTime;
     unsigned long MaxUpTime;
     unsigned long CurrMaxUpTime;
@@ -58,14 +73,12 @@ class Pump{
     unsigned long StopTime; 
     double flowrate, tankvolume, tankfill;          
   private:
-     
-    uint8_t pumppin; 
+    Relay   pumprelay;
+    Relay*  interlockrelay_; // Interlock can be passed 
     uint8_t isrunningsensorpin;
     uint8_t tanklevelpin;
     uint8_t interlockpin;
-    uint8_t relay_on_state;
-    uint8_t relay_off_state;
-    uint8_t interlock_on_state;
-    uint8_t interlock_off_state;
+    int interlock_on_level;
+    int interlock_off_level;
 };
 #endif

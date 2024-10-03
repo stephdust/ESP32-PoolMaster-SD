@@ -1,194 +1,158 @@
 #include "Arduino.h"
 #include "Relay.h"
 
+// Timer Callback function for bistable relay operations
+auto CallBackTimer = []( TimerHandle_t xTimer )
+{
+    Relay* rr = static_cast<Relay*>(pvTimerGetTimerID(xTimer));      // Get the relay related to this timer
+    assert(rr); // Sanity check
+    digitalWrite(rr->GetRelayPin(), rr->GetInactiveLevel());         // Stop BISTABLE switch when timer fires
+};
+
 //Constructor
 //relaypin is the Arduino relay output pin number to be switched to start/stop the equipment
-//TankLevelPin is the Arduino digital input pin number connected to the tank level switch
-//Interlockpin is the Arduino digital input number connected to an "interlock". 
-//If this input is LOW, pump is stopped and/or cannot start. This is used for instance to stop
-//the Orp or pH pumps in case filtration pump is not running
-//PumpRelayType, InterLockRelayType choose whether pump relay and interlock is considered active at high level or low level
-// RelayType can be normal or momentary when used to simulate a button pressed when closing relay for a short time and reopen it
-//IsRunningSensorPin is the pin which is checked to know whether the pump is running or not. 
 //It can be the same pin as "relaypin" in case there is no sensor on the pump (pressure, current, etc) which is not as robust. 
-//This option is especially useful in the case where the filtration pump is not managed by the Arduino. 
-//FlowRate is the flow rate of the pump in Liters/Hour, typically 1.5 or 3.0 L/hour for peristaltic pumps for pools. This is used to compute how much of the tank we have emptied out
-//TankVolume is used here to compute the percentage fill used
-//PumpType defines whether the underlying relay should work normally or momentarilly simulating a button press
-Relay::Relay(uint8_t RelayPin, uint8_t IsRunningSensorPin,  
-           uint8_t Interlockpin,  uint8_t RelayType, uint8_t PumpRelayType, uint8_t InterLockRelayType)
+//This option is especially useful in the case where the relay is not managed by the Arduino. 
+//RelayType defines whether the underlying relay should work normally on/off or bistable simulating a button press (relay switch to on then off after a predefined time)
+//RelayLevels either RELAY_ACTIVE_HIGH if relay is on when pin is high state or RELAY_ACTIVE_LOW if relay is on when pin in low state
+
+Relay::Relay(uint8_t RelayPin, uint8_t RelayLevels, uint8_t RelayType)
 {
   relaypin = RelayPin;
-  isrunningsensorpin = IsRunningSensorPin;
-  interlockpin = Interlockpin;
-  relaytype = RelayType; // Standard (RELAY_STD) or Momentary (RELAY_MOMENTARY)
-  relay_on_state = (PumpRelayType == RELAY_ACTIVE_HIGH)? STATE_ON : STATE_OFF;
-  relay_off_state = (PumpRelayType == RELAY_ACTIVE_HIGH)? STATE_OFF : STATE_ON;
-  interlock_on_state = (InterLockRelayType == RELAY_ACTIVE_HIGH)? STATE_ON : STATE_OFF;
-  interlock_off_state = (InterLockRelayType == RELAY_ACTIVE_HIGH)? STATE_OFF : STATE_ON;
-  StartTime = 0;
-  LastStartTime = 0;
-  StopTime = 0;
-  UpTime = 0;        
-  UpTimeError = 0;
-  MomentarySwitchStart = 0; // Contain the millis when the underlying relay was set to ON
+  isonsensorpin = RelayPin;
+  relaytype = RelayType; // Standard (RELAY_STD) or BISTABLE (RELAY_BISTABLE)
+  relay_on_level = (RelayLevels == RELAY_ACTIVE_HIGH)? HIGH : LOW;
+  relay_off_level = (RelayLevels == RELAY_ACTIVE_HIGH)? LOW : HIGH;
   RelayVirtualStatus = 0;
-  MomentarySwitchState = 0; // Is True when the underlying relay of the momentary switch is ON
-  MaxUpTime = Relay_DefaultMaxUpTime;
-  CurrMaxUpTime = MaxUpTime;
 
   // Open the port for OUTPUT and set it to down state
   pinMode(relaypin, OUTPUT);
-  digitalWrite(relaypin,relay_off_state);
-}
+  digitalWrite(relaypin,relay_off_level);
 
-//Call this in the main loop, for every loop, as often as possible
-void Relay::loop()
-{
-  if(digitalRead(isrunningsensorpin) == relay_on_state || ((relaytype == RELAY_MOMENTARY) && (RelayVirtualStatus == 1)))
-  {
-    UpTime += millis() - StartTime;
-    StartTime = millis();
-  }
-
-  // Reset the underlying momentary switch relay  OFF
-  if ((relaytype == RELAY_MOMENTARY) && (MomentarySwitchState == 1) && ((millis() - MomentarySwitchStart) >= RELAY_MOMENTARY_SWITCH_SHORT_CLICK_DELAY))
-  {
-    digitalWrite(relaypin, relay_off_state);  // Stop momentary switch after RELAY_MOMENTARY_SWITCH_SHORT_CLICK_DELAY ms
-    MomentarySwitchState = 0;
-  }
-
-  if((CurrMaxUpTime > 0) && (UpTime >= CurrMaxUpTime))
-  {
-    Stop();
-    UpTimeError = true;
-  }
-
-  if(interlockpin != RELAY_NO_INTERLOCK)
-  {
-    if(digitalRead(interlockpin) == interlock_off_state)
-       Stop();
+  // Create timer used by bistable switches to switch off after predefined period of time
+  if (relaytype == RELAY_BISTABLE) {
+    tmr = xTimerCreate("BistableTimer", pdMS_TO_TICKS(RELAY_BISTABLE_SWITCH_SHORT_CLICK_DELAY), pdFALSE, static_cast<void*>(this) , CallBackTimer);
+    if (tmr == NULL) {
+          //Debug.print(DBG_ERROR,"Bistable relay timer creation failed (pin %d)",relaypin);
+    }
   }
 }
 
-//Switch pump ON if over time was not reached, tank is not empty and interlock is OK
+//Switch the relay ON
 bool Relay::Start()
 {
-  if (relaytype == RELAY_MOMENTARY) // If Pump is Momentary
+  if (!IsActive()) 
   {
-    Debug.print(DBG_VERBOSE,"Start : Relay Momentary");
-    if((RelayVirtualStatus == 0) // Check that the Status is not already ON
-      && !UpTimeError
-      && ((interlockpin == RELAY_NO_INTERLOCK) || (digitalRead(interlockpin) == interlock_on_state)))    // if((digitalRead(relaypin) == false))
-    {
-        Debug.print(DBG_VERBOSE,"Start : Start Really");
-        MomentarySwitchStart = millis();
-        digitalWrite(relaypin, relay_on_state);
-        StartTime = LastStartTime = millis();
-        RelayVirtualStatus = 1;
-        MomentarySwitchState = 1;
-        return true; 
+    if (relaytype == RELAY_BISTABLE) 
+    { // If relay is BISTABLE type
+      if (tmr == NULL)  // If timer was not properly initialized
+        return false;
+
+        // Launch timer to switch the BISTABLE relay back off after the delay
+        if( xTimerStart( tmr, 0 ) != pdPASS )
+          return false;
+
+      RelayVirtualStatus = 1;
     }
-    else
-    {
-      return false;
-    }
-  }
-  else 
-  {
-    if((digitalRead(isrunningsensorpin) == relay_off_state) 
-      && !UpTimeError
-      && ((interlockpin == RELAY_NO_INTERLOCK) || (digitalRead(interlockpin) == interlock_on_state)))    //if((digitalRead(relaypin) == false))
-    {
-      digitalWrite(relaypin, relay_on_state);
-      StartTime = LastStartTime = millis(); 
-      return true; 
-    }
-    else return false;
-  }
+    digitalWrite(relaypin, relay_on_level);
+    return true; 
+  } else
+    return false;
 }
 
 //Switch pump OFF
 bool Relay::Stop()
 {
-  if (relaytype == RELAY_MOMENTARY)
+  if (IsActive()) 
   {
-    if(RelayVirtualStatus == 1)
-    {
-      MomentarySwitchStart = millis();
-      digitalWrite(relaypin, relay_on_state);
-      UpTime += millis() - StartTime;
+    if (relaytype == RELAY_BISTABLE) 
+    { // If relay is BISTABLE type
+      if (tmr == NULL)  // If timer was not properly initialized
+        return false;
+
+        // Launch timer to switch the BISTABLE relay back off after the delay
+        if( xTimerStart( tmr, 0 ) != pdPASS )
+          return false;
+
       RelayVirtualStatus = 0;
-      MomentarySwitchState = 1;
-      return true;
     }
-    else
-    {
-      return false;
-    }
-  }
-  else
-  {  
-    if(digitalRead(isrunningsensorpin) == relay_on_state)
-    {
-      digitalWrite(relaypin, relay_off_state);
-      UpTime += millis() - StartTime; 
-      return true;
-    }
-    else return false;
-  }
+    digitalWrite(relaypin, (relaytype == RELAY_BISTABLE)? relay_on_level : relay_off_level);
+    return true; 
+  } else
+    return false;
 }
 
-//Reset the tracking of running time
-//This is typically called every day at midnight
-void Relay::ResetUpTime()
+//Switch pump OFF
+void Relay::Toggle()
 {
-  StartTime = 0;
-  StopTime = 0;
-  UpTime = 0;
-  CurrMaxUpTime = MaxUpTime;
+  (IsActive()) ? Stop() : Start();  // Invert the position of the relay
 }
 
-// Get the value 0 or 1 corresponding to the inactive state of the pump
-bool Relay::GetOffLevel()
+// Get the value 0 or 1 corresponding to the active level of the relay
+int Relay::GetActiveLevel()
 {
-  return (relay_off_state);
+  return (relay_on_level);
 }
 
-//Set a maximum running time (in millisecs) per day (in case ResetUpTime() is called once per day)
-//Once reached, pump is stopped and "UpTimeError" error flag is raised
-//Set "Max" to 0 to disable limit
-void Relay::SetMaxUpTime(unsigned long Max)
+// Get the value 0 or 1 corresponding to the inactive level of the relay
+int Relay::GetInactiveLevel()
 {
-  MaxUpTime = Max;
-  CurrMaxUpTime = MaxUpTime;
+  return (relay_off_level);
 }
 
-//Clear "UpTimeError" error flag and allow the pump to run for an extra MaxUpTime
-void Relay::ClearErrors()
+//Set pump relay to be active on HIGH or LOW state of the corresponding pin
+void Relay::SetActiveLevel(uint8_t RelayLevel)
 {
-  if(UpTimeError)
+    relay_on_level = (RelayLevel == RELAY_ACTIVE_HIGH)? HIGH : LOW;
+    relay_off_level = (RelayLevel == RELAY_ACTIVE_HIGH)? LOW : HIGH;
+}
+
+// Return pin number related to this relay
+uint8_t Relay::GetRelayPin()
+{
+  return relaypin;
+}
+
+// Set the pin number for this relay
+void Relay::SetRelayPin(uint8_t RelayPin)
+{
+  relaypin = RelayPin;
+  // Open the port for OUTPUT and set it to down state
+  pinMode(relaypin, OUTPUT);
+  digitalWrite(relaypin,relay_off_level);
+}
+
+// Change relay type STANDARD or BISTABLE
+void Relay::SetRelayType(uint8_t RelayType)
+{
+  // Change from standard to bistable
+  if ((relaytype == RELAY_STD) && (RelayType == RELAY_BISTABLE))  
   {
-    CurrMaxUpTime += MaxUpTime;
-    UpTimeError = false;
+    // Create timer used by bistable switches to switch off after predefined period of time
+    tmr = xTimerCreate("BistableTimer", pdMS_TO_TICKS(RELAY_BISTABLE_SWITCH_SHORT_CLICK_DELAY), pdFALSE, static_cast<void*>(this) , CallBackTimer);
+    if (tmr == NULL) {
+          //Debug.print(DBG_ERROR,"Bistable relay timer creation failed (pin %d)",relaypin);
+    }
   }
+
+  // Change from bistable to standard
+  if ((relaytype == RELAY_BISTABLE) && (RelayType == RELAY_STD))  // Move from standard to bistable
+  {
+    // No need for a timer anymore
+    xTimerDelete(tmr, 0);
+  }
+  relaytype = RelayType;
 }
 
-//interlock status
-bool Relay::Interlock()
+//relay status
+bool Relay::IsActive()
 {
-  return (digitalRead(interlockpin) == interlock_on_state);
-}
-
-//pump status
-bool Relay::IsRunning()
-{
-  if (relaytype == RELAY_MOMENTARY)
+  if (relaytype == RELAY_BISTABLE)
   {
     return (RelayVirtualStatus == 1);
   }
   else
   {
-    return (digitalRead(isrunningsensorpin) == relay_on_state);
+    return (digitalRead(isonsensorpin) == relay_on_level);
   }
 }

@@ -98,10 +98,7 @@ void PoolMaster(void *pvParameters)
     PhPump.loop();
     ChlPump.loop();
     RobotPump.loop(); 
-
-    RELAYR0.loop();
-    RELAYR1.loop();
-    OrpProd.loop(); 
+    OrpProd.loop();
 
     //reset time counters at midnight and send sync request to time server
     if (hour() == 0 && !DoneForTheDay)
@@ -118,9 +115,6 @@ void PoolMaster(void *pvParameters)
         ChlPump.ResetUpTime();
         ChlPump.SetTankFill(storage.ChlFill);
         RobotPump.ResetUpTime();
-
-        RELAYR0.ResetUpTime();
-        RELAYR1.ResetUpTime();
         OrpProd.ResetUpTime();
 
         EmergencyStopFiltPump = false;

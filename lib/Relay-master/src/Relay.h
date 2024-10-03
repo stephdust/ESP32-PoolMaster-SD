@@ -1,13 +1,12 @@
 /*
-            Relay - a simple library to handle home-pool relays
+            Relay - a simple library to handle relays
                  (c) Christophe <christophe.belmont@gmail.com> 2024
 Features: 
 
-- keeps track of active and inactive time
 - handle high level and low level active relays
-- handle momentary relay operation or standard relay operation
-- interlock option to prevent relay from switching under condition
-
+- handle bistable relay operation or standard relay operation
+  In case of bistable relays, please note that there is no possibility to know the real underlying state of the relay
+  more specifically in case of system restart. This must be dealt with at higher level in your code.
 
 NB: all timings are in milliseconds
 */
@@ -17,55 +16,40 @@ NB: all timings are in milliseconds
 #ifndef RELAY_h
 #define RELAY_h
 
-#define RELAY_VERSION "1.0.0"
+#define RELAY_VERSION "1.0.1"
 
-//Constants used in some of the functions below
+//Class constants
 #define RELAY_ACTIVE_HIGH  1
 #define RELAY_ACTIVE_LOW  0
-#define STATE_ON  1
-#define STATE_OFF 0
-#define RELAY_NO_INTERLOCK 255
-#define RELAY_STD  1            // Underlying relay works normally
-#define RELAY_MOMENTARY  2      // Underlying relay activate and deactive shortly after to simulate button press
-#define RELAY_MOMENTARY_SWITCH_SHORT_CLICK_DELAY  500 // In Milliseconds
-#define RELAY_MOMENTARY_SWITCH_LONG_CLICK_DELAY  2000 // In Milliseconds
-
-#define Relay_DefaultMaxUpTime 60*60*1000*24 //default value is 24 hours  
+#define RELAY_STD  1           // Underlying relay works normally
+#define RELAY_BISTABLE  2      // Underlying relay activate and deactive shortly after to simulate button press
+#define RELAY_BISTABLE_SWITCH_SHORT_CLICK_DELAY  500 // In Milliseconds
 
 class Relay{
   public:
 
-    Relay(uint8_t, uint8_t, uint8_t = RELAY_NO_INTERLOCK,  uint8_t = RELAY_STD, uint8_t = RELAY_ACTIVE_LOW, uint8_t = RELAY_ACTIVE_LOW);    
-    void loop();
+    Relay(uint8_t, uint8_t = RELAY_ACTIVE_LOW, uint8_t = RELAY_STD);
+
     bool Start();
     bool Stop();
-    bool IsRunning();
-    bool Interlock();
-    void SetMaxUpTime(unsigned long Max);
-    void ResetUpTime();
-    bool GetOffLevel();
-    void ClearErrors();
-    
-    unsigned long UpTime;
-    unsigned long MaxUpTime;
-    unsigned long CurrMaxUpTime;
-    bool UpTimeError;
-    bool RelayVirtualStatus;
-    bool MomentarySwitchState;
-    unsigned long StartTime;
-    unsigned long LastStartTime;
-    unsigned long MomentarySwitchStart;
-    unsigned long StopTime; 
-       
+    void Toggle();
+
+    int GetActiveLevel();
+    int GetInactiveLevel();
+    void SetActiveLevel(uint8_t);
+
+    uint8_t GetRelayPin();
+    void SetRelayPin(uint8_t);
+    void SetRelayType(uint8_t); // Set Standard or bistable
+    bool IsActive();
+
   private:
-     
+    TimerHandle_t tmr; // Used for bistable relay callback function
     uint8_t relaypin; 
-    uint8_t isrunningsensorpin;
-    uint8_t interlockpin;
-    uint8_t relaytype;
-    uint8_t relay_on_state;
-    uint8_t relay_off_state;
-    uint8_t interlock_on_state;
-    uint8_t interlock_off_state;
+    uint8_t isonsensorpin;
+    uint8_t relaytype;  // Standard or bistable
+    int relay_on_level;
+    int relay_off_level;
+    bool RelayVirtualStatus; // Retain status in case of bistable relay
 };
 #endif

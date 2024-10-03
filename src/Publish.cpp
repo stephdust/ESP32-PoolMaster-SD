@@ -48,8 +48,8 @@ void EncodeBitMap()
   BitMap2 |= (OrpPID.GetMode() & 1) << 6;
   BitMap2 |= (storage.AutoMode & 1) << 5;
   BitMap2 |= (RobotPump.IsRunning() & 1) << 4;  // Different from ParisBrest
-  BitMap2 |= (RELAYR0.IsRunning() & 1) << 3;
-  BitMap2 |= (RELAYR1.IsRunning() & 1) << 2;
+  BitMap2 |= (RELAYR0.IsActive() & 1) << 3;
+  BitMap2 |= (RELAYR1.IsActive() & 1) << 2;
   BitMap2 |= (storage.WinterMode & 1) << 1;
   BitMap2 |= (0 & 1U) << 0;     
 

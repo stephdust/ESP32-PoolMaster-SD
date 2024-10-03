@@ -111,6 +111,7 @@ void AnalogPoll(void *pvParameters)
       //PSI (water pressure)
       samples_PSI.add(psi_sensor_value);        // compute average of PSI from last 5 measurements
       storage.PSIValue = (samples_PSI.getAverage(5)*0.1875/1000.)*storage.PSICalibCoeffs0 + storage.PSICalibCoeffs1;
+      storage.PSIValue = (storage.PSIValue < 0)? 0 : storage.PSIValue;
     }
     unlockI2C();
 
@@ -217,6 +218,7 @@ void AnalogPoll(void *pvParameters)
         //PSI (water pressure)
         samples_PSI.add(psi_sensor_value);        // compute average of PSI from last 5 measurements
         storage.PSIValue = (samples_PSI.getAverage(5)*0.1875/1000.)*storage.PSICalibCoeffs0 + storage.PSICalibCoeffs1;
+        storage.PSIValue = (storage.PSIValue < 0)? 0 : storage.PSIValue;
 
         Debug.print(DBG_DEBUG,"pH: %5.0f - %4.2f - ORP: %5.0f - %3.0fmV - PSI: %5.0f - %4.2fBar\r",
             ph_sensor_value,storage.PhValue,orp_sensor_value,storage.OrpValue,psi_sensor_value,storage.PSIValue);

@@ -17,6 +17,7 @@ static String temp;
 static unsigned long LastAction = 0; // Last action time done on TFT. Go to sleep after TFT_SLEEP
 static char HourBuffer[9];
 static char DateBuffer[11];
+//static uint8_t Nextion_BitMap1 = 0;
 
 // Variables used to refresh buttons only on status change
 static bool TFT_Automode = false;
@@ -24,9 +25,8 @@ static bool TFT_Filt = false;
 static bool TFT_Robot = false;
 static bool TFT_R0 = false;
 static bool TFT_R1 = false;
-static bool TFT_R2_Winter = false;
+static bool TFT_Winter = false;
 static bool TFT_Electro = false; // ajout
-static bool TFT_ElectroMode = false; // ajout
 static bool TFT_pHPIDEnabled = false; // ajout
 static bool TFT_OrpPIDEnabled = false; // ajout
 
@@ -93,6 +93,19 @@ void UpdateTFT()
   // Updates done only if TFT ON, useless (and not taken into account) if not
   if (TFT_ON)
   {
+    // Encode States into integer
+   /*Nextion_BitMap1 = 0;
+    Nextion_BitMap1 |= (FiltrationPump.IsRunning() & 1) << 7;
+    Nextion_BitMap1 |= (PhPump.IsRunning() & 1) << 6;
+    Nextion_BitMap1 |= (ChlPump.IsRunning() & 1) << 5;
+    Nextion_BitMap1 |= (PhPump.TankLevel() & 1) << 4;
+    Nextion_BitMap1 |= (ChlPump.TankLevel() & 1) << 3;
+    Nextion_BitMap1 |= (PSIError & 1) << 2;
+    Nextion_BitMap1 |= (PhPump.UpTimeError & 1) << 1;
+    Nextion_BitMap1 |= (ChlPump.UpTimeError & 1) << 0;*/
+
+    //myNex.writeNum("storage.NxtBitmap1.val", Nextion_BitMap1);
+
     sprintf(HourBuffer, "%02d:%02d:%02d", hour(), minute(), second());
     myNex.writeStr("pageHome.vaTime.txt", HourBuffer);
     sprintf(DateBuffer, "%02d/%02d/%04d", day(), month(), year());
@@ -106,12 +119,12 @@ void UpdateTFT()
     { TFT_Automode = storage.AutoMode;
       myNex.writeNum(F("pageHome.vaMode.val"), storage.AutoMode);
     }
-    if (TFT_R2_Winter != storage.WinterMode)
-    { TFT_R2_Winter = storage.WinterMode;
+    if (TFT_Winter != storage.WinterMode)
+    { TFT_Winter = storage.WinterMode;
       myNex.writeNum(F("pageSwitch.vaR2.val"), storage.WinterMode);
     }
-    if(TFT_R0 != RELAYR0.IsRunning())
-      { TFT_R0 = RELAYR0.IsRunning();
+    if(TFT_R0 != RELAYR0.IsActive())
+      { TFT_R0 = RELAYR0.IsActive();
         myNex.writeNum(F("pageSwitch.vaR0.val"), TFT_R0);
       }
     if(TFT_pHPIDEnabled != storage.pHPIDEnabled)
@@ -186,14 +199,14 @@ void UpdateTFT()
       { TFT_Robot = RobotPump.IsRunning();
         myNex.writeNum(F("pageSwitch.vaRobot.val"), TFT_Robot);
       }
-      if(TFT_R1 != RELAYR1.IsRunning())
-      { TFT_R1 = RELAYR1.IsRunning();
+      if(TFT_R1 != RELAYR1.IsActive())
+      { TFT_R1 = RELAYR1.IsActive();
         myNex.writeNum(F("pageSwitch.vaR1.val"), TFT_R1);
       }
       if(TFT_Electro != OrpProd.IsRunning())
       { TFT_Electro = OrpProd.IsRunning();
         myNex.writeNum(F("pageSwitch.vaElectroOn.val"), TFT_Electro);
-      }  
+      } 
     }
 
     if (CurrentPage == 1||CurrentPage == 2)
@@ -256,8 +269,7 @@ void trigger3()
 void trigger5()
 {
   char Cmd[100] = "{\"Mode\":1}";
-  if (storage.AutoMode)
-    Cmd[8] = '0';
+  if (storage.AutoMode) Cmd[8] = '0';
   xQueueSendToBack(queueIn, &Cmd, 0);
   LastAction = millis();
 }
@@ -267,12 +279,8 @@ void trigger5()
 void trigger6()
 {
   char Cmd[100] = "{\"FiltPump\":1}";
-  if (FiltrationPump.IsRunning())
-  {
-    Cmd[12] = '0';
-  }
-  else
-    TFT_Filt = true;
+  if (FiltrationPump.IsRunning()) Cmd[12] = '0';
+  else TFT_Filt = true;
   xQueueSendToBack(queueIn, &Cmd, 0);
   LastAction = millis();
 }
@@ -282,12 +290,8 @@ void trigger6()
 void trigger7()
 {
   char Cmd[100] = "{\"RobotPump\":1}";
-  if (RobotPump.IsRunning())
-  {
-    Cmd[13] = '0';
-  }
-  else
-    TFT_Robot = true;
+  if (RobotPump.IsRunning()) Cmd[13] = '0';
+  else TFT_Robot = true;
   xQueueSendToBack(queueIn, &Cmd, 0);
   LastAction = millis();
 }
@@ -297,7 +301,8 @@ void trigger7()
 void trigger8()
 {
   char Cmd[100] = "{\"Relay\":[0,1]}";
-  if (RELAYR0.IsRunning())  Cmd[12] = '0';  // Test without changing TFT variable
+  if (RELAYR0.IsActive())  Cmd[12] = '0'; 
+  else TFT_R0 = true;
   xQueueSendToBack(queueIn, &Cmd, 0);
   LastAction = millis();
 }
@@ -307,12 +312,8 @@ void trigger8()
 void trigger9()
 {
   char Cmd[100] = "{\"Relay\":[1,1]}";
-  if (RELAYR1.IsRunning())
-  {
-    Cmd[12] = '0';
-  }
-  else
-    TFT_R1 = true;
+  if (RELAYR1.IsActive()) Cmd[12] = '0';
+  else TFT_R1 = true;
   xQueueSendToBack(queueIn, &Cmd, 0);
   LastAction = millis();
 }
@@ -322,12 +323,8 @@ void trigger9()
 void trigger10()
 {
   char Cmd[100] = "{\"Winter\":1}";
-  if (storage.WinterMode)
-  {
-    Cmd[10] = '0';
-  }
-  else
-    TFT_R2_Winter = true;
+  if (storage.WinterMode) Cmd[10] = '0';
+  else TFT_Winter = true;
   xQueueSendToBack(queueIn, &Cmd, 0);
   LastAction = millis();
 }
@@ -357,8 +354,7 @@ void trigger12()
 void trigger13()
 {
   char Cmd[100] = "{\"PhPID\":1}";
-  if (PhPID.GetMode() == 1)
-    Cmd[9] = '0';
+  if (PhPID.GetMode() == 1)  Cmd[9] = '0';
   xQueueSendToBack(queueIn, &Cmd, 0);
   LastAction = millis();
 }
@@ -368,8 +364,7 @@ void trigger13()
 void trigger14()
 {
   char Cmd[100] = "{\"OrpPID\":1}";
-  if (OrpPID.GetMode() == 1)
-    Cmd[10] = '0';
+  if (OrpPID.GetMode() == 1)  Cmd[10] = '0';
   xQueueSendToBack(queueIn, &Cmd, 0);
   LastAction = millis();
 }
@@ -378,9 +373,8 @@ void trigger14()
 // printh 23 02 54 0F
 void trigger15()
 {
-  char Cmd[100] = "{\"Electrolyse\":1";
-  if (OrpProd.IsRunning())
-    Cmd[11] = '0';
+  char Cmd[100] = "{\"Electrolyse\":1}";
+  if (OrpProd.IsRunning())  Cmd[15] = '0';
   else TFT_Electro = true;
   xQueueSendToBack(queueIn, &Cmd, 0);
   LastAction = millis();
@@ -391,12 +385,8 @@ void trigger15()
 void trigger16()
 {
   char Cmd[100] = "{\"PhPIDEnabled\":1}";
-  if (storage.pHPIDEnabled)
-  {
-    Cmd[10] = '0';
-  }
-  else
-    TFT_pHPIDEnabled = true;
+  if (storage.pHPIDEnabled) Cmd[16] = '0';
+  else TFT_pHPIDEnabled = true;
   xQueueSendToBack(queueIn, &Cmd, 0);
   LastAction = millis();
 }
@@ -406,12 +396,8 @@ void trigger16()
 void trigger17()
 {
   char Cmd[100] = "{\"OrpPIDEnabled\":1}";
-  if (storage.OrpPIDEnabled)
-  {
-    Cmd[10] = '0';
-  }
-  else
-    TFT_OrpPIDEnabled = true;
+  if (storage.OrpPIDEnabled) Cmd[17] = '0';
+  else TFT_OrpPIDEnabled = true;
   xQueueSendToBack(queueIn, &Cmd, 0);
   LastAction = millis();
 }
@@ -421,12 +407,10 @@ void trigger17()
 void trigger18()
 {
   char Cmd[100] = "{\"ElectrolyseMode\":1}";
-  if (storage.ElectrolyseMode)
-  {
-    Cmd[10] = '0';
-  }
-  else
-    TFT_ElectroMode = true;
+  if (storage.ElectrolyseMode) Cmd[19] = '0';
   xQueueSendToBack(queueIn, &Cmd, 0);
   LastAction = millis();
 }
+
+
+// BUTTONS OFF TRIGGER

@@ -54,11 +54,11 @@ extern Pump FiltrationPump;
 extern Pump PhPump;
 extern Pump ChlPump;
 extern Pump RobotPump;
+extern Pump OrpProd;
 
 // The Relay to activate and deactivate Orp production
 extern Relay RELAYR0;
 extern Relay RELAYR1;
-extern Relay OrpProd;
 
 extern WebServer server;
 
