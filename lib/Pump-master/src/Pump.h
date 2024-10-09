@@ -10,7 +10,6 @@ Features:
 NB: all timings are in milliseconds
 */
 
-#include "Arduino_DebugUtils.h"   // Debug.print
 #include "Relay.h"                // To handle underlying pump relays
 
 #ifndef PUMP_h

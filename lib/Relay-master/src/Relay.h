@@ -11,8 +11,6 @@ Features:
 NB: all timings are in milliseconds
 */
 
-#include "Arduino_DebugUtils.h"   // Debug.print
-
 #ifndef RELAY_h
 #define RELAY_h
 
