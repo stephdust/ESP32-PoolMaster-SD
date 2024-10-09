@@ -292,6 +292,7 @@ void setup()
   // Configure OrpProd relay as bistable (simulate a button press to turn on and off the Salt Water Chlorine generator)
   // default relay type for class Pump
   OrpProd.SetRelayType(RELAY_BISTABLE); 
+  //OrpProd.GetRelayReference()->SetBistableDelay(500); // Default delay between up and down for bistable relay is 500ms. Can be changed here.
 
   // Start filtration pump at power-on if within scheduled time slots -- You can choose not to do this and start pump manually
   if (storage.AutoMode && (hour() >= storage.FiltrationStart) && (hour() < storage.FiltrationStop))
