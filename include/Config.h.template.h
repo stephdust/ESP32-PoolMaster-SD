@@ -59,6 +59,7 @@
 //and status LED through PCF8574A 
 #define I2C_SDA			21
 #define I2C_SCL			22
+#define PCF8574ADDRESS  0x20 // 0x20 for PCF8574(N) or 0x38 for PCF8574A(N)
 
 //Type of pH and Orp sensors acquisition :
 //INT_ADS1115 : single ended signal with internal ADS1115 ADC (default)
@@ -69,10 +70,6 @@
 
 // Buzzer
 #define BUZZER           2
-
-// PCF8574 model could be:
-//  1 - PCF8574AN
-#define PCF8574_ADDR  0x20
 
 #define WDT_TIMEOUT     10
 

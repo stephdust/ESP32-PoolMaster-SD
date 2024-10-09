@@ -3,23 +3,21 @@
 
 //Constructor
 //PumpPin is the Arduino relay output pin number to be switched to start/stop the pump
+//IsRunningSensorPin is the pin which is checked to know whether the pump is running or not. 
+//It can be the same pin as "PumpPin" in case there is no sensor on the pump (pressure, current, etc) which is not as robust. 
+//This option is especially useful in the case where the filtration pump is not managed by the Arduino. 
 //TankLevelPin is the Arduino digital input pin number connected to the tank level switch
 //Interlockpin is the Arduino digital input number connected to an "interlock". 
 //If this input is Inactive, pump is stopped and/or cannot start. This is used for instance to stop
 //the Orp or pH pumps in case filtration pump is not running
-//PumpRelayLevel, InterLockRelayLevel choose whether pump relay and interlock is considered active at high level or low level
-//IsRunningSensorPin is the pin which is checked to know whether the pump is running or not. 
-//It can be the same pin as "PumpPin" in case there is no sensor on the pump (pressure, current, etc) which is not as robust. 
-//This option is especially useful in the case where the filtration pump is not managed by the Arduino. 
+//PumpRelayLevel choose whether pump relay is considered active at high level or low level
+//InterLockRelayLevel choose whether interlock is considered active at high level or low level
 //FlowRate is the flow rate of the pump in Liters/Hour, typically 1.5 or 3.0 L/hour for peristaltic pumps for pools. This is used to compute how much of the tank we have emptied out
 //TankVolume is used here to compute the percentage fill used
-//PumpType defines whether the underlying relay should work normally or momentarilly simulating a button press
-
 
 Pump::Pump(uint8_t PumpPin, uint8_t IsRunningSensorPin, uint8_t TankLevelPin, uint8_t Interlockpin,
-           uint8_t PumpRelayLevel, uint8_t InterLockRelayLevel, double FlowRate, double TankVolume, double TankFill) : pumprelay(PumpPin, PumpRelayLevel)
+           uint8_t PumpRelayLevel, uint8_t InterLockRelayLevel, double FlowRate, double TankVolume, double TankFill) : pumprelay(PumpPin, IsRunningSensorPin, PumpRelayLevel)
 {
-  isrunningsensorpin = IsRunningSensorPin;
   tanklevelpin = TankLevelPin;
   interlockpin = Interlockpin;
   flowrate = FlowRate; //in Liters per hour

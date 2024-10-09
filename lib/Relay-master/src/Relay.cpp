@@ -16,14 +16,15 @@ auto CallBackTimer = []( TimerHandle_t xTimer )
 //RelayType defines whether the underlying relay should work normally on/off or bistable simulating a button press (relay switch to on then off after a predefined time)
 //RelayLevels either RELAY_ACTIVE_HIGH if relay is on when pin is high state or RELAY_ACTIVE_LOW if relay is on when pin in low state
 
-Relay::Relay(uint8_t RelayPin, uint8_t RelayLevels, uint8_t RelayType)
+Relay::Relay(uint8_t RelayPin, uint8_t RelaySensorPin, uint8_t RelayLevels, uint8_t RelayType)
 {
   relaypin = RelayPin;
-  isonsensorpin = RelayPin;
-  relaytype = RelayType; // Standard (RELAY_STD) or BISTABLE (RELAY_BISTABLE)
+  isonsensorpin = RelaySensorPin;
+  relaytype = RelayType; // Standard (RELAY_MONOSTABLE) or BISTABLE (RELAY_BISTABLE)
   relay_on_level = (RelayLevels == RELAY_ACTIVE_HIGH)? HIGH : LOW;
   relay_off_level = (RelayLevels == RELAY_ACTIVE_HIGH)? LOW : HIGH;
   RelayVirtualStatus = 0;
+  bistable_relay_delay = RELAY_BISTABLE_SWITCH_SHORT_CLICK_DELAY;
 
   // Open the port for OUTPUT and set it to down state
   pinMode(relaypin, OUTPUT);
@@ -31,12 +32,16 @@ Relay::Relay(uint8_t RelayPin, uint8_t RelayLevels, uint8_t RelayType)
 
   // Create timer used by bistable switches to switch off after predefined period of time
   if (relaytype == RELAY_BISTABLE) {
-    tmr = xTimerCreate("BistableTimer", pdMS_TO_TICKS(RELAY_BISTABLE_SWITCH_SHORT_CLICK_DELAY), pdFALSE, static_cast<void*>(this) , CallBackTimer);
-    if (tmr == NULL) {
+    tmr = xTimerCreate("BistableTimer", pdMS_TO_TICKS(bistable_relay_delay), pdFALSE, static_cast<void*>(this) , CallBackTimer);
+    if (tmr == NULL ) {
           //Debug.print(DBG_ERROR,"Bistable relay timer creation failed (pin %d)",relaypin);
     }
   }
 }
+
+//Constructors with only one argument
+Relay::Relay(uint8_t RelayPin) 
+     :Relay(RelayPin,RelayPin) {}
 
 //Switch the relay ON
 bool Relay::Start()
@@ -45,7 +50,7 @@ bool Relay::Start()
   {
     if (relaytype == RELAY_BISTABLE) 
     { // If relay is BISTABLE type
-      if (tmr == NULL)  // If timer was not properly initialized
+      if (tmr == NULL )  // If timer was not properly initialized
         return false;
 
         // Launch timer to switch the BISTABLE relay back off after the delay
@@ -67,7 +72,7 @@ bool Relay::Stop()
   {
     if (relaytype == RELAY_BISTABLE) 
     { // If relay is BISTABLE type
-      if (tmr == NULL)  // If timer was not properly initialized
+      if (tmr == NULL )  // If timer was not properly initialized
         return false;
 
         // Launch timer to switch the BISTABLE relay back off after the delay
@@ -82,7 +87,7 @@ bool Relay::Stop()
     return false;
 }
 
-//Switch pump OFF
+//Toggle switch state
 void Relay::Toggle()
 {
   (IsActive()) ? Stop() : Start();  // Invert the position of the relay
@@ -107,6 +112,28 @@ void Relay::SetActiveLevel(uint8_t RelayLevel)
     relay_off_level = (RelayLevel == RELAY_ACTIVE_HIGH)? LOW : HIGH;
 }
 
+bool Relay::SetBistableDelay(int Bistable_Relay_Delay)
+{
+  bool isTimerActive = false;
+  bistable_relay_delay = Bistable_Relay_Delay;
+
+  // Initialize timer to new value
+  if(relaytype == RELAY_BISTABLE)
+  {
+    // Check if timer is currently active to futher reactivate
+    isTimerActive = ( xTimerIsTimerActive( tmr ) != pdFALSE )? true : false;
+
+    if (xTimerChangePeriod( tmr, pdMS_TO_TICKS(bistable_relay_delay), 0 ) != pdPASS )
+      return false;
+    
+    // xTimerChangePeriod causes the timer to restart. If it was dormant before stop it.
+    if (!isTimerActive)
+      xTimerStop( tmr, 0 ); 
+    return true;
+  } else
+    return true;
+}
+
 // Return pin number related to this relay
 uint8_t Relay::GetRelayPin()
 {
@@ -126,17 +153,17 @@ void Relay::SetRelayPin(uint8_t RelayPin)
 void Relay::SetRelayType(uint8_t RelayType)
 {
   // Change from standard to bistable
-  if ((relaytype == RELAY_STD) && (RelayType == RELAY_BISTABLE))  
+  if ((relaytype == RELAY_MONOSTABLE) && (RelayType == RELAY_BISTABLE))  
   {
     // Create timer used by bistable switches to switch off after predefined period of time
     tmr = xTimerCreate("BistableTimer", pdMS_TO_TICKS(RELAY_BISTABLE_SWITCH_SHORT_CLICK_DELAY), pdFALSE, static_cast<void*>(this) , CallBackTimer);
-    if (tmr == NULL) {
+    if (tmr == NULL ) {
           //Debug.print(DBG_ERROR,"Bistable relay timer creation failed (pin %d)",relaypin);
     }
   }
 
   // Change from bistable to standard
-  if ((relaytype == RELAY_BISTABLE) && (RelayType == RELAY_STD))  // Move from standard to bistable
+  if ((relaytype == RELAY_BISTABLE) && (RelayType == RELAY_MONOSTABLE))  // Move from standard to bistable
   {
     // No need for a timer anymore
     xTimerDelete(tmr, 0);

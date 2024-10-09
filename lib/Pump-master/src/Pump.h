@@ -32,7 +32,7 @@ class Pump{
 
     Pump(uint8_t);
     Pump(uint8_t, uint8_t);
-    Pump(uint8_t, uint8_t, uint8_t, Relay* = NULL,  double = 0., double = 0., double =100.);                         // Constructor to pass Interlock pump object for runtime change in the future
+    Pump(uint8_t, uint8_t, uint8_t, Relay* = nullptr ,  double = 0., double = 0., double =100.);                         // Constructor to pass Interlock pump object for runtime change in the future
     Pump(uint8_t, uint8_t, uint8_t, uint8_t,  double = 0., double = 0., double =100. );                             // Constructor compatible with version 1.0.1
     Pump(uint8_t, uint8_t, uint8_t, uint8_t,  uint8_t , uint8_t ,  double = 0., double = 0., double =100. );        // Version 1.0.2 constructor
 
@@ -75,7 +75,6 @@ class Pump{
   private:
     Relay   pumprelay;
     Relay*  interlockrelay_; // Interlock can be passed 
-    uint8_t isrunningsensorpin;
     uint8_t tanklevelpin;
     uint8_t interlockpin;
     int interlock_on_level;

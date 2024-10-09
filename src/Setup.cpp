@@ -79,16 +79,36 @@ Preferences nvs;
 // be read from NVS later. This means that the correct objects attributes must be set later in
 // the setup function (fortunatelly, init methods exist).
 
-// The four pumps of the system (instanciate the Pump class)
-// In this case, all pumps start/Stop are managed by relays. pH, ORP and Robot pumps are interlocked with 
+// The five pumps of the system (instanciate the Pump class)
+// In this case, all pumps start/Stop are managed by relays. pH, ORP, Robot and Electrolyse SWG pumps are interlocked with 
 // filtration pump
+// Class Pump takes the following parameters:
+//    1/ The MCU relay output pin number to be switched by this pump
+//    2/ The MCU relay input pin number to monitor for the actual state of the pump (can be the same as first argument if directly controlled)
+//       This option is especially useful in the case where the filtration pump is not managed by the Arduino. 
+//    3/ The MCU digital input pin number connected to the tank low level switch (can be NO_TANK or NO_LEVEL)
+//    4/ The MCU digital input pin number to monitor for interlock. If this input is Inactive, pump is stopped and/or cannot start. This is used for instance to stop
+//       the Orp, pH and Electrolyse pumps in case filtration pump is not running
+//       Interlock argument can also be a reference to a Relay class which manages the interlocked object.
+//    5/ The relay level used for the pump. RELAY_ACTIVE_HIGH if relay ON when digital output is HIGH and RELAY_ACTIVE_LOW if relay ON when digital output is LOW.
+//    6/ The relay level used for the interlock. Same as above for the interlock pin. Which level HIGH or LOW is considered ON.
+//    7/ The flow rate of the pump in Liters/Hour, typically 1.5 or 3.0 L/hour for peristaltic pumps for pools.
+//       This is used to estimate how much of the tank we have emptied out.
+//    8/ Tankvolume is used to compute the percentage of tank used/remaining
+
+// FiltrationPump: This Pump controls the filtration, no tank attached and not interlocked to any element. SSD relay attached works with HIGH level.
 Pump FiltrationPump(FILTRATION_PUMP, FILTRATION_PUMP, (uint8_t)NO_TANK, (uint8_t)NO_INTERLOCK, (uint8_t)RELAY_ACTIVE_HIGH, (uint8_t)RELAY_ACTIVE_HIGH);
+// pHPump: This Pump has no low-level switch so remaining volume is estimated. It is interlocked with the relay of the FilrationPump
 Pump PhPump(PH_PUMP, PH_PUMP, NO_LEVEL, FiltrationPump.GetRelayReference(), storage.pHPumpFR, storage.pHTankVol, storage.AcidFill);
+// ChlPump: This Pump has no low-level switch so remaining volume is estimated. It is interlocked with the relay of the FilrationPump
 Pump ChlPump(CHL_PUMP, CHL_PUMP, NO_LEVEL, FiltrationPump.GetRelayReference(), storage.ChlPumpFR, storage.ChlTankVol, storage.ChlFill);
+// RobotPump: This Pump is not injecting liquid so tank is associated to it. It is interlocked with the relay of the FilrationPump
 Pump RobotPump(ROBOT_PUMP, ROBOT_PUMP, NO_TANK, FiltrationPump.GetRelayReference());
+// OrpProd: This Pump is associated with a Salt Water Chlorine Generator. It turns on and off the equipment to produce chlorine.
+// It has no tank associated. It is interlocked with the relay of the FilrationPump
 Pump OrpProd(ORP_PROD, ORP_PROD, NO_TANK, FiltrationPump.GetRelayReference()); // OrpProd is interlocked with the Pump Relay
 
-// The Relays to activate and deactivate function. OrpProd is interlocked with Pump relay
+// The Relays class to activate and deactivate digital pins
 Relay RELAYR0(RELAY_R0);
 Relay RELAYR1(RELAY_R1);
 
@@ -232,7 +252,7 @@ void setup()
   TempInit();
 
   // Clear status LEDs
-  Wire.beginTransmission(PCF8574_ADDR);
+  Wire.beginTransmission(PCF8574ADDRESS);
   Wire.write((uint8_t)0xFF);
   Wire.endTransmission();
 
@@ -269,7 +289,9 @@ void setup()
   ChlPump.SetTankFill(storage.ChlFill);
   ChlPump.SetMaxUpTime(storage.ChlPumpUpTimeLimit * 1000);
 
-  OrpProd.SetRelayType(RELAY_BISTABLE); // Configure OrpProd relay as bistable (simulate a button press for turn on and turn off)
+  // Configure OrpProd relay as bistable (simulate a button press to turn on and off the Salt Water Chlorine generator)
+  // default relay type for class Pump
+  //OrpProd.SetRelayType(RELAY_BISTABLE); 
 
   // Start filtration pump at power-on if within scheduled time slots -- You can choose not to do this and start pump manually
   if (storage.AutoMode && (hour() >= storage.FiltrationStart) && (hour() < storage.FiltrationStop))
