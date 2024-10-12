@@ -38,6 +38,8 @@ void onMqttMessage(char* , char* , AsyncMqttClientMessageProperties , size_t , s
 void onMqttPublish(uint16_t);
 void UpdateWiFi(bool);
 int  freeRam(void);
+void SetMQTTReady(void);  // To inform the Nextion that MQTT is ready
+void UpdateTFT(void);
 
 void initTimers() {
   mqttReconnectTimer = xTimerCreate("mqttTimer", pdMS_TO_TICKS(2000), pdFALSE, (void*)0, reinterpret_cast<TimerCallbackFunction_t>(connectToMqtt));
@@ -123,6 +125,8 @@ void onMqttConnect(bool sessionPresent){
   mqttClient.subscribe(PoolTopicAPI,2);
   mqttClient.publish(PoolTopicStatus,1,true,"{\"PoolMaster Online\":1}");
   MQTTConnection = true;
+  SetMQTTReady();
+  UpdateTFT();
 }
 
 void onMqttDisconnect(AsyncMqttClientDisconnectReason reason){

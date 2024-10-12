@@ -63,7 +63,7 @@ tm timeinfo;
 volatile bool startTasks = false;               // Signal to start loop tasks
 
 bool AntiFreezeFiltering = false;               // Filtration anti freeze mode
-bool EmergencyStopFiltPump = false;             // flag will be (re)set by double-tapp button
+//bool EmergencyStopFiltPump = false;             // flag will be (re)set by double-tapp button
 bool PSIError = false;                          // Water pressure OK
 bool cleaning_done = false;                     // daily cleaning done   
 
@@ -82,7 +82,7 @@ Preferences nvs;
 // The five pumps of the system (instanciate the Pump class)
 // In this case, all pumps start/Stop are managed by relays. pH, ORP, Robot and Electrolyse SWG pumps are interlocked with 
 // filtration pump
-// Class Pump takes the following parameters:
+// Pump class takes the following parameters:
 //    1/ The MCU relay output pin number to be switched by this pump
 //    2/ The MCU relay input pin number to monitor for the actual state of the pump (can be the same as first argument if directly controlled)
 //       This option is especially useful in the case where the filtration pump is not managed by the Arduino. 
@@ -104,9 +104,9 @@ Pump PhPump(PH_PUMP, PH_PUMP, NO_LEVEL, FiltrationPump.GetRelayReference(), stor
 Pump ChlPump(CHL_PUMP, CHL_PUMP, NO_LEVEL, FiltrationPump.GetRelayReference(), storage.ChlPumpFR, storage.ChlTankVol, storage.ChlFill);
 // RobotPump: This Pump is not injecting liquid so tank is associated to it. It is interlocked with the relay of the FilrationPump
 Pump RobotPump(ROBOT_PUMP, ROBOT_PUMP, NO_TANK, FiltrationPump.GetRelayReference());
-// OrpProd: This Pump is associated with a Salt Water Chlorine Generator. It turns on and off the equipment to produce chlorine.
+// SWG: This Pump is associated with a Salt Water Chlorine Generator. It turns on and off the equipment to produce chlorine.
 // It has no tank associated. It is interlocked with the relay of the FilrationPump
-Pump OrpProd(ORP_PROD, ORP_PROD, NO_TANK, FiltrationPump.GetRelayReference()); // OrpProd is interlocked with the Pump Relay
+Pump SWG(ORP_PROD, ORP_PROD, NO_TANK, FiltrationPump.GetRelayReference()); // SWG is interlocked with the Pump Relay
 
 // The Relays class to activate and deactivate digital pins
 Relay RELAYR0(RELAY_R0);
@@ -146,6 +146,12 @@ unsigned stack_hwm();
 void stack_mon(UBaseType_t&);
 void info();
 
+// Functions to inform Nextion of bootup process
+void SetBoardReady(void);
+void SetWifiReady(void);
+void SetNTPReady(void);
+void UpdateTFT(void);
+
 // Functions used as Tasks
 void PoolMaster(void*);
 void AnalogPoll(void*);
@@ -175,7 +181,8 @@ void setup()
   // Initialize Nextion TFT
   InitTFT();
   ResetTFT();
-
+  SetBoardReady();
+  UpdateTFT();
   //Read ConfigVersion. If does not match expected value, restore default values
   if(nvs.begin("PoolMaster",true))
   {
@@ -225,7 +232,8 @@ void setup()
     delay(500);
     Serial.print(".");
   }
-
+  SetWifiReady(); // Inform Nextion screen
+  UpdateTFT();
   // Config NTP, get time and set system time. This is done here in setup then every day at midnight
   // note: in timeinfo struct, months are from 0 to 11 and years are from 1900. Thus the corrections
   // to pass arguments to setTime which needs months from 1 to 12 and years from 2000...
@@ -234,6 +242,8 @@ void setup()
   readLocalTime();
   setTime(timeinfo.tm_hour,timeinfo.tm_min,timeinfo.tm_sec,timeinfo.tm_mday,timeinfo.tm_mon+1,timeinfo.tm_year-100);
   Debug.print(DBG_INFO,"%d/%02d/%02d %02d:%02d:%02d",year(),month(),day(),hour(),minute(),second());
+  SetNTPReady();  // Inform Nextion Screen
+  UpdateTFT();
 
   // Initialize the mDNS library.
   while (!MDNS.begin("PoolMaster")) {
@@ -289,10 +299,10 @@ void setup()
   ChlPump.SetTankFill(storage.ChlFill);
   ChlPump.SetMaxUpTime(storage.ChlPumpUpTimeLimit * 1000);
 
-  // Configure OrpProd relay as bistable (simulate a button press to turn on and off the Salt Water Chlorine generator)
+  // Configure SWG relay as bistable (simulate a button press to turn on and off the Salt Water Chlorine generator)
   // default relay type for class Pump
-  OrpProd.SetRelayType(RELAY_BISTABLE); 
-  //OrpProd.GetRelayReference()->SetBistableDelay(500); // Default delay between up and down for bistable relay is 500ms. Can be changed here.
+  SWG.SetRelayType(RELAY_BISTABLE); 
+  //SWG.GetRelayReference()->SetBistableDelay(500); // Default delay between up and down for bistable relay is 500ms. Can be changed here.
 
   // Start filtration pump at power-on if within scheduled time slots -- You can choose not to do this and start pump manually
   if (storage.AutoMode && (hour() >= storage.FiltrationStart) && (hour() < storage.FiltrationStop))
@@ -528,8 +538,8 @@ bool loadConfig()
   storage.SecureElectro         = nvs.getUChar("SecureElectro",15);  //ajout
   storage.DelayElectro          = nvs.getUChar("DelayElectro",2);  //ajout
   storage.ElectrolyseMode       = nvs.getUChar("ElectrolyseMode",0);  //ajout
-  storage.pHPIDEnabled          = nvs.getUChar("pHPIDEnabled",15);  //ajout
-  storage.OrpPIDEnabled         = nvs.getUChar("OrpPIDEnabled",2);  //ajout
+  storage.pHAutoMode            = nvs.getUChar("pHAutoMode",0);  //ajout
+  storage.OrpAutoMode           = nvs.getUChar("OrpAutoMode",0);  //ajout
 
 
   nvs.end();
@@ -550,8 +560,8 @@ bool loadConfig()
               storage.PhPIDOutput,storage.OrpPIDOutput,storage.TempValue,storage.PhValue,storage.OrpValue,storage.PSIValue);
   Debug.print(DBG_INFO,"%3.0f, %3.0f, %3.0f, %3.0f, %3.1f, %3.1f ",storage.AcidFill,storage.ChlFill,storage.pHTankVol,storage.ChlTankVol,
               storage.pHPumpFR,storage.ChlPumpFR);
-  Debug.print(DBG_INFO,"%d, %d, %d, %d %d",storage.SecureElectro,storage.DelayElectro,storage.ElectrolyseMode,storage.pHPIDEnabled,
-              storage.OrpPIDEnabled);
+  Debug.print(DBG_INFO,"%d, %d, %d, %d %d",storage.SecureElectro,storage.DelayElectro,storage.ElectrolyseMode,storage.pHAutoMode,
+              storage.OrpAutoMode);
 
   return (storage.ConfigVersion == CONFIG_VERSION);
 }
@@ -612,8 +622,8 @@ bool saveConfig()
   i += nvs.putUChar("SecureElectro",storage.SecureElectro);  //ajout
   i += nvs.putUChar("DelayElectro",storage.DelayElectro);  //ajout
   i += nvs.putUChar("ElectrolyseMode",storage.ElectrolyseMode);  //ajout
-  i += nvs.putUChar("pHPIDEnabled",storage.pHPIDEnabled);  //ajout
-  i += nvs.putUChar("OrpPIDEnabled",storage.OrpPIDEnabled);  //ajout
+  i += nvs.putUChar("pHAutoMode",storage.pHAutoMode);  //ajout
+  i += nvs.putUChar("OrpAutoMode",storage.OrpAutoMode);  //ajout
   nvs.end();
 
   Debug.print(DBG_INFO,"Bytes saved: %d / %d\n",i,sizeof(storage));

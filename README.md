@@ -171,7 +171,7 @@ IO2
 |-| :-------- |  :------------------------- |
 |7|  pHPID| current state of pH PID regulation loop (1=on, 0=off)
 |6|   OrpPID| current state of Orp PID regulation loop (1=on, 0=off)
-|5|   Mode| state of pH and Orp regulation mode (0=manual, 1=auto)
+|5|   Mode| filtration pump automation mode (0=manual, 1=automatic)
 |4|   RobotPump| current state of Robot Pump (1=on, 0=off)
 |3|   RELAYR0| current state of spare Relay0 (1=on, 0=off)
 |2|   RELAYR1|current state of spare Relay1 (1=on, 0=off)
@@ -188,8 +188,8 @@ IO3
 |4|   | Unused
 |3|   SWGMode| current mode of Salt Water Chlorine Generator (0=no SWG, 1=SWG active)
 |2|   SWGState|current state of Salt Water Chlorine Generator (0=off, 1=on)
-|1|   pHPIDEnabled| current mode of pH PID (0=stop, 1=PID active)
-|0|   OrpPIDEnabled| current mode of Orp PID (0=stop, 1=PID active)
+|1|   pHAutoMode| pH automation and regulation mode (0=manual, 1=automatic)
+|0|   OrpAutoMode| Orp automation and regulation mode (0=manual, 1=PID active)
 
 In addition the system published on-demand settings :
 ```http
@@ -264,10 +264,10 @@ Below are the Payloads/commands to publish on the "PoolTopicAPI" topic in Json f
 | :-------- |  :------------------------- |
 |{"Mode":1} or {"Mode":0} | set "Mode" to manual (0) or Auto (1). In Auto, filtration starts/stops at set times of the day and pH and Orp are regulated (if pH/Orp PID Mode activated see below)
 |{"FiltPump":1} or {"FiltPump":0} | manually start/stop the filtration pump
-|{"PhPIDEnabled":1} or {"PhPIDEnabled":0} | set " PID Mode" for pH regulation to manual (0) or Auto (1). In Auto mode the pH PID regulation loop (see below) turns on and off automatically. 
+|{"pHAutoMode":1} or {"pHAutoMode":0} | set " Automatic Mode" for pH regulation to manual (0) or Auto (1). In Auto mode the pH PID regulation loop (see below) turns on and off automatically. 
 |{"PhPID":1} or {"PhPID":0} | start/stop the Ph PID regulation loop which directly controls the pH pump.
 |{"PhPump":1} or {"PhPump":0} | manually start/stop the Acid pump to lower the Ph
-|{"OrpPIDEnabled":1} or {"OrpPIDEnabled":0} | set " PID Mode" for Orp regulation to manual (0) or Auto (1). In Auto mode the Orp PID regulation loop (see below) turns on and off automatically. 
+|{"OrpAutoMode":1} or {"OrpAutoMode":0} | set " Automatic Mode" for Orp regulation to manual (0) or Auto (1). In Auto mode the Orp PID regulation loop or SWG device (see below) turn on and off automatically. 
 |{"OrpPID":1} or {"OrpPID":0} | start/stop the Orp PID regulation loop which directly controls the Chlorine pump.
 |{"ChlPump":1} or {"ChlPump":0} | manually start/stop the Chl pump to add more Chlorine
 |{"ElectrolyseMode":1} or {"ElectrolyseMode":0} | set auto mode for Chlorine production via Salt Water Chlorine Generation. In Auto mode the Orp regulates itself (when filtration pump on) with Salt Water Chlorine Generator.

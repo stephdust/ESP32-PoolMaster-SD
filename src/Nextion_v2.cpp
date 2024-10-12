@@ -18,7 +18,7 @@
 #define GLOBAL  "globals" // Name of Nextion page to store global variables
 
 static volatile int CurrentPage = 0;
-static volatile bool TFT_ON = true;           // display status
+static volatile bool TFT_ON = true;           // display status (not in sleep mode at startup)
 
 static char temp[32];
 static unsigned long LastAction = 0; // Last action time done on TFT. Go to sleep after TFT_SLEEP
@@ -34,8 +34,13 @@ static bool TFT_R1 = false;
 static bool TFT_Winter = false;
 static bool TFT_Electro = false; // ajout
 static bool TFT_Electro_Mode = false; // ajout
-static bool TFT_pHPIDEnabled = false; // ajout
-static bool TFT_OrpPIDEnabled = false; // ajout
+static bool TFT_pHAutoMode = false; // ajout
+static bool TFT_OrpAutoMode = false; // ajout
+static bool PoolMaster_BoardReady = false;      // Is Board Up
+static bool PoolMaster_WifiReady = false;      // Is Wifi Up
+static bool PoolMaster_MQTTReady = false;      // Is MQTT Connected
+static bool PoolMaster_NTPReady = false;      // Is NTP Connected
+static bool PoolMaster_FullyLoaded = false;      // At startup gives time for everything to start before exiting Nextion's splash screen
 
 //Nextion TFT object. Choose which ever Serial port
 //you wish to connect to (not "Serial" which is used for debug), here Serial2 UART
@@ -44,8 +49,15 @@ static EasyNex myNex(Serial2);
 // Functions prototypes
 void InitTFT(void);
 void ResetTFT(void);
+void SetFullyLoaded(void);
+void SetBoardReady(void);
+void SetWifiReady(void);
+void SetMQTTReady(void);
+void SetNTPReady(void);
 void UpdateTFT(void);
 void UpdateWiFi(bool);
+
+  
 
 //Reset TFT at start of controller - Change transmission rate to 115200 bauds on both side (Nextion then ESP)
 //could have been not in HMI file, but it is good to know that after reset the Nextion goes back to 9600 bauds
@@ -53,9 +65,11 @@ void ResetTFT()
 {
   myNex.begin(115200);
   myNex.writeStr("sleep=0");
-  myNex.writeStr(F("rest"));
+  //myNex.writeStr(F("rest"));
   myNex.writeStr(F("wup=9")); // Exit from sleep on page 9 Loading
-  delay(1000);
+  myNex.writeStr(F("usup=1")); // Authorize auto wake up on serial data
+  myNex.writeStr("page pageSplash");
+  //delay(1000);
 }
 
 void InitTFT()
@@ -69,6 +83,29 @@ void InitTFT()
   myNex.writeNum(F(GLOBAL".vaR2.val"), 0);
   myNex.writeStr(F(GLOBAL".vaMCFW.txt"), FIRMW);
   myNex.writeStr(F(GLOBAL".vaTFTFW.txt"), TFT_FIRMW);
+}
+
+void SetFullyLoaded()
+{
+  PoolMaster_FullyLoaded = true;
+}
+
+void SetBoardReady()
+{
+  PoolMaster_BoardReady = true;
+}
+
+void SetWifiReady()
+{
+  PoolMaster_WifiReady = true;
+}
+void SetMQTTReady()
+{
+  PoolMaster_MQTTReady = true;
+}
+void SetNTPReady()
+{
+  PoolMaster_NTPReady = true;
 }
 
 void UpdateWiFi(bool wifi){
@@ -96,6 +133,13 @@ void UpdateTFT()
   // Updates done only if TFT ON, useless (and not taken into account) if not
   if(TFT_ON)
   {
+    // Set bootup parameters
+    myNex.writeNum(F(GLOBAL".vaFullload.val"),PoolMaster_FullyLoaded);
+    myNex.writeNum(F(GLOBAL".vaBOARDReady.val"),PoolMaster_BoardReady);
+    myNex.writeNum(F(GLOBAL".vaWIFIReady.val"),PoolMaster_WifiReady);
+    myNex.writeNum(F(GLOBAL".vaMQTTReady.val"),PoolMaster_MQTTReady);
+    myNex.writeNum(F(GLOBAL".vaNTPReady.val"),PoolMaster_FullyLoaded);
+
     sprintf(HourBuffer, PSTR("%02d:%02d:%02d"), hour(), minute(), second());
     myNex.writeStr(F(GLOBAL".vaTime.txt"),HourBuffer);
     sprintf(DateBuffer, PSTR("%02d/%02d/%04d"), day(), month(), year());
@@ -132,21 +176,21 @@ void UpdateTFT()
       { myNex.writeNum(F(GLOBAL".vaWinter.val"),storage.WinterMode);
         TFT_Winter = storage.WinterMode;
       }  
-      if(TFT_Electro != OrpProd.IsRunning())
-      { TFT_Electro = OrpProd.IsRunning();
+      if(TFT_Electro != SWG.IsRunning())
+      { TFT_Electro = SWG.IsRunning();
         myNex.writeNum(F(GLOBAL".vaElectroOn.val"), TFT_Electro);
       } 
       if(TFT_Electro_Mode != storage.ElectrolyseMode)
       { TFT_Electro_Mode = storage.ElectrolyseMode;
         myNex.writeNum(F(GLOBAL".vaElectrolyse.val"), TFT_Electro_Mode);
       } 
-      if(TFT_pHPIDEnabled != storage.pHPIDEnabled)
-      { TFT_pHPIDEnabled = storage.pHPIDEnabled;
-        myNex.writeNum(F(GLOBAL".vapHPIDEnable.val"), TFT_R0);
+      if(TFT_pHAutoMode != storage.pHAutoMode)
+      { TFT_pHAutoMode = storage.pHAutoMode;
+        myNex.writeNum(F(GLOBAL".vapHAutoMode.val"), TFT_pHAutoMode);
       }
-      if(TFT_OrpPIDEnabled != storage.OrpPIDEnabled)
-      { TFT_OrpPIDEnabled = storage.OrpPIDEnabled;
-        myNex.writeNum(F(GLOBAL".vaOrpPIDEnable.val"), TFT_R0);
+      if(TFT_OrpAutoMode != storage.OrpAutoMode)
+      { TFT_OrpAutoMode = storage.OrpAutoMode;
+        myNex.writeNum(F(GLOBAL".vaOrpAutoMode.val"), TFT_OrpAutoMode);
       }
     }
 
@@ -226,6 +270,7 @@ void UpdateTFT()
     {
       myNex.writeStr(F("thup=1"));
       myNex.writeStr(F("wup=9"));     // Wake up on page 9 Loading
+      myNex.writeStr(F("usup=1"));    // Authorize auto wake up on serial data
       myNex.writeStr(F("sleep=1"));
       TFT_ON = false;
     }
@@ -379,7 +424,7 @@ void trigger14()
 void trigger15()
 {
   char Cmd[100] = "{\"Electrolyse\":1}";
-  if (OrpProd.IsRunning())  Cmd[15] = '0';
+  if (SWG.IsRunning())  Cmd[15] = '0';
   else TFT_Electro = true;
   xQueueSendToBack(queueIn, &Cmd, 0);
   LastAction = millis();
@@ -389,9 +434,9 @@ void trigger15()
 // printh 23 02 54 10
 void trigger16()
 {
-  char Cmd[100] = "{\"PhPIDEnabled\":1}";
-  if (storage.pHPIDEnabled) Cmd[16] = '0';
-  else TFT_pHPIDEnabled = true;
+  char Cmd[100] = "{\"PhAutoMode\":1}";
+  if (storage.pHAutoMode) Cmd[16] = '0';
+  else TFT_pHAutoMode = true;
   xQueueSendToBack(queueIn, &Cmd, 0);
   LastAction = millis();
 }
@@ -400,9 +445,9 @@ void trigger16()
 // printh 23 02 54 11
 void trigger17()
 {
-  char Cmd[100] = "{\"OrpPIDEnabled\":1}";
-  if (storage.OrpPIDEnabled) Cmd[17] = '0';
-  else TFT_OrpPIDEnabled = true;
+  char Cmd[100] = "{\"OrpAutoMode\":1}";
+  if (storage.OrpAutoMode) Cmd[17] = '0';
+  else TFT_OrpAutoMode = true;
   xQueueSendToBack(queueIn, &Cmd, 0);
   LastAction = millis();
 }
@@ -416,5 +461,26 @@ void trigger18()
   xQueueSendToBack(queueIn, &Cmd, 0);
   LastAction = millis();
 }
+
+//  Turn On and Off the pH Pump
+// printh 23 02 54 13
+void trigger19()
+{
+  char Cmd[100] = "{\"PhPump\":1}";
+  if (PhPump.IsRunning()) Cmd[10] = '0';
+  xQueueSendToBack(queueIn, &Cmd, 0);
+  LastAction = millis();
+}
+
+//  Turn On and Off the Chlorine Pump
+// printh 23 02 54 14
+void trigger20()
+{
+  char Cmd[100] = "{\"ChlPump\":1}";
+  if (ChlPump.IsRunning()) Cmd[11] = '0';
+  xQueueSendToBack(queueIn, &Cmd, 0);
+  LastAction = millis();
+}
+
 
 #endif

@@ -58,9 +58,9 @@ void EncodeBitMap()
   BitMap3 |= (0 & 1U) << 5;
   BitMap3 |= (0 & 1U) << 4;
   BitMap3 |= (storage.ElectrolyseMode & 1) << 3;
-  BitMap3 |= (OrpProd.IsRunning() & 1) << 2;
-  BitMap3 |= (storage.pHPIDEnabled & 1) << 1;
-  BitMap3 |= (storage.OrpPIDEnabled & 1) << 0;
+  BitMap3 |= (SWG.IsRunning() & 1) << 2;
+  BitMap3 |= (storage.pHAutoMode & 1) << 1;
+  BitMap3 |= (storage.OrpAutoMode & 1) << 0;
    
 }
 

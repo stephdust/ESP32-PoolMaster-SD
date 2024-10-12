@@ -33,7 +33,7 @@ Relay::Relay(uint8_t RelayPin, uint8_t RelaySensorPin, uint8_t RelayLevels, uint
   // Create timer used by bistable switches to switch off after predefined period of time
   if (relaytype == RELAY_BISTABLE) {
     tmr = xTimerCreate("BistableTimer", pdMS_TO_TICKS(bistable_relay_delay), pdFALSE, static_cast<void*>(this) , CallBackTimer);
-    if (tmr == NULL ) {
+    if (tmr == nullptr ) {
           //Debug.print(DBG_ERROR,"Bistable relay timer creation failed (pin %d)",relaypin);
     }
   }
@@ -46,11 +46,16 @@ Relay::Relay(uint8_t RelayPin)
 //Switch the relay ON
 bool Relay::Start()
 {
+  // If timer is active, this means that a bistable switch is currently being turned on or off
+  // do nothing and return false to indicate that something went wrong
+  if ( xTimerIsTimerActive( tmr ) != pdFALSE )
+    return false;
+
   if (!IsActive()) 
   {
     if (relaytype == RELAY_BISTABLE) 
     { // If relay is BISTABLE type
-      if (tmr == NULL )  // If timer was not properly initialized
+      if (tmr == nullptr )  // If timer was not properly initialized
         return false;
 
         // Launch timer to switch the BISTABLE relay back off after the delay
@@ -68,11 +73,16 @@ bool Relay::Start()
 //Switch pump OFF
 bool Relay::Stop()
 {
+  // If timer is active, this means that a bistable switch is currently being turned on or off
+  // do nothing and return false to indicate that something went wrong
+  if ( xTimerIsTimerActive( tmr ) != pdFALSE )
+    return false;
+
   if (IsActive()) 
   {
     if (relaytype == RELAY_BISTABLE) 
     { // If relay is BISTABLE type
-      if (tmr == NULL )  // If timer was not properly initialized
+      if (tmr == nullptr )  // If timer was not properly initialized
         return false;
 
         // Launch timer to switch the BISTABLE relay back off after the delay
@@ -157,7 +167,7 @@ void Relay::SetRelayType(uint8_t RelayType)
   {
     // Create timer used by bistable switches to switch off after predefined period of time
     tmr = xTimerCreate("BistableTimer", pdMS_TO_TICKS(RELAY_BISTABLE_SWITCH_SHORT_CLICK_DELAY), pdFALSE, static_cast<void*>(this) , CallBackTimer);
-    if (tmr == NULL ) {
+    if (tmr == nullptr ) {
           //Debug.print(DBG_ERROR,"Bistable relay timer creation failed (pin %d)",relaypin);
     }
   }

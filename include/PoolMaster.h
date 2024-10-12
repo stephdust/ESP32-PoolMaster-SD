@@ -38,7 +38,7 @@ struct StoreStruct
   double Ph_Kp, Ph_Ki, Ph_Kd, Orp_Kp, Orp_Ki, Orp_Kd, PhPIDOutput, OrpPIDOutput, TempValue, PhValue, OrpValue, PSIValue;
   double AcidFill, ChlFill, pHTankVol, ChlTankVol, pHPumpFR, ChlPumpFR;
   uint8_t SecureElectro, DelayElectro; //ajout
-  bool ElectrolyseMode,pHPIDEnabled,OrpPIDEnabled;
+  bool ElectrolyseMode,pHAutoMode,OrpAutoMode;
 } ;
 
 extern StoreStruct storage;
@@ -54,7 +54,7 @@ extern Pump FiltrationPump;
 extern Pump PhPump;
 extern Pump ChlPump;
 extern Pump RobotPump;
-extern Pump OrpProd;
+extern Pump SWG;    // Pump class which control the Salt Water Chlorine Generator (switch it on and off)
 
 // The Relay to activate and deactivate Orp production
 extern Relay RELAYR0;
@@ -79,7 +79,7 @@ extern AsyncMqttClient mqttClient;                     // MQTT async. client
 // Various flags
 extern volatile bool startTasks;                       // flag to start loop tasks       
 extern bool MQTTConnection;                            // MQTT connected flag
-extern bool EmergencyStopFiltPump;                     // Filtering pump stopped manually; needs to be cleared to restart
+//extern bool EmergencyStopFiltPump;                     // Filtering pump stopped manually; needs to be cleared to restart
 extern bool AntiFreezeFiltering;                       // Filtration anti freeze mode
 extern bool PSIError;								   // Water pressure alarm
 extern bool cleaning_done;      					   // Robot clean-up done   

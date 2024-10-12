@@ -221,12 +221,17 @@ void ProcessCommand(void *pvParameters)
           {
             // start electrolyse if not below minimum temperature
             if (storage.TempValue >= (double)storage.SecureElectro)
-              OrpProd.Start();
+              if (!SWG.Start())
+                Debug.print(DBG_WARNING,"Problem starting SWG");   
           }
           else
           {
-            OrpProd.Stop();
+            if (!SWG.Stop())
+              Debug.print(DBG_WARNING,"Problem stopping SWG");   
           }
+          // Direct action on Electrolyse will exit the automatic regulation mode
+          storage.AutoMode = 0;
+          saveParam("AutoMode",storage.AutoMode);
         }
         else if (command.containsKey(F("ElectrolyseMode"))) 
         {
@@ -426,7 +431,7 @@ void ProcessCommand(void *pvParameters)
         {
           if ((int)command[F("FiltPump")] == 0)
           {
-            EmergencyStopFiltPump = true;
+            //EmergencyStopFiltPump = true;
             FiltrationPump.Stop();  //stop filtration pump
 
             //Stop PIDs
@@ -435,9 +440,11 @@ void ProcessCommand(void *pvParameters)
           }
           else
           {
-            EmergencyStopFiltPump = false;
+            //EmergencyStopFiltPump = false;
             FiltrationPump.Start();   //start filtration pump
           }
+          storage.AutoMode = 0;
+          saveParam("AutoMode",storage.AutoMode);
         }
         else if (command.containsKey(F("RobotPump"))) //"RobotPump" command which starts or stops the Robot pump
         {
@@ -470,10 +477,10 @@ void ProcessCommand(void *pvParameters)
           else
             SetPhPID(true);
         }
-        else if (command.containsKey(F("PhPIDEnabled"))) //"PhPID" command which starts or stops the Ph PID loop
+        else if (command.containsKey(F("PhAutoMode"))) //"PhPID" command which starts or stops the Ph PID loop
         {
-          storage.pHPIDEnabled = (int)command[F("PhPIDEnabled")];
-          if (storage.pHPIDEnabled == 0) SetPhPID(false);
+          storage.pHAutoMode = (int)command[F("PhAutoMode")];
+          if (storage.pHAutoMode == 0) SetPhPID(false);
         }
         else if (command.containsKey(F("OrpPID"))) //"OrpPID" command which starts or stops the Orp PID loop
         {
@@ -482,10 +489,10 @@ void ProcessCommand(void *pvParameters)
           else
             SetOrpPID(true);
         }
-        else if (command.containsKey(F("OrpPIDEnabled"))) //"PhPID" command which starts or stops the Ph PID loop
+        else if (command.containsKey(F("OrpAutoMode"))) //"PhPID" command which starts or stops the Ph PID loop
         {
-          storage.OrpPIDEnabled = (int)command[F("OrpPIDEnabled")];
-          if (storage.OrpPIDEnabled == 0) SetOrpPID(false);
+          storage.OrpAutoMode = (int)command[F("OrpAutoMode")];
+          if (storage.OrpAutoMode == 0) SetOrpPID(false);
         }
         //"Relay" command which is called to actuate relays
         //Parameter 1 is the relay number (R0 in this example), parameter 2 is the relay state (ON in this example).
@@ -520,7 +527,8 @@ void ProcessCommand(void *pvParameters)
           mqttErrorPublish(""); // publish clearing of error(s)
 
           //start filtration pump if within scheduled time slots
-          if (!EmergencyStopFiltPump && storage.AutoMode && (hour() >= storage.FiltrationStart) && (hour() < storage.FiltrationStop))
+          //if (!EmergencyStopFiltPump && storage.AutoMode && (hour() >= storage.FiltrationStart) && (hour() < storage.FiltrationStop))
+          if (storage.AutoMode && (hour() >= storage.FiltrationStart) && (hour() < storage.FiltrationStop))
             FiltrationPump.Start();
         }
         //"ElectroSecure" command which is called when electrolyser is configured

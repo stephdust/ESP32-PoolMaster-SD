@@ -28,6 +28,7 @@ void SetOrpPID(bool);
 void mqttErrorPublish(const char*);
 void PublishSettings(void);
 void UpdateTFT(void);
+void SetFullyLoaded(void);
 void stack_mon(UBaseType_t&);
 #ifdef SMTP
 void smtpCallback(SMTP_Status);
@@ -98,7 +99,7 @@ void PoolMaster(void *pvParameters)
     PhPump.loop();
     ChlPump.loop();
     RobotPump.loop(); 
-    OrpProd.loop();
+    SWG.loop();
 
     //reset time counters at midnight and send sync request to time server
     if (hour() == 0 && !DoneForTheDay)
@@ -115,9 +116,9 @@ void PoolMaster(void *pvParameters)
         ChlPump.ResetUpTime();
         ChlPump.SetTankFill(storage.ChlFill);
         RobotPump.ResetUpTime();
-        OrpProd.ResetUpTime();
+        SWG.ResetUpTime();
 
-        EmergencyStopFiltPump = false;
+        //EmergencyStopFiltPump = false;
         d_calc = false;
         DoneForTheDay = true;
         cleaning_done = false;
@@ -170,23 +171,29 @@ void PoolMaster(void *pvParameters)
     #endif
 
     //start filtration pump as scheduled
-    if (!EmergencyStopFiltPump && !FiltrationPump.IsRunning() && storage.AutoMode &&
+//    if (!EmergencyStopFiltPump && !FiltrationPump.IsRunning() && storage.AutoMode &&
+//        !PSIError && hour() >= storage.FiltrationStart && hour() < storage.FiltrationStop )
+//        FiltrationPump.Start();
+    if (!FiltrationPump.IsRunning() && storage.AutoMode &&
         !PSIError && hour() >= storage.FiltrationStart && hour() < storage.FiltrationStop )
         FiltrationPump.Start();
 
+
     //start & stop electrolyse as needed
-    if (FiltrationPump.IsRunning() && storage.ElectrolyseMode)
+    if (FiltrationPump.IsRunning() && storage.ElectrolyseMode && storage.AutoMode)
     {
         bool ElectrolyseCanStart = (!AntiFreezeFiltering && storage.TempValue >= (double)storage.SecureElectro && ((millis() - FiltrationPump.LastStartTime)/ 1000 / 60 >= (unsigned long)storage.DelayElectro)) ;
 
-        if (!OrpProd.IsRunning() && ElectrolyseCanStart && storage.OrpValue <= storage.Orp_SetPoint*0.9) {
+        if (!SWG.IsRunning() && ElectrolyseCanStart && storage.OrpValue <= storage.Orp_SetPoint*0.9) {
             Debug.print(DBG_VERBOSE,"Start Electrolyse low chlorine: %d < %d",storage.OrpValue,storage.Orp_SetPoint*0.9);
-            OrpProd.Start();
+            if (!SWG.Start())
+              Debug.print(DBG_WARNING,"Problem starting SWG");   
         }
           
-        if (OrpProd.IsRunning() && (!ElectrolyseCanStart || storage.OrpValue >= storage.Orp_SetPoint*1.05)) {
+        if (SWG.IsRunning() && (!ElectrolyseCanStart || storage.OrpValue >= storage.Orp_SetPoint*1.05)) {
             Debug.print(DBG_VERBOSE,"Stop Electrolyse high chlorine: %d > %d",storage.OrpValue, storage.Orp_SetPoint*1.05);
-            OrpProd.Stop(); 
+            if (!SWG.Stop())
+               Debug.print(DBG_WARNING,"Problem stopping SWG");
         }
     }
 
@@ -212,10 +219,10 @@ void PoolMaster(void *pvParameters)
         storage.TempValue >= storage.WaterTempLowThreshold)
     {
         //Start PIDs if enabled in configuration
-        if (storage.pHPIDEnabled)
+        if (storage.pHAutoMode)
           SetPhPID(true);
 
-        if (storage.OrpPIDEnabled)
+        if (storage.OrpAutoMode)
           SetOrpPID(true);
     }
 
@@ -228,7 +235,8 @@ void PoolMaster(void *pvParameters)
     }
 
     //Outside regular filtration hours, start filtration in case of cold Air temperatures (<-2.0deg)
-    if (!EmergencyStopFiltPump && storage.AutoMode && !PSIError && !FiltrationPump.IsRunning() && ((hour() < storage.FiltrationStart) || (hour() > storage.FiltrationStop)) && (storage.TempExternal < -2.0))
+    //if (!EmergencyStopFiltPump && storage.AutoMode && !PSIError && !FiltrationPump.IsRunning() && ((hour() < storage.FiltrationStart) || (hour() > storage.FiltrationStop)) && (storage.TempExternal < -2.0))
+    if (storage.AutoMode && !PSIError && !FiltrationPump.IsRunning() && ((hour() < storage.FiltrationStart) || (hour() > storage.FiltrationStop)) && (storage.TempExternal < -2.0))
     {
         FiltrationPump.Start();
         AntiFreezeFiltering = true;
@@ -277,6 +285,7 @@ void PoolMaster(void *pvParameters)
 
     stack_mon(hwm);
     vTaskDelayUntil(&ticktime,period);
+    SetFullyLoaded();
   }
 }
 

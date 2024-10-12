@@ -94,7 +94,8 @@ bool Pump::Start()
 {
   if((!IsRunning()) && !UpTimeError && this->Pump::TankLevel() && Interlock())
   {
-    pumprelay.Start();
+    if (!pumprelay.Start())
+      return false;
     StartTime = LastStartTime = millis(); 
     return true; 
   } else return false;
@@ -105,7 +106,8 @@ bool Pump::Stop()
 {
   if(IsRunning())
   {
-    pumprelay.Stop();
+    if (!pumprelay.Stop())
+      return false;
     UpTime += millis() - StartTime; 
     return true;
   } else return false;

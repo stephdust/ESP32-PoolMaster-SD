@@ -333,35 +333,41 @@ void pHRegulation(void *pvParameters)
 
     //do not compute PID if filtration pump is not running
     // Set also a lower limit at 30s (a lower pump duration doesn't mean anything)
-
-    if (FiltrationPump.IsRunning()  && (PhPID.GetMode() == AUTOMATIC))
+    if (PhPID.GetMode() == AUTOMATIC)
     {  
-      if(PhPID.Compute()){
-        Debug.print(DBG_VERBOSE,"Ph  regulation: %10.2f, %13.9f, %13.9f, %17.9f",storage.PhPIDOutput,storage.PhValue,storage.Ph_SetPoint,storage.Ph_Kp);
-        if(storage.PhPIDOutput < (double)30000.) storage.PhPIDOutput = 0.;
-        Debug.print(DBG_INFO,"Ph  regulation: %10.2f",storage.PhPIDOutput);
-    #ifdef SIMU
-        newpHOutput = true;
-    #endif            
-      }
-    #ifdef SIMU
-      else newpHOutput = false;
-    #endif    
-      /************************************************
-       turn the Acid pump on/off based on pid output
-      ************************************************/
-	    unsigned long now = millis();
-      if (now - storage.PhPIDwindowStartTime > storage.PhPIDWindowSize)
-      {
-        //time to shift the Relay Window
-        storage.PhPIDwindowStartTime += storage.PhPIDWindowSize;
-      }
-      if ((unsigned long)storage.PhPIDOutput <= now - storage.PhPIDwindowStartTime)
+      if (FiltrationPump.IsRunning()) {
+  
+          if(PhPID.Compute()){
+            Debug.print(DBG_VERBOSE,"Ph  regulation: %10.2f, %13.9f, %13.9f, %17.9f",storage.PhPIDOutput,storage.PhValue,storage.Ph_SetPoint,storage.Ph_Kp);
+            if(storage.PhPIDOutput < (double)30000.) storage.PhPIDOutput = 0.;
+            Debug.print(DBG_INFO,"Ph  regulation: %10.2f",storage.PhPIDOutput);
+        #ifdef SIMU
+            newpHOutput = true;
+        #endif            
+          }
+        #ifdef SIMU
+          else newpHOutput = false;
+        #endif    
+          /************************************************
+           turn the Acid pump on/off based on pid output
+          ************************************************/
+          unsigned long now = millis();
+          if (now - storage.PhPIDwindowStartTime > storage.PhPIDWindowSize)
+          {
+            //time to shift the Relay Window
+            storage.PhPIDwindowStartTime += storage.PhPIDWindowSize;
+          }
+          if ((unsigned long)storage.PhPIDOutput <= now - storage.PhPIDwindowStartTime)
+            PhPump.Stop();
+          else
+            PhPump.Start();   
+      } else {
+        PhPID.SetMode(MANUAL);
+        storage.Ph_RegulationOnOff = 0;
+        storage.PhPIDOutput = 0.0;
         PhPump.Stop();
-      else
-        PhPump.Start();   
+      } 
     }
-
     #ifdef CHRONO
     t_act = millis() - td;
     if(t_act > t_max) t_max = t_act;
@@ -401,35 +407,40 @@ void OrpRegulation(void *pvParameters)
 
     //do not compute PID if filtration pump is not running
     // Set also a lower limit at 30s (a lower pump duration does'nt mean anything)
-
-    if (FiltrationPump.IsRunning() && (OrpPID.GetMode() == AUTOMATIC))
-    {
-      if(OrpPID.Compute()){
-        Debug.print(DBG_VERBOSE,"ORP regulation: %10.2f, %13.9f, %12.9f, %17.9f",storage.OrpPIDOutput,storage.OrpValue,storage.Orp_SetPoint,storage.Orp_Kp);
-        if(storage.OrpPIDOutput < (double)30000.) storage.OrpPIDOutput = 0.;    
-          Debug.print(DBG_INFO,"Orp regulation: %10.2f",storage.OrpPIDOutput);
-    #ifdef SIMU
-          newChlOutput = true;
-    #endif      
-        }
-    #ifdef SIMU
-        else newChlOutput = false;
-    #endif    
-      /************************************************
-       turn the Chl pump on/off based on pid output
-      ************************************************/
-	    unsigned long now = millis();
-      if (now - storage.OrpPIDwindowStartTime > storage.OrpPIDWindowSize)
+    if (OrpPID.GetMode() == AUTOMATIC) {
+      if (FiltrationPump.IsRunning())
       {
-        //time to shift the Relay Window
-        storage.OrpPIDwindowStartTime += storage.OrpPIDWindowSize;
-      }
-      if ((unsigned long)storage.OrpPIDOutput <= now - storage.OrpPIDwindowStartTime)
+        if(OrpPID.Compute()){
+          Debug.print(DBG_VERBOSE,"ORP regulation: %10.2f, %13.9f, %12.9f, %17.9f",storage.OrpPIDOutput,storage.OrpValue,storage.Orp_SetPoint,storage.Orp_Kp);
+          if(storage.OrpPIDOutput < (double)30000.) storage.OrpPIDOutput = 0.;    
+            Debug.print(DBG_INFO,"Orp regulation: %10.2f",storage.OrpPIDOutput);
+      #ifdef SIMU
+            newChlOutput = true;
+      #endif      
+          }
+      #ifdef SIMU
+          else newChlOutput = false;
+      #endif    
+        /************************************************
+         turn the Chl pump on/off based on pid output
+        ************************************************/
+        unsigned long now = millis();
+        if (now - storage.OrpPIDwindowStartTime > storage.OrpPIDWindowSize)
+        {
+          //time to shift the Relay Window
+          storage.OrpPIDwindowStartTime += storage.OrpPIDWindowSize;
+        }
+        if ((unsigned long)storage.OrpPIDOutput <= now - storage.OrpPIDwindowStartTime)
+          ChlPump.Stop();
+        else
+          ChlPump.Start();
+      } else {
+        OrpPID.SetMode(MANUAL);
+        storage.Orp_RegulationOnOff = 0;
+        storage.OrpPIDOutput = 0.0;
         ChlPump.Stop();
-      else
-        ChlPump.Start();
+      } 
     }
-
     #ifdef CHRONO
     t_act = millis() - td;
     if(t_act > t_max) t_max = t_act;
