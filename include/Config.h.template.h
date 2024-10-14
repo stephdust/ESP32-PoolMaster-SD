@@ -2,6 +2,12 @@
 #define FIRMW "ESP-3.4b"
 #define TFT_FIRMW "TFT-4.0"
 
+// Choose Nextion version to Compile (only one choice possible)
+// NEXTION_V1 (default) for initial interface or blue them interface
+// NEXTION_V2 for Nextion version 4
+//#define NEXTION_V1
+#define NEXTION_V2
+
 #define DEBUG_LEVEL DBG_INFO     // Possible levels : NONE/ERROR/WARNING/INFO/DEBUG/VERBOSE
 
 //Version of config stored in EEPROM
@@ -10,8 +16,8 @@
 
 // WiFi credentials
 #ifdef DEVT
-  #define WIFI_NETWORK "<WIFI_NETWORK>"
-  #define WIFI_PASSWORD "<WIFI_PASSWORD>"
+  #define WIFI_NETWORK "<WIFI_DEVT_NETWORK>"
+  #define WIFI_PASSWORD "<WIFI_DEVT_PASSWORD>"
 #else
   #define WIFI_NETWORK "<WIFI_NETWORK>"
   #define WIFI_PASSWORD "<WIFI_PASSWORD>"
@@ -93,7 +99,7 @@
 
 // Uncomment if MQTT broker needs login/pwd
 #define MQTT_LOGIN 				
-//#define MQTT_SERVER_ID    "ESP32Pool"		   // MQTT server ID
+#define MQTT_SERVER_ID    "ESP32Pool"		   // MQTT server ID
 #define MQTT_SERVER_LOGIN "<MQTT_LOGIN>"
 #define MQTT_SERVER_PWD   "<MQTT_PASSWORD>"
 
