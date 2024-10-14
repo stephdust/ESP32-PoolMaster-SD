@@ -3,7 +3,7 @@
 #define TFT_FIRMW "TFT-4.0"
 
 // Choose Nextion version to Compile (only one choice possible)
-// NEXTION_V1 (default) for initial interface or blue them interface
+// NEXTION_V1 (default) for initial interface or blue theme interface
 // NEXTION_V2 for Nextion version 4
 //#define NEXTION_V1
 #define NEXTION_V2
