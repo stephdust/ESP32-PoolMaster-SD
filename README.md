@@ -82,7 +82,7 @@ The version V6, (aka ESP-2.0) implement direct usage of FreeRTOS functions for m
 ![enter image description here](https://github.com/Gixy31/ESP32-PoolMaster/blob/main/docs/Profiling.jpg)
 
 To better understand PoolMaster's logic, please review the flowchart below:
-![PoolMaster's Logic Flowchart](https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/PoolMaster-LogicFlowChart.pdf)
+![PoolMaster Logic Flowchart](https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/PoolMaster-LogicFlowChart.pdf)
 
 ### 3.5'' TouchScreen control
 ![Nextion TouchScreen HMI](https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/Nextion_Screens.png)
@@ -307,5 +307,5 @@ Below are the Payloads/commands to publish on the "PoolTopicAPI" topic in Json f
 |{"RstOrpCal":1} | call this command to reset the calibration coefficients of the Orp probe
 |{"RstPSICal":1} | call this command to reset the calibration coefficients of the pressure sensor
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMTk1NzIwMzA3OV19
+eyJoaXN0b3J5IjpbLTQwNjYwOTEyNSwxOTU3MjAzMDc5XX0=
 -->
