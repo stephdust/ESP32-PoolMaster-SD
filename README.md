@@ -54,7 +54,7 @@ Finally code and PCB are made with high flexibility to precisely tailor the feat
 A dedicated board has been designed to host all components. There are 8 LEDs at the bottom to display status, warnings and alarms.
 Below two examples of live deployments:
 
-![Project Hardware](https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/Hardware.png)
+![Project Hardware](https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/Hardware2.png)
 
 ### Software
 The ESP32 project isn't a fork of the ATmega2560 original one due to the different structure of source files with PlatformIO ((.cpp, .h). 
