@@ -55,7 +55,7 @@ A dedicated board has been designed to host all components. There are 8 LEDs at 
 Below two examples of live deployments:
 
 ![Project Hardware](https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/Hardware.png)
-![Project Hardware2](https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/PoolMasterBox_2.png)
+![Project Hardware2](https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/Hardware_2.png)
 
 ### Software
 The ESP32 project isn't a fork of the ATmega2560 original one due to the different structure of source files with PlatformIO ((.cpp, .h). 
