@@ -537,18 +537,18 @@ void getTemp(void *pvParameters)
     double temp = sensors_W.getTempC(DS18B20_W);
     if (temp == NAN || temp == -127) {
       Debug.print(DBG_WARNING,"Error getting Water temperature");
-    }  else storage.TempValue = temp;
-    samples_WTemp.add(storage.TempValue);
-    storage.TempValue = samples_WTemp.getAverage(5);
-    Debug.print(DBG_DEBUG,"DS18B20_W: %6.2f°C",storage.TempValue);
+    }  else storage.WaterTemp = temp;
+    samples_WTemp.add(storage.WaterTemp);
+    storage.WaterTemp = samples_WTemp.getAverage(5);
+    Debug.print(DBG_DEBUG,"DS18B20_W: %6.2f°C",storage.WaterTemp);
 
     temp = sensors_A.getTempC(DS18B20_A);
     if (temp == NAN || temp == -127) {
       Debug.print(DBG_WARNING,"Error getting Air temperature");
-    }  else storage.TempExternal = temp;
-    samples_ATemp.add(storage.TempExternal);
-    storage.TempExternal = samples_ATemp.getAverage(5);
-    Debug.print(DBG_DEBUG,"DS18B20_A: %6.2f°C",storage.TempExternal);
+    }  else storage.AirTemp = temp;
+    samples_ATemp.add(storage.AirTemp);
+    storage.AirTemp = samples_ATemp.getAverage(5);
+    Debug.print(DBG_DEBUG,"DS18B20_A: %6.2f°C",storage.AirTemp);
 
     sensors_W.requestTemperatures();
     sensors_A.requestTemperatures();

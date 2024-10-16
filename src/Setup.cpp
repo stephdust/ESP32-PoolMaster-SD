@@ -305,9 +305,9 @@ void setup()
   //SWG.GetRelayReference()->SetBistableDelay(500); // Default delay between up and down for bistable relay is 500ms. Can be changed here.
 
   // Start filtration pump at power-on if within scheduled time slots -- You can choose not to do this and start pump manually
-  if (storage.AutoMode && (hour() >= storage.FiltrationStart) && (hour() < storage.FiltrationStop))
-    FiltrationPump.Start();
-  else FiltrationPump.Stop();
+  //if (storage.AutoMode && (hour() >= storage.FiltrationStart) && (hour() < storage.FiltrationStop))
+  //  FiltrationPump.Start();
+  //else FiltrationPump.Stop();
 
   // Robot pump off at start
   RobotPump.Stop();
@@ -499,7 +499,7 @@ bool loadConfig()
   storage.DelayPIDs             = nvs.getUChar("DelayPIDs",0);
   storage.PhPumpUpTimeLimit     = nvs.getULong("PhPumpUTL",900);
   storage.ChlPumpUpTimeLimit    = nvs.getULong("ChlPumpUTL",2500);
-  storage.PublishPeriod         = nvs.getULong("PublishPeriod",30000);
+  storage.PublishPeriod         = nvs.getULong("PublishPeriod",PUBLISHINTERVAL);
   storage.PhPIDWindowSize       = nvs.getULong("PhPIDWSize",60000);
   storage.OrpPIDWindowSize      = nvs.getULong("OrpPIDWSize",60000);
   storage.PhPIDwindowStartTime  = nvs.getULong("PhPIDwStart",0);
@@ -510,7 +510,7 @@ bool loadConfig()
   storage.PSI_MedThreshold      = nvs.getDouble("PSI_Med",0.25);
   storage.WaterTempLowThreshold = nvs.getDouble("WaterTempLow",10.);
   storage.WaterTemp_SetPoint    = nvs.getDouble("WaterTempSet",27.);
-  storage.TempExternal          = nvs.getDouble("TempExternal",3.);
+  storage.AirTemp          = nvs.getDouble("TempExternal",3.);
   storage.pHCalibCoeffs0        = nvs.getDouble("pHCalibCoeffs0",-2.49);
   storage.pHCalibCoeffs1        = nvs.getDouble("pHCalibCoeffs1",6.87);
   storage.OrpCalibCoeffs0       = nvs.getDouble("OrpCalibCoeffs0",431.03);
@@ -525,7 +525,7 @@ bool loadConfig()
   storage.Orp_Kd                = nvs.getDouble("Orp_Kd",0.);
   storage.PhPIDOutput           = nvs.getDouble("PhPIDOutput",0.);
   storage.OrpPIDOutput          = nvs.getDouble("OrpPIDOutput",0.);
-  storage.TempValue             = nvs.getDouble("TempValue",18.);
+  storage.WaterTemp             = nvs.getDouble("TempValue",18.);
   storage.PhValue               = nvs.getDouble("PhValue",0.);
   storage.OrpValue              = nvs.getDouble("OrpValue",0.);
   storage.PSIValue              = nvs.getDouble("PSIValue",0.4);
@@ -552,12 +552,12 @@ bool loadConfig()
   Debug.print(DBG_INFO,"%d, %d, %d, %d",storage.PhPIDWindowSize,storage.OrpPIDWindowSize,storage.PhPIDwindowStartTime,storage.OrpPIDwindowStartTime);
   Debug.print(DBG_INFO,"%3.1f, %4.0f, %3.1f, %3.1f, %3.0f, %3.0f, %4.1f, %8.6f, %9.6f, %11.6f, %11.6f, %3.1f, %3.1f",
               storage.Ph_SetPoint,storage.Orp_SetPoint,storage.PSI_HighThreshold,
-              storage.PSI_MedThreshold,storage.WaterTempLowThreshold,storage.WaterTemp_SetPoint,storage.TempExternal,
+              storage.PSI_MedThreshold,storage.WaterTempLowThreshold,storage.WaterTemp_SetPoint,storage.AirTemp,
               storage.pHCalibCoeffs0,storage.pHCalibCoeffs1,storage.OrpCalibCoeffs0,storage.OrpCalibCoeffs1,
               storage.PSICalibCoeffs0,storage.PSICalibCoeffs1);
   Debug.print(DBG_INFO,"%8.0f, %3.0f, %3.0f, %6.0f, %3.0f, %3.0f, %7.0f, %7.0f, %4.2f, %4.2f, %4.0f, %4.2f",
               storage.Ph_Kp,storage.Ph_Ki,storage.Ph_Kd,storage.Orp_Kp,storage.Orp_Ki,storage.Orp_Kd,
-              storage.PhPIDOutput,storage.OrpPIDOutput,storage.TempValue,storage.PhValue,storage.OrpValue,storage.PSIValue);
+              storage.PhPIDOutput,storage.OrpPIDOutput,storage.WaterTemp,storage.PhValue,storage.OrpValue,storage.PSIValue);
   Debug.print(DBG_INFO,"%3.0f, %3.0f, %3.0f, %3.0f, %3.1f, %3.1f ",storage.AcidFill,storage.ChlFill,storage.pHTankVol,storage.ChlTankVol,
               storage.pHPumpFR,storage.ChlPumpFR);
   Debug.print(DBG_INFO,"%d, %d, %d, %d %d",storage.SecureElectro,storage.DelayElectro,storage.ElectrolyseMode,storage.pHAutoMode,
@@ -594,7 +594,7 @@ bool saveConfig()
   i += nvs.putDouble("PSI_Med",storage.PSI_MedThreshold);
   i += nvs.putDouble("WaterTempLow",storage.WaterTempLowThreshold);
   i += nvs.putDouble("WaterTempSet",storage.WaterTemp_SetPoint);
-  i += nvs.putDouble("TempExternal",storage.TempExternal);
+  i += nvs.putDouble("TempExternal",storage.AirTemp);
   i += nvs.putDouble("pHCalibCoeffs0",storage.pHCalibCoeffs0);
   i += nvs.putDouble("pHCalibCoeffs1",storage.pHCalibCoeffs1);
   i += nvs.putDouble("OrpCalibCoeffs0",storage.OrpCalibCoeffs0);
@@ -609,7 +609,7 @@ bool saveConfig()
   i += nvs.putDouble("Orp_Kd",storage.Orp_Kd);
   i += nvs.putDouble("PhPIDOutput",storage.PhPIDOutput);
   i += nvs.putDouble("OrpPIDOutput",storage.OrpPIDOutput);
-  i += nvs.putDouble("TempValue",storage.TempValue);
+  i += nvs.putDouble("TempValue",storage.WaterTemp);
   i += nvs.putDouble("PhValue",storage.PhValue);
   i += nvs.putDouble("OrpValue",storage.OrpValue);
   i += nvs.putDouble("PSIValue",storage.PSIValue);

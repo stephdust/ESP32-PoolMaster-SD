@@ -210,9 +210,9 @@ void UpdateTFT()
       myNex.writeStr(F(GLOBAL".vapHSP.txt"),temp);
       snprintf_P(temp,sizeof(temp),PSTR("%3.0f"),storage.Orp_SetPoint);      
       myNex.writeStr(F(GLOBAL".vaOrpSP.txt"),temp);
-      snprintf_P(temp,sizeof(temp),PSTR("%4.1f"),storage.TempValue); 
+      snprintf_P(temp,sizeof(temp),PSTR("%4.1f"),storage.WaterTemp); 
       myNex.writeStr(F("pageHome.vaWT.txt"),temp);
-      snprintf_P(temp,sizeof(temp),PSTR("%4.1f"),storage.TempExternal);      
+      snprintf_P(temp,sizeof(temp),PSTR("%4.1f"),storage.AirTemp);      
       myNex.writeStr(F("pageHome.vaAT.txt"),temp);
       snprintf_P(temp,sizeof(temp),PSTR("%4.2f"),storage.PSIValue);   
       myNex.writeStr(F("pageHome.vaPSI.txt"),temp);

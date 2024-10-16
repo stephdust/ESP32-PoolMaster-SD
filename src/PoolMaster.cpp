@@ -142,12 +142,12 @@ void PoolMaster(void *pvParameters)
     if (hour() == 15 && (millis() - FiltrationPump.LastStartTime) > 300000 && !d_calc)
     #endif
     {
-        if (storage.TempValue < storage.WaterTempLowThreshold){
+        if (storage.WaterTemp < storage.WaterTempLowThreshold){
             storage.FiltrationDuration = 2;}
-        else if (storage.TempValue >= storage.WaterTempLowThreshold && storage.TempValue < storage.WaterTemp_SetPoint){
-            storage.FiltrationDuration = round(storage.TempValue / 3.);}
-        else if (storage.TempValue >= storage.WaterTemp_SetPoint){
-            storage.FiltrationDuration = round(storage.TempValue / 2.);}
+        else if (storage.WaterTemp >= storage.WaterTempLowThreshold && storage.WaterTemp < storage.WaterTemp_SetPoint){
+            storage.FiltrationDuration = round(storage.WaterTemp / 3.);}
+        else if (storage.WaterTemp >= storage.WaterTemp_SetPoint){
+            storage.FiltrationDuration = round(storage.WaterTemp / 2.);}
     
         storage.FiltrationStart = 15 - (int)round(storage.FiltrationDuration / 2.);
         if (storage.FiltrationStart < storage.FiltrationStartMin)
@@ -182,7 +182,7 @@ void PoolMaster(void *pvParameters)
     //start & stop electrolyse as needed
     if (FiltrationPump.IsRunning() && storage.ElectrolyseMode && storage.AutoMode)
     {
-        bool ElectrolyseCanStart = (!AntiFreezeFiltering && storage.TempValue >= (double)storage.SecureElectro && ((millis() - FiltrationPump.LastStartTime)/ 1000 / 60 >= (unsigned long)storage.DelayElectro)) ;
+        bool ElectrolyseCanStart = (!AntiFreezeFiltering && storage.WaterTemp >= (double)storage.SecureElectro && ((millis() - FiltrationPump.LastStartTime)/ 1000 / 60 >= (unsigned long)storage.DelayElectro)) ;
 
         if (!SWG.IsRunning() && ElectrolyseCanStart && storage.OrpValue <= storage.Orp_SetPoint*0.9) {
             Debug.print(DBG_VERBOSE,"Start Electrolyse low chlorine: %d < %d",storage.OrpValue,storage.Orp_SetPoint*0.9);
@@ -216,7 +216,7 @@ void PoolMaster(void *pvParameters)
     if (FiltrationPump.IsRunning() && storage.AutoMode && !storage.WinterMode && !PhPID.GetMode() &&
         ((millis() - FiltrationPump.LastStartTime) / 1000 / 60 >= storage.DelayPIDs) &&
         (hour() >= storage.FiltrationStart) && (hour() < storage.FiltrationStop) &&
-        storage.TempValue >= storage.WaterTempLowThreshold)
+        storage.WaterTemp >= storage.WaterTempLowThreshold)
     {
         //Start PIDs if enabled in configuration
         if (storage.pHAutoMode)
@@ -235,15 +235,15 @@ void PoolMaster(void *pvParameters)
     }
 
     //Outside regular filtration hours, start filtration in case of cold Air temperatures (<-2.0deg)
-    //if (!EmergencyStopFiltPump && storage.AutoMode && !PSIError && !FiltrationPump.IsRunning() && ((hour() < storage.FiltrationStart) || (hour() > storage.FiltrationStop)) && (storage.TempExternal < -2.0))
-    if (storage.AutoMode && !PSIError && !FiltrationPump.IsRunning() && ((hour() < storage.FiltrationStart) || (hour() > storage.FiltrationStop)) && (storage.TempExternal < -2.0))
+    //if (!EmergencyStopFiltPump && storage.AutoMode && !PSIError && !FiltrationPump.IsRunning() && ((hour() < storage.FiltrationStart) || (hour() > storage.FiltrationStop)) && (storage.AirTemp < -2.0))
+    if (storage.AutoMode && !PSIError && !FiltrationPump.IsRunning() && ((hour() < storage.FiltrationStart) || (hour() > storage.FiltrationStop)) && (storage.AirTemp < -2.0))
     {
         FiltrationPump.Start();
         AntiFreezeFiltering = true;
     }
 
     //Outside regular filtration hours and if in AntiFreezeFiltering mode but Air temperature rose back above 2.0deg, stop filtration
-    if (storage.AutoMode && FiltrationPump.IsRunning() && ((hour() < storage.FiltrationStart) || (hour() > storage.FiltrationStop)) && AntiFreezeFiltering && (storage.TempExternal > 2.0))
+    if (storage.AutoMode && FiltrationPump.IsRunning() && ((hour() < storage.FiltrationStart) || (hour() > storage.FiltrationStop)) && AntiFreezeFiltering && (storage.AirTemp > 2.0))
     {
         FiltrationPump.Stop();
         AntiFreezeFiltering = false;

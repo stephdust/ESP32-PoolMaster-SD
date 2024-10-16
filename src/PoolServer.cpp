@@ -63,8 +63,8 @@ void ProcessCommand(void *pvParameters)
         //Provide the external temperature. Should be updated regularly and will be used to start filtration for 10mins every hour when temperature is negative
         if (command.containsKey(F("TempExt")))
         {
-          storage.TempExternal = command["TempExt"].as<float>();
-          Debug.print(DBG_DEBUG,"External Temperature: %4.1f°C",storage.TempExternal);
+          storage.AirTemp = command["TempExt"].as<float>();
+          Debug.print(DBG_DEBUG,"External Temperature: %4.1f°C",storage.AirTemp);
         }
         //"PhCalib" command which computes and sets the calibration coefficients of the pH sensor response based on a multi-point linear regression
         //{"PhCalib":[4.02,3.8,9.0,9.11]}  -> multi-point linear regression calibration (minimum 1 point-couple, 6 max.) in the form [ProbeReading_0, BufferRating_0, xx, xx, ProbeReading_n, BufferRating_n]
@@ -212,6 +212,7 @@ void ProcessCommand(void *pvParameters)
             storage.AutoMode = 1;
           }
           saveParam("AutoMode",storage.AutoMode);
+          PublishSettings();
         }
          // "Electrolyse"
         // command which (un)enables Electrolyser
@@ -220,7 +221,7 @@ void ProcessCommand(void *pvParameters)
           if ((int)command[F("Electrolyse")] == 1)  // activate electrolyse
           {
             // start electrolyse if not below minimum temperature
-            if (storage.TempValue >= (double)storage.SecureElectro)
+            if (storage.WaterTemp >= (double)storage.SecureElectro)
               if (!SWG.Start())
                 Debug.print(DBG_WARNING,"Problem starting SWG");   
           }
@@ -232,11 +233,13 @@ void ProcessCommand(void *pvParameters)
           // Direct action on Electrolyse will exit the automatic regulation mode
           storage.AutoMode = 0;
           saveParam("AutoMode",storage.AutoMode);
+          PublishSettings();
         }
         else if (command.containsKey(F("ElectrolyseMode"))) 
         {
           storage.ElectrolyseMode = (int)command[F("ElectrolyseMode")];
           saveParam("ElectrolyseMode",storage.ElectrolyseMode);
+          PublishSettings();
         }
         else if (command.containsKey(F("Winter"))) //"Winter" command which activate/deactivate Winter Mode
         {
@@ -445,6 +448,7 @@ void ProcessCommand(void *pvParameters)
           }
           storage.AutoMode = 0;
           saveParam("AutoMode",storage.AutoMode);
+          PublishSettings();
         }
         else if (command.containsKey(F("RobotPump"))) //"RobotPump" command which starts or stops the Robot pump
         {
@@ -481,6 +485,7 @@ void ProcessCommand(void *pvParameters)
         {
           storage.pHAutoMode = (int)command[F("PhAutoMode")];
           if (storage.pHAutoMode == 0) SetPhPID(false);
+          PublishSettings();
         }
         else if (command.containsKey(F("OrpPID"))) //"OrpPID" command which starts or stops the Orp PID loop
         {
@@ -493,6 +498,7 @@ void ProcessCommand(void *pvParameters)
         {
           storage.OrpAutoMode = (int)command[F("OrpAutoMode")];
           if (storage.OrpAutoMode == 0) SetOrpPID(false);
+          PublishSettings();
         }
         //"Relay" command which is called to actuate relays
         //Parameter 1 is the relay number (R0 in this example), parameter 2 is the relay state (ON in this example).

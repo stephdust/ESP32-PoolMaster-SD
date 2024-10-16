@@ -121,9 +121,9 @@ void UpdateTFT()
       myNex.writeStr(F("page0.vapHPID.txt"),temp);
       snprintf_P(temp,sizeof(temp),PSTR("%s"),(OrpPID.GetMode() == 1) ? PSTR("PID") : PSTR("---"));               
       myNex.writeStr(F("page0.vaOrpPID.txt"),temp);
-      snprintf_P(temp,sizeof(temp),PSTR("%4.1f°C"),storage.TempValue); 
+      snprintf_P(temp,sizeof(temp),PSTR("%4.1f°C"),storage.WaterTemp); 
       myNex.writeStr(F("page0.vaWT.txt"),temp);
-      snprintf_P(temp,sizeof(temp),PSTR("%4.1f°C"),storage.TempExternal);      
+      snprintf_P(temp,sizeof(temp),PSTR("%4.1f°C"),storage.AirTemp);      
       myNex.writeStr(F("page0.vaAT.txt"),temp);
       snprintf_P(temp,sizeof(temp),PSTR("%4.2fb"),storage.PSIValue);   
       myNex.writeStr(F("page0.vaPSI.txt"),temp);

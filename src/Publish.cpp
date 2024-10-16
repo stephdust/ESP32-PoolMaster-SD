@@ -288,8 +288,8 @@ void MeasuresPublish(void *pvParameters)
         const int capacity = JSON_OBJECT_SIZE(7);
         StaticJsonDocument<capacity> root;
 
-        root["TE"]      = storage.TempExternal * 100;        // /!\ x100
-        root["Tmp"]     = storage.TempValue * 100;
+        root["TE"]      = storage.AirTemp * 100;        // /!\ x100
+        root["Tmp"]     = storage.WaterTemp * 100;
         root["pH"]      = storage.PhValue * 100;
         root["PSI"]     = storage.PSIValue * 100;
         root["Orp"]     = storage.OrpValue;
