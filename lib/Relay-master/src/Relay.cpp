@@ -48,8 +48,9 @@ bool Relay::Start()
 {
   // If timer is active, this means that a bistable switch is currently being turned on or off
   // do nothing and return false to indicate that something went wrong
-  if ( xTimerIsTimerActive( tmr ) != pdFALSE )
-    return false;
+  if (tmr != nullptr )
+    if ( xTimerIsTimerActive( tmr ) != pdFALSE )
+      return false;
 
   if (!IsActive()) 
   {
@@ -75,8 +76,9 @@ bool Relay::Stop()
 {
   // If timer is active, this means that a bistable switch is currently being turned on or off
   // do nothing and return false to indicate that something went wrong
-  if ( xTimerIsTimerActive( tmr ) != pdFALSE )
-    return false;
+  if (tmr != nullptr )
+    if ( xTimerIsTimerActive( tmr ) != pdFALSE )
+      return false;
 
   if (IsActive()) 
   {
