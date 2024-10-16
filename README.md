@@ -52,8 +52,10 @@ Finally code and PCB are made with high flexibility to precisely tailor the feat
 
 ### Hardware
 A dedicated board has been designed to host all components. There are 8 LEDs at the bottom to display status, warnings and alarms.
+Below two examples of live deployments:
 
 ![Project Hardware](https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/Hardware.png)
+![Project Hardware2](https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/PoolMasterBox_2.png)
 
 ### Software
 The ESP32 project isn't a fork of the ATmega2560 original one due to the different structure of source files with PlatformIO ((.cpp, .h). 
@@ -79,8 +81,11 @@ The version V6, (aka ESP-2.0) implement direct usage of FreeRTOS functions for m
 |T3| `PublishMeasures` | publish measurement on the MQTT topic (Meas1 - Meas2) |`30s`|`570`
 |T3| `PublishSettings` | publish settings on the MQTT topic (Set1 - Set5) |`When notifed`|`940`
 
-
 ![enter image description here](https://github.com/Gixy31/ESP32-PoolMaster/blob/main/docs/Profiling.jpg)
+
+To better understand PoolMaster's logic, please review the flowchart below:
+
+[https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/PoolMaster-LogicFlowChart.pdf](https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/PoolMaster-LogicFlowChart.pdf)
 
 ### 3.5'' TouchScreen control
 ![Nextion TouchScreen HMI](https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/Nextion_Screens.png)
@@ -304,3 +309,6 @@ Below are the Payloads/commands to publish on the "PoolTopicAPI" topic in Json f
 |{"RstpHCal":1} | call this command to reset the calibration coefficients of the pH probe
 |{"RstOrpCal":1} | call this command to reset the calibration coefficients of the Orp probe
 |{"RstPSICal":1} | call this command to reset the calibration coefficients of the pressure sensor
+<!--stackedit_data:
+eyJoaXN0b3J5IjpbLTQwNjYwOTEyNSwxOTU3MjAzMDc5XX0=
+-->
