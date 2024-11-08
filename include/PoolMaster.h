@@ -60,7 +60,9 @@ extern Pump SWG;    // Pump class which control the Salt Water Chlorine Generato
 extern Relay RELAYR0;
 extern Relay RELAYR1;
 
+#ifdef ELEGANT_OTA
 extern WebServer server;
+#endif
 
 //PIDs instances
 //Specify the links and initial tuning parameters

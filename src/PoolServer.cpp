@@ -484,6 +484,8 @@ void ProcessCommand(void *pvParameters)
         else if (command.containsKey(F("PhAutoMode"))) //"PhPID" command which starts or stops the Ph PID loop
         {
           storage.pHAutoMode = (int)command[F("PhAutoMode")];
+          saveParam("pHAutoMode",storage.pHAutoMode);
+          Debug.print(DBG_DEBUG,"pHAutomode become %d",storage.pHAutoMode);
           if (storage.pHAutoMode == 0) SetPhPID(false);
           PublishSettings();
         }
@@ -497,6 +499,7 @@ void ProcessCommand(void *pvParameters)
         else if (command.containsKey(F("OrpAutoMode"))) //"PhPID" command which starts or stops the Ph PID loop
         {
           storage.OrpAutoMode = (int)command[F("OrpAutoMode")];
+          saveParam("OrpAutoMode",storage.OrpAutoMode);
           if (storage.OrpAutoMode == 0) SetOrpPID(false);
           PublishSettings();
         }

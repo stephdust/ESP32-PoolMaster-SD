@@ -193,13 +193,13 @@ void PoolMaster(void *pvParameters)
     // Check outside Winter Mode tasks
     if (!storage.WinterMode) // NOT Winter Mode
     {
-      //start cleaning robot for ROBOT_DURATION hours, ROBOT_DELAY minutes after filtration start
+      //start cleaning robot for ROBOT_DURATION minutes, ROBOT_DELAY minutes after filtration start
       if (storage.AutoMode && !RobotPump.IsRunning() &&
           ((millis() - FiltrationPump.LastStartTime) / 1000 / 60) >= ROBOT_DELAY &&
           !cleaning_done)
       {
           RobotPump.Start();
-          Debug.print(DBG_INFO,"Robot Start 30mn after Filtration");   
+          Debug.print(DBG_INFO,"Robot Start %d mn after Filtration",0);   
       }
       if(RobotPump.IsRunning() && storage.AutoMode && ((millis() - RobotPump.LastStartTime) / 1000 / 60) >= ROBOT_DURATION)
       {

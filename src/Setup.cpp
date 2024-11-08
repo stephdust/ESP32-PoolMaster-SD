@@ -537,9 +537,9 @@ bool loadConfig()
   storage.ChlPumpFR             = nvs.getDouble("ChlPumpFR",1.5);
   storage.SecureElectro         = nvs.getUChar("SecureElectro",15);  //ajout
   storage.DelayElectro          = nvs.getUChar("DelayElectro",2);  //ajout
-  storage.ElectrolyseMode       = nvs.getUChar("ElectrolyseMode",0);  //ajout
-  storage.pHAutoMode            = nvs.getUChar("pHAutoMode",0);  //ajout
-  storage.OrpAutoMode           = nvs.getUChar("OrpAutoMode",0);  //ajout
+  storage.ElectrolyseMode       = nvs.getBool("ElectrolyseMode",false);  //ajout
+  storage.pHAutoMode            = nvs.getBool("pHAutoMode",false);  //ajout
+  storage.OrpAutoMode           = nvs.getBool("OrpAutoMode",false);  //ajout
 
 
   nvs.end();
@@ -560,7 +560,7 @@ bool loadConfig()
               storage.PhPIDOutput,storage.OrpPIDOutput,storage.WaterTemp,storage.PhValue,storage.OrpValue,storage.PSIValue);
   Debug.print(DBG_INFO,"%3.0f, %3.0f, %3.0f, %3.0f, %3.1f, %3.1f ",storage.AcidFill,storage.ChlFill,storage.pHTankVol,storage.ChlTankVol,
               storage.pHPumpFR,storage.ChlPumpFR);
-  Debug.print(DBG_INFO,"%d, %d, %d, %d %d",storage.SecureElectro,storage.DelayElectro,storage.ElectrolyseMode,storage.pHAutoMode,
+  Debug.print(DBG_INFO,"%d, %d, %d, %d, %d",storage.SecureElectro,storage.DelayElectro,storage.ElectrolyseMode,storage.pHAutoMode,
               storage.OrpAutoMode);
 
   return (storage.ConfigVersion == CONFIG_VERSION);
@@ -621,9 +621,9 @@ bool saveConfig()
   i += nvs.putDouble("ChlPumpFR",storage.ChlPumpFR);
   i += nvs.putUChar("SecureElectro",storage.SecureElectro);  //ajout
   i += nvs.putUChar("DelayElectro",storage.DelayElectro);  //ajout
-  i += nvs.putUChar("ElectrolyseMode",storage.ElectrolyseMode);  //ajout
-  i += nvs.putUChar("pHAutoMode",storage.pHAutoMode);  //ajout
-  i += nvs.putUChar("OrpAutoMode",storage.OrpAutoMode);  //ajout
+  i += nvs.putBool("ElectrolyseMode",storage.ElectrolyseMode);  //ajout
+  i += nvs.putBool("pHAutoMode",storage.pHAutoMode);  //ajout
+  i += nvs.putBool("OrpAutoMode",storage.OrpAutoMode);  //ajout
   nvs.end();
 
   Debug.print(DBG_INFO,"Bytes saved: %d / %d\n",i,sizeof(storage));
