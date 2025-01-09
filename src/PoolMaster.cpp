@@ -8,7 +8,7 @@
 #endif
 #ifdef ELEGANT_OTA
 static WiFiClient wificlient;
-WebServer server(80);
+AsyncWebServer server(80);
 #endif
 
 #ifdef SMTP
@@ -90,7 +90,7 @@ void PoolMaster(void *pvParameters)
     ArduinoOTA.handle();
 
 #ifdef ELEGANT_OTA
-    server.handleClient();
+    //server.handleClient();
     ElegantOTA.loop();
 #endif
 
