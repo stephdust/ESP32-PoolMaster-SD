@@ -63,6 +63,8 @@ An extended board is also available which includes additional interfaces as well
 - ESP32 power toggle switch (if reboot needed)
 - Over-the-Internet software upgrades
 
+![Project Extended Hardware](https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/Extended_Board.jpg)
+
 ### Software
 The ESP32 project isn't a fork of the ATmega2560 original one due to the different structure of source files with PlatformIO ((.cpp, .h). 
 It includes:
