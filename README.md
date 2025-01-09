@@ -12,6 +12,7 @@ System continuously monitors various metrics and periodically reports them over 
  - Orp
  - Chlorine tank level
  - pH tank level
+ - Water Level
 
 pH and Orp are continuously adjusted thanks to two peristaltic pumps controlled by two PID regulation loops.
 
@@ -41,9 +42,10 @@ This project is a fork of ESP32 Poolmaster by Gixy ([https://github.com/Gixy31/E
 
 Gixy's project is a redesign for ESP32 of an initial project by Loic74650 [(https://github.com/Loic74650/PoolMaster](https://github.com/Loic74650/PoolMaster)) which was intended for Atmega2560 MCUs.
 
-Project includes ESP code and two PCB designs for:
+Project includes ESP code and three PCB designs for:
 - The main control board
 - The pH/Orp acquisition board
+- The main control board (extended interface version)
 
 The main unit interfaces with a 3.5'' Nextion touchscreen for local information and control.
 It includes Wifi connectivity to communicate via MQTT and SMTP. Project includes configuration files for various home automation systems such as Home Assistant, Jeedom, NodeRed, Grafana, etc.
@@ -55,6 +57,13 @@ A dedicated board has been designed to host all components. There are 8 LEDs at 
 Below two examples of live deployments:
 
 ![Project Hardware](https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/Hardware2.png)
+
+An extended board is also available which includes additional interfaces as well as a second ESP32 slot for watchdog and remote maintenance. This is particularly useful for remote pool management features such as:
+- Logs sent to cloud (and long term storage & statistics)
+- ESP32 power toggle switch (if reboot needed)
+- Over-the-Internet software upgrades
+
+![Project Extended Hardware](https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/Extended_Board.jpg)
 
 ### Software
 The ESP32 project isn't a fork of the ATmega2560 original one due to the different structure of source files with PlatformIO ((.cpp, .h). 
@@ -87,7 +96,7 @@ To better understand PoolMaster's logic, please review the flowchart below:
 [https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/PoolMaster-LogicFlowChart.pdf](https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/PoolMaster-LogicFlowChart.pdf)
 
 ### 3.5'' TouchScreen control
-![Nextion TouchScreen HMI](https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/Nextion_Screens.png)
+![Nextion TouchScreen HMI](https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/Nextion_Screens.jpg)
 ### Home Automation Integration
 Example of integration in Grafana and Home Assistant
 ![Home Automation Integration](https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/Grafana%20and%20App.png)
