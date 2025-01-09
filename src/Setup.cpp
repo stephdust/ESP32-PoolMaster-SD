@@ -97,11 +97,11 @@ Preferences nvs;
 //    8/ Tankvolume is used to compute the percentage of tank used/remaining
 
 // FiltrationPump: This Pump controls the filtration, no tank attached and not interlocked to any element. SSD relay attached works with HIGH level.
-Pump FiltrationPump(FILTRATION_PUMP, FILTRATION_PUMP, (uint8_t)NO_TANK, (uint8_t)NO_INTERLOCK, (uint8_t)RELAY_ACTIVE_HIGH, (uint8_t)RELAY_ACTIVE_HIGH);
+Pump FiltrationPump(FILTRATION_PUMP, FILTRATION_PUMP, (uint8_t)NO_TANK, (uint8_t)NO_INTERLOCK);
 // pHPump: This Pump has no low-level switch so remaining volume is estimated. It is interlocked with the relay of the FilrationPump
-Pump PhPump(PH_PUMP, PH_PUMP, NO_LEVEL, FiltrationPump.GetRelayReference(), storage.pHPumpFR, storage.pHTankVol, storage.AcidFill);
+Pump PhPump(PH_PUMP, PH_PUMP, PH_LEVEL, FiltrationPump.GetRelayReference(), storage.pHPumpFR, storage.pHTankVol, storage.AcidFill);
 // ChlPump: This Pump has no low-level switch so remaining volume is estimated. It is interlocked with the relay of the FilrationPump
-Pump ChlPump(CHL_PUMP, CHL_PUMP, NO_LEVEL, FiltrationPump.GetRelayReference(), storage.ChlPumpFR, storage.ChlTankVol, storage.ChlFill);
+Pump ChlPump(CHL_PUMP, CHL_PUMP, CHL_LEVEL, FiltrationPump.GetRelayReference(), storage.ChlPumpFR, storage.ChlTankVol, storage.ChlFill);
 // RobotPump: This Pump is not injecting liquid so tank is associated to it. It is interlocked with the relay of the FilrationPump
 Pump RobotPump(ROBOT_PUMP, ROBOT_PUMP, NO_TANK, FiltrationPump.GetRelayReference());
 // SWG: This Pump is associated with a Salt Water Chlorine Generator. It turns on and off the equipment to produce chlorine.
@@ -120,6 +120,9 @@ PID OrpPID(&storage.OrpValue, &storage.OrpPIDOutput, &storage.Orp_SetPoint, stor
 // Publishing tasks handles to notify them
 static TaskHandle_t pubSetTaskHandle;
 static TaskHandle_t pubMeasTaskHandle;
+
+// Used for ElegantOTA
+unsigned long ota_progress_millis = 0;
 
 // Mutex to share access to I2C bus among two tasks: AnalogPoll and StatusLights
 static SemaphoreHandle_t mutex;
@@ -162,6 +165,11 @@ void ProcessCommand(void*);
 void SettingsPublish(void*);
 void MeasuresPublish(void*);
 void StatusLights(void*);
+
+// For ElegantOTA
+void onOTAStart(void);
+void onOTAProgress(size_t,size_t);
+void onOTAEnd(bool);
 
 // Setup
 void setup()
@@ -425,12 +433,15 @@ void setup()
 
 #ifdef ELEGANT_OTA
 // ELEGANTOTA Configuration
-  server.on("/", []() {
-    server.send(200, "text/plain", "NA");
-  });
+  //server.on("/", []() {
+  //  server.send(200, "text/plain", "NA");
+  //});
 
 
   ElegantOTA.begin(&server);    // Start ElegantOTA
+  ElegantOTA.onStart(onOTAStart);
+  ElegantOTA.onProgress(onOTAProgress);
+  ElegantOTA.onEnd(onOTAEnd);
   server.begin();
   Serial.println("HTTP server started");
   // Set Authentication Credentials
@@ -480,6 +491,32 @@ void setup()
 
   delay(1000);          // wait for tasks to start
 
+}
+
+
+void onOTAStart() {
+  // Log when OTA has started
+  Serial.println("OTA update started!");
+  // <Add your own code here>
+}
+
+void onOTAProgress(size_t current, size_t final) {
+  esp_task_wdt_reset();           // reset Watchdog as upload may last some time...
+  // Log every 1 second
+  if (millis() - ota_progress_millis > 1000) {
+    ota_progress_millis = millis();
+    Serial.printf("OTA Progress Current: %u bytes, Final: %u bytes\n", current, final);
+  }
+}
+
+void onOTAEnd(bool success) {
+  // Log when OTA has finished
+  if (success) {
+    Serial.println("OTA update finished successfully!");
+  } else {
+    Serial.println("There was an error during OTA update!");
+  }
+  // <Add your own code here>
 }
 
 bool loadConfig()
