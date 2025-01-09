@@ -23,7 +23,7 @@
 #include "AsyncMqttClient.h"      // Async. MQTT client
 #include "ADS1115.h"              // ADS1115 sensors library
 #ifdef ELEGANT_OTA
-#include <WebServer.h>            // Used for ElegantOTA
+#include <ESPAsyncWebServer.h>            // Used for ElegantOTA
 #include <ElegantOTA.h>
 #endif
 // General shared data structure
@@ -61,7 +61,7 @@ extern Relay RELAYR0;
 extern Relay RELAYR1;
 
 #ifdef ELEGANT_OTA
-extern WebServer server;
+extern AsyncWebServer server;
 #endif
 
 //PIDs instances
