@@ -10,7 +10,7 @@
 #include "PoolMaster.h"
 
 //Size of the buffer to store outgoing JSON messages
-#define PAYLOAD_BUFFER_LENGTH 150
+#define PAYLOAD_BUFFER_LENGTH 170
 
 // BitMaps with GPIO states
 static uint8_t BitMap1 = 0;
