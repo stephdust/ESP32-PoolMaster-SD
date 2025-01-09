@@ -157,7 +157,7 @@ void UpdateTFT()
     myNex.writeNum(F(GLOBAL".vapHUTErr.val"),PhPump.UpTimeError ? 1:0); 
 
     // Do not update switch status during 1s after a change of switch to allow the system to reflect it in real life
-    if ((unsigned long)(millis() - LastAction) > 1000)
+    if (((unsigned long)(millis() - LastAction) > 1000) || (CurrentPage==1))
     {
       // Update all bistable switches
       if(TFT_Automode != storage.AutoMode) 
