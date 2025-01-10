@@ -223,6 +223,7 @@ void setup()
   // Warning: pins used here have no pull-ups, provide external ones
   pinMode(CHL_LEVEL, INPUT);
   pinMode(PH_LEVEL, INPUT);
+  pinMode(POOL_LEVEL, INPUT);
 
   // Initialize watch-dog
   esp_task_wdt_init(WDT_TIMEOUT, true);
