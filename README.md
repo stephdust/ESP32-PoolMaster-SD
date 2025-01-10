@@ -62,6 +62,8 @@ An extended board is also available which includes additional interfaces as well
 - Logs sent to cloud (and long term storage & statistics)
 - ESP32 power toggle switch (if reboot needed)
 - Over-the-Internet software upgrades
+- Alarm Buzzer included onto the board
+- External 5V output to power additional device
 
 ![Project Extended Hardware](https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/Extended_Board2.jpg)
 
