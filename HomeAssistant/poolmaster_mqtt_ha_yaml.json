@@ -370,7 +370,7 @@ sensor:
       - 3091a77d-5096-45be-b2a6-e445d71bb192
 
 binary_sensor:
-- name: "pH Level Error"
+- name: "pH Level Status"
   state_topic: "Home/Pool/Meas2"
   value_template: "{{ value_json.IO | int | bitwise_and(16) == 16 }}"
   payload_on: "False"
@@ -391,7 +391,7 @@ binary_sensor:
     identifiers:
       - 3091a77d-5096-45be-b2a6-e445d71bb192
 
-- name: "Chl Level Error"
+- name: "Chl Level Status"
   state_topic: "Home/Pool/Meas2"
   value_template: "{{ value_json.IO | int | bitwise_and(8) == 8 }}"
   payload_on: "False"
@@ -412,7 +412,7 @@ binary_sensor:
     identifiers:
       - 3091a77d-5096-45be-b2a6-e445d71bb192
 
-- name: "pH Uptime Error"
+- name: "pH Uptime Status"
   state_topic: "Home/Pool/Meas2"
   value_template: "{{ value_json.IO | int | bitwise_and(2) == 2 }}"
   payload_on: "True"
@@ -433,7 +433,7 @@ binary_sensor:
     identifiers:
       - 3091a77d-5096-45be-b2a6-e445d71bb192
 
-- name: "Chl Uptime Error"
+- name: "Chl Uptime Status"
   state_topic: "Home/Pool/Meas2"
   value_template: "{{ value_json.IO | int | bitwise_and(1) == 1 }}"
   payload_on: "True"
@@ -454,13 +454,34 @@ binary_sensor:
     identifiers:
       - 3091a77d-5096-45be-b2a6-e445d71bb192
 
-- name: "PSI Error"
+- name: "PSI Status"
   state_topic: "Home/Pool/Meas2"
   value_template: "{{ value_json.IO | int | bitwise_and(4) == 4 }}"
   payload_on: "True"
   payload_off: "False"
   unique_id: "poolmaster_meas_psierror"
   icon: "mdi:water-alert"
+  device_class: "problem"
+  availability:
+      - topic: "Home/Pool/Status"
+        value_template: "{{ value_json['PoolMaster Online'] }}"
+        payload_available: "1"
+        payload_not_available : "0"
+  expire_after: 240
+  device:
+    name: "PoolMaster"
+    model: "PoolMaster ESP32"
+    manufacturer: "Gixy"
+    identifiers:
+      - 3091a77d-5096-45be-b2a6-e445d71bb192
+
+- name: "Water Level Status"
+  state_topic: "Home/Pool/Meas2"
+  value_template: "{{ value_json.IO2 | int | bitwise_and(1) == 1 }}"
+  payload_on: "True"
+  payload_off: "False"
+  unique_id: "poolmaster_meas_wlevelerror"
+  icon: "mdi:waves-arrow-up"
   device_class: "problem"
   availability:
       - topic: "Home/Pool/Status"
