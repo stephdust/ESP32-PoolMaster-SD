@@ -41,6 +41,10 @@ int  freeRam(void);
 void SetMQTTReady(void);  // To inform the Nextion that MQTT is ready
 void UpdateTFT(void);
 
+// Function to set NTP
+extern void StartTime(void);
+extern void readLocalTime(void);
+
 void initTimers() {
   mqttReconnectTimer = xTimerCreate("mqttTimer", pdMS_TO_TICKS(2000), pdFALSE, (void*)0, reinterpret_cast<TimerCallbackFunction_t>(connectToMqtt));
   wifiReconnectTimer = xTimerCreate("wifiTimer", pdMS_TO_TICKS(2000), pdFALSE, (void*)0, reinterpret_cast<TimerCallbackFunction_t>(reconnectToWiFi));
@@ -104,6 +108,9 @@ void WiFiEvent(WiFiEvent_t event){
       Debug.print(DBG_INFO,"[WiFi] IP address: %s",WiFi.localIP().toString().c_str());
       Debug.print(DBG_INFO,"[WiFi] Hostname: %s",WiFi.getHostname());
       UpdateWiFi(true);
+      //Attemps to synchronize to NTP upon reconnection
+      StartTime();
+      readLocalTime();
       xTimerStart(mqttReconnectTimer,0);
       break;
     case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:

@@ -85,3 +85,4 @@ extern bool MQTTConnection;                            // MQTT connected flag
 extern bool AntiFreezeFiltering;                       // Filtration anti freeze mode
 extern bool PSIError;								   // Water pressure alarm
 extern bool cleaning_done;      					   // Robot clean-up done   
+

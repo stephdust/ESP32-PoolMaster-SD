@@ -51,7 +51,7 @@ void EncodeBitMap()
   BitMap2 |= (RELAYR0.IsActive() & 1) << 3;
   BitMap2 |= (RELAYR1.IsActive() & 1) << 2;
   BitMap2 |= (storage.WinterMode & 1) << 1;
-  BitMap2 |= (0 & 1U) << 0;     
+  BitMap2 |= (digitalRead(POOL_LEVEL) & 1) << 0;     
 
   BitMap3 |= (0 & 1U) << 7;
   BitMap3 |= (0 & 1U) << 6;

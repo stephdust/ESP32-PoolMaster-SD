@@ -62,6 +62,10 @@ tm timeinfo;
 // Various global flags
 volatile bool startTasks = false;               // Signal to start loop tasks
 
+// Store millis to allow Wifi Connection Timeout
+static unsigned long WifiConnectionTimeout = 0; // Last action time done on TFT. Go to sleep after TFT_SLEEP
+bool MDNSStatus = false;
+
 bool AntiFreezeFiltering = false;               // Filtration anti freeze mode
 //bool EmergencyStopFiltPump = false;             // flag will be (re)set by double-tapp button
 bool PSIError = false;                          // Water pressure OK
@@ -187,8 +191,8 @@ void setup()
   info();
   
   // Initialize Nextion TFT
-  InitTFT();
   ResetTFT();
+  InitTFT();
   SetBoardReady();
   UpdateTFT();
   //Read ConfigVersion. If does not match expected value, restore default values
@@ -237,11 +241,17 @@ void setup()
   connectToWiFi();
 
   delay(500);    // let task start-up and wait for connection
-  while(WiFi.status() != WL_CONNECTED) {
+  WifiConnectionTimeout = millis();
+  while((WiFi.status() != WL_CONNECTED)&&((unsigned long)(millis() - WifiConnectionTimeout) < 10000)) {
     delay(500);
     Serial.print(".");
   }
-  SetWifiReady(); // Inform Nextion screen
+  
+  if(WiFi.status() == WL_CONNECTED) {
+    SetWifiReady(); // Inform Nextion screen
+  } else {
+    Serial.print("Ignored Wifi Connection (timeout)");
+  }
   UpdateTFT();
   // Config NTP, get time and set system time. This is done here in setup then every day at midnight
   // note: in timeinfo struct, months are from 0 to 11 and years are from 1900. Thus the corrections
@@ -255,11 +265,17 @@ void setup()
   UpdateTFT();
 
   // Initialize the mDNS library.
-  while (!MDNS.begin("PoolMaster")) {
+  WifiConnectionTimeout = millis();
+  while (!MDNSStatus&&((unsigned long)(millis() - WifiConnectionTimeout) < 10000)) {
+    MDNSStatus = MDNS.begin("PoolMaster");
     Debug.print(DBG_ERROR,"Error setting up MDNS responder!");
     delay(1000);
   }
-  MDNS.addService("http", "tcp", SERVER_PORT);
+  if(MDNSStatus) {
+    MDNS.addService("http", "tcp", SERVER_PORT);
+  } else {
+    Serial.print("Ignored MDNS (timeout)");
+  }
 
   // Start I2C for ADS1115 and status lights through PCF8574A
   Wire.begin(I2C_SDA,I2C_SCL);

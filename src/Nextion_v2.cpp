@@ -67,11 +67,21 @@ void ResetTFT()
 {
   myNex.begin(115200);
   myNex.writeStr("sleep=0");
-  //myNex.writeStr(F("rest"));
-  myNex.writeStr(F("wup=8")); // Exit from sleep on page 9 Loading
+  myNex.writeStr(F("rest"));
+  myNex.writeStr(F("wup=1")); // Exit from sleep on page 9 Loading
   myNex.writeStr(F("usup=1")); // Authorize auto wake up on serial data
+  PoolMaster_BoardReady = false;
+  PoolMaster_WifiReady = false;
+  PoolMaster_MQTTReady = false;
+  PoolMaster_NTPReady = false;
+  PoolMaster_FullyLoaded = false;
+  myNex.writeNum(F(GLOBAL".vaFullload.val"),0);
+  myNex.writeNum(F(GLOBAL".vaBOARDReady.val"),0);
+  myNex.writeNum(F(GLOBAL".vaWIFIReady.val"),0);
+  myNex.writeNum(F(GLOBAL".vaMQTTReady.val"),0);
+  myNex.writeNum(F(GLOBAL".vaNTPReady.val"),0);
   myNex.writeStr("page pageSplash");
-  //delay(1000);
+  delay(500);
 }
 
 double map(double x, double in_min, double in_max, int out_min, int out_max) {
@@ -215,7 +225,7 @@ void UpdateTFT()
       myNex.writeNum(F(GLOBAL".vaNTPReady.val"),PoolMaster_FullyLoaded);
     }
 
-    if(CurrentPage==1 || CurrentPage==2)  
+    if(CurrentPage==1 || CurrentPage==2)    //Splash & Home
     {
       // Home page data is loaded during splash screen to avoid lag when Home page appears
       sprintf(HourBuffer, PSTR("%02d:%02d:%02d"), hour(), minute(), second());
@@ -287,7 +297,7 @@ void UpdateTFT()
         myNex.writeNum(F("pageHome.vaOrpErr.val"),2);        
     }
 
-    if(CurrentPage == 3) 
+    if(CurrentPage == 3)     //Settings
     {  
       //snprintf_P(temp,sizeof(temp),PSTR("%d%% / %4.1fmin"),(int)round(PhPump.GetTankFill()),float(PhPump.UpTime)/1000./60.);
       snprintf_P(temp,sizeof(temp),PSTR("%4.1fmn"),float(PhPump.UpTime)/1000./60.);
@@ -303,30 +313,33 @@ void UpdateTFT()
       myNex.writeStr(F(GLOBAL".vaTFTFW.txt"),TFT_FIRMW);
     }  
 
-    if(CurrentPage == 4) 
+    if(CurrentPage == 4)      //Calib & Electrolyse
     {
       snprintf_P(temp,sizeof(temp),PSTR("%4.2f"),storage.PhValue);
       myNex.writeStr(F(GLOBAL".vapH.txt"),temp);
       snprintf_P(temp,sizeof(temp),PSTR("%3.0f"),storage.OrpValue);
       myNex.writeStr(F(GLOBAL".vaOrp.txt"),temp);
-
       myNex.writeNum(F(GLOBAL".vaElectroSec.val"), storage.SecureElectro);
       myNex.writeNum(F(GLOBAL".vaElectroDelay.val"), storage.DelayElectro);
     }
 
+    if(CurrentPage == 5)      //Keypad & Keyboard
+    {
+
+    }
     //put TFT in sleep mode with wake up on touch and force page 0 load to trigger an event
-    if((unsigned long)(millis() - LastAction) >= TFT_SLEEP && TFT_ON && CurrentPage !=4)
+    if((unsigned long)(millis() - LastAction) >= TFT_SLEEP && TFT_ON && CurrentPage !=4 && CurrentPage !=5)
     {
       myNex.writeStr(F("thup=1"));
-      myNex.writeStr(F("wup=8"));     // Wake up on page 9 SplashScreen
-      myNex.writeStr(F("usup=1"));    // Authorize auto wake up on serial data
+      myNex.writeStr(F("wup=1"));     // Wake up on page 9 SplashScreen
+      myNex.writeStr(F("usup=0"));    // Authorize auto wake up on serial data
       myNex.writeStr(F("sleep=1"));
       TFT_ON = false;
     }
   }  
 }
 
-//Page 0 has finished loading - SplashScreen
+//Page 1 has finished loading - SplashScreen
 //printh 23 02 54 01
 void trigger1()
 {
@@ -339,7 +352,7 @@ void trigger1()
   LastAction = millis();
 }
 
-//Page 1 has finished loading - Home
+//Page 2 has finished loading - Home
 //printh 23 02 54 02
 void trigger2()
 {
@@ -347,7 +360,7 @@ void trigger2()
   LastAction = millis();
 }
 
-//Page 2 has finished loading - Settings & Info
+//Page 3 has finished loading - Settings & Info
 //printh 23 02 54 03
 void trigger3()
 {
@@ -531,5 +544,33 @@ void trigger20()
   LastAction = millis();
 }
 
+//Electrolyser configuration
+//printh 23 02 54 15
+void trigger21()
+{
+  char Cmd[100] = "";
+  strcpy(Cmd,myNex.readStr(F(GLOBAL".vaCommand.txt")).c_str());
+  xQueueSendToBack(queueIn,&Cmd,0);
+  Debug.print(DBG_VERBOSE,"Nextion cal page command: %s",Cmd);
+  LastAction = millis();
+}
 
+//Page 5 has finished loading - KeyPad & KeyBoard
+//printh 23 02 54 16
+void trigger22()
+{
+  CurrentPage = 5;
+  LastAction = millis();
+}
+
+//DateTime information
+//printh 23 02 54 17
+void trigger23()
+{
+  char Cmd[100] = "";
+  strcpy(Cmd,myNex.readStr(F(GLOBAL".vaCommand.txt")).c_str());
+  xQueueSendToBack(queueIn,&Cmd,0);
+  Debug.print(DBG_VERBOSE,"Nextion set date time page command: %s",Cmd);
+  LastAction = millis();
+}
 #endif

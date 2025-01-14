@@ -540,22 +540,35 @@ void ProcessCommand(void *pvParameters)
           if (storage.AutoMode && (hour() >= storage.FiltrationStart) && (hour() < storage.FiltrationStop))
             FiltrationPump.Start();
         }
-        //"ElectroSecure" command which is called when electrolyser is configured
-        // Secure Temperature
-        else if (command.containsKey(F("ElectroSecure")))
+        //"ElectroConfig" command which is called when the Electrolyser is configured
+        //First parameter is minimum temperature to use the Electrolyser, second is the delay after pump start
+        else if (command.containsKey(F("ElectroConfig")))
         {
-          storage.SecureElectro = (int8_t)command[F("ElectroSecure")];
+          storage.SecureElectro = (uint8_t)command[F("ElectroConfig")][0];
+          storage.DelayElectro = (uint8_t)command[F("ElectroConfig")][1];
           saveParam("SecureElectro",storage.SecureElectro);
+          saveParam("DelayElectro",storage.DelayElectro);               
           PublishSettings();
         }
-        //"ElectroDelay" command which is called when electrolyser is configured
-        // Delay to start
-        if (command.containsKey(F("ElectroDelay")))
+        //"SetDateTime" command which sets the ESP32 local time based
+        // on Nextion's RTC
+        else if (command.containsKey(F("SetDateTime")))
         {
-          storage.DelayElectro = (int8_t)command[F("ElectroDelay")];
-          saveParam("DelayElectro",storage.DelayElectro);
-          PublishSettings();
+          int	rtc_hour = (int)command[F("SetDateTime")][0];
+          int	rtc_min = (int)command[F("SetDateTime")][1];
+          int	rtc_sec = (int)command[F("SetDateTime")][2];
+          int	rtc_mday = (int)command[F("SetDateTime")][3];
+          int	rtc_mon = (int)command[F("SetDateTime")][4];
+          int	rtc_year = (int)command[F("SetDateTime")][5];
+          setTime(rtc_hour,rtc_min,rtc_sec,rtc_mday,rtc_mon+1,rtc_year);
         }
+        digitalWrite(BUZZER,HIGH);
+        delay(30);
+        digitalWrite(BUZZER,LOW);
+        delay(40);
+        digitalWrite(BUZZER,HIGH);
+        delay(30);
+        digitalWrite(BUZZER,LOW);   
         // Publish Update on the MQTT broker the status of our variables
         PublishMeasures();
       }
