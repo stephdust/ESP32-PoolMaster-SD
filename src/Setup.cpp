@@ -63,7 +63,7 @@ tm timeinfo;
 volatile bool startTasks = false;               // Signal to start loop tasks
 
 // Store millis to allow Wifi Connection Timeout
-static unsigned long WifiConnectionTimeout = 0; // Last action time done on TFT. Go to sleep after TFT_SLEEP
+static unsigned long ConnectionTimeout = 0; // Last action time done on TFT. Go to sleep after TFT_SLEEP
 bool MDNSStatus = false;
 
 bool AntiFreezeFiltering = false;               // Filtration anti freeze mode
@@ -101,19 +101,19 @@ Preferences nvs;
 //    8/ Tankvolume is used to compute the percentage of tank used/remaining
 
 // FiltrationPump: This Pump controls the filtration, no tank attached and not interlocked to any element. SSD relay attached works with HIGH level.
-Pump FiltrationPump(FILTRATION_PUMP, FILTRATION_PUMP, (uint8_t)NO_TANK, (uint8_t)NO_INTERLOCK);
+Pump FiltrationPump(FILTRATION, FILTRATION, (uint8_t)NO_TANK, (uint8_t)NO_INTERLOCK);
 // pHPump: This Pump has no low-level switch so remaining volume is estimated. It is interlocked with the relay of the FilrationPump
 Pump PhPump(PH_PUMP, PH_PUMP, PH_LEVEL, FiltrationPump.GetRelayReference(), storage.pHPumpFR, storage.pHTankVol, storage.AcidFill);
 // ChlPump: This Pump has no low-level switch so remaining volume is estimated. It is interlocked with the relay of the FilrationPump
 Pump ChlPump(CHL_PUMP, CHL_PUMP, CHL_LEVEL, FiltrationPump.GetRelayReference(), storage.ChlPumpFR, storage.ChlTankVol, storage.ChlFill);
 // RobotPump: This Pump is not injecting liquid so tank is associated to it. It is interlocked with the relay of the FilrationPump
-Pump RobotPump(ROBOT_PUMP, ROBOT_PUMP, NO_TANK, FiltrationPump.GetRelayReference());
+Pump RobotPump(ROBOT, ROBOT, NO_TANK, FiltrationPump.GetRelayReference());
 // SWG: This Pump is associated with a Salt Water Chlorine Generator. It turns on and off the equipment to produce chlorine.
 // It has no tank associated. It is interlocked with the relay of the FilrationPump
-Pump SWG(ORP_PROD, ORP_PROD, NO_TANK, FiltrationPump.GetRelayReference()); // SWG is interlocked with the Pump Relay
+Pump SWG(SPARE, SPARE, NO_TANK, FiltrationPump.GetRelayReference()); // SWG is interlocked with the Pump Relay
 
 // The Relays class to activate and deactivate digital pins
-Relay RELAYR0(RELAY_R0);
+Relay RELAYR0(PROJ);
 Relay RELAYR1(RELAY_R1);
 
 // PIDs instances
@@ -133,7 +133,7 @@ static SemaphoreHandle_t mutex;
 
 // Functions prototypes
 void StartTime(void);
-void readLocalTime(void);
+bool readLocalTime(void);
 bool loadConfig(void);
 bool saveConfig(void);
 void WiFiEvent(WiFiEvent_t);
@@ -241,8 +241,8 @@ void setup()
   connectToWiFi();
 
   delay(500);    // let task start-up and wait for connection
-  WifiConnectionTimeout = millis();
-  while((WiFi.status() != WL_CONNECTED)&&((unsigned long)(millis() - WifiConnectionTimeout) < 10000)) {
+  ConnectionTimeout = millis();
+  while((WiFi.status() != WL_CONNECTED)&&((unsigned long)(millis() - ConnectionTimeout) < WIFI_TIMEOUT)) {
     delay(500);
     Serial.print(".");
   }
@@ -258,15 +258,16 @@ void setup()
   // to pass arguments to setTime which needs months from 1 to 12 and years from 2000...
   // DST (Daylight Saving Time) is managed automatically
   StartTime();
-  readLocalTime();
-  setTime(timeinfo.tm_hour,timeinfo.tm_min,timeinfo.tm_sec,timeinfo.tm_mday,timeinfo.tm_mon+1,timeinfo.tm_year-100);
-  Debug.print(DBG_INFO,"%d/%02d/%02d %02d:%02d:%02d",year(),month(),day(),hour(),minute(),second());
-  SetNTPReady();  // Inform Nextion Screen
-  UpdateTFT();
+  if (readLocalTime()) {
+    setTime(timeinfo.tm_hour,timeinfo.tm_min,timeinfo.tm_sec,timeinfo.tm_mday,timeinfo.tm_mon+1,timeinfo.tm_year-100);
+    Debug.print(DBG_INFO,"%d/%02d/%02d %02d:%02d:%02d",year(),month(),day(),hour(),minute(),second());
+    SetNTPReady();  // Inform Nextion Screen
+    UpdateTFT();
+  }
 
   // Initialize the mDNS library.
-  WifiConnectionTimeout = millis();
-  while (!MDNSStatus&&((unsigned long)(millis() - WifiConnectionTimeout) < 10000)) {
+  ConnectionTimeout = millis();
+  while (!MDNSStatus&&((unsigned long)(millis() - ConnectionTimeout) < WIFI_TIMEOUT)) {
     MDNSStatus = MDNS.begin("PoolMaster");
     Debug.print(DBG_ERROR,"Error setting up MDNS responder!");
     delay(1000);
@@ -328,11 +329,6 @@ void setup()
   // default relay type for class Pump
   SWG.SetRelayType(RELAY_BISTABLE); 
   //SWG.GetRelayReference()->SetBistableDelay(500); // Default delay between up and down for bistable relay is 500ms. Can be changed here.
-
-  // Start filtration pump at power-on if within scheduled time slots -- You can choose not to do this and start pump manually
-  //if (storage.AutoMode && (hour() >= storage.FiltrationStart) && (hour() < storage.FiltrationStop))
-  //  FiltrationPump.Start();
-  //else FiltrationPump.Stop();
 
   // Robot pump off at start
   RobotPump.Stop();
@@ -763,11 +759,13 @@ void StartTime(){
   Debug.print(DBG_INFO,"NTP configured");
 }
 
-void readLocalTime(){
+bool readLocalTime(){
   if(!getLocalTime(&timeinfo,5000U)){
     Debug.print(DBG_WARNING,"Failed to obtain time");
+    return false;
   }
   Serial.println(&timeinfo,"%A, %B %d %Y %H:%M:%S");
+  return true;
 }
 
 // Notify PublishSettings task 
@@ -795,6 +793,7 @@ void info(){
   Debug.print(DBG_INFO,"confixMAX_PRIORITIES: %d",configMAX_PRIORITIES);
   Debug.print(DBG_INFO,"configTICK_RATE_HZ  : %d",configTICK_RATE_HZ);
 }
+
 
 // Pseudo loop, which deletes loopTask of the Arduino framework
 void loop()

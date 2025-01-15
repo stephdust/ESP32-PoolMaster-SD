@@ -195,8 +195,7 @@ void ProcessCommand(void *pvParameters)
             Debug.print(DBG_DEBUG,"Calibration completed. Coeffs are: %10.2f, %10.2f",storage.PSICalibCoeffs0,storage.PSICalibCoeffs1);
           }
         }
-        // "Mode" 
-        // command which sets regulation and filtration to manual or auto modes
+        //"Mode" command which sets regulation and filtration to manual or auto modes
         else if (command.containsKey(F("Mode")))
         {
           if ((bool)command[F("Mode")] == 0)  // mode 0 = Manu
@@ -428,8 +427,6 @@ void ProcessCommand(void *pvParameters)
         {
           PublishSettings();
         }         
-        // "FiltPump" 
-        // command which starts or stops the filtration pump
         else if (command.containsKey(F("FiltPump"))) //"FiltPump" command which starts or stops the filtration pump
         {
           if ((int)command[F("FiltPump")] == 0)

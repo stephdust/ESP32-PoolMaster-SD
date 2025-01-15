@@ -43,7 +43,8 @@ void UpdateTFT(void);
 
 // Function to set NTP
 extern void StartTime(void);
-extern void readLocalTime(void);
+extern bool readLocalTime(void);
+extern void SetNTPReady(void);
 
 void initTimers() {
   mqttReconnectTimer = xTimerCreate("mqttTimer", pdMS_TO_TICKS(2000), pdFALSE, (void*)0, reinterpret_cast<TimerCallbackFunction_t>(connectToMqtt));
@@ -108,9 +109,13 @@ void WiFiEvent(WiFiEvent_t event){
       Debug.print(DBG_INFO,"[WiFi] IP address: %s",WiFi.localIP().toString().c_str());
       Debug.print(DBG_INFO,"[WiFi] Hostname: %s",WiFi.getHostname());
       UpdateWiFi(true);
-      //Attemps to synchronize to NTP upon reconnection
+      //Attemps to synchronize to NTP upon Wifi reconnection
       StartTime();
-      readLocalTime();
+      if (readLocalTime()) {
+        setTime(timeinfo.tm_hour,timeinfo.tm_min,timeinfo.tm_sec,timeinfo.tm_mday,timeinfo.tm_mon+1,timeinfo.tm_year-100);
+        Debug.print(DBG_INFO,"From NTP time %d/%02d/%02d %02d:%02d:%02d",year(),month(),day(),hour(),minute(),second());
+        SetNTPReady();  // Inform Nextion Screen
+      }
       xTimerStart(mqttReconnectTimer,0);
       break;
     case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:

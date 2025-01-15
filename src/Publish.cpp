@@ -108,8 +108,8 @@ void SettingsPublish(void *pvParameters)
          
     if (mqttClient.connected())
     {
-        //send a JSON to MQTT broker. /!\ Split JSON if longer than 100 bytes
-        const int capacity = JSON_OBJECT_SIZE(8) + 8; // +8 as there is the Firmw String
+        //send a JSON to MQTT broker. /!\ Split JSON if longer than 192 bytes
+        const int capacity = JSON_OBJECT_SIZE(9) + 10; // value recommended by ArduinoJson Assistant with slack for the Firmw string
         StaticJsonDocument<capacity> root;
 
         root["FW"]     = Firmw;                            //firmware revision
@@ -283,7 +283,7 @@ void MeasuresPublish(void *pvParameters)
 
     if (mqttClient.connected())
     {
-        //send a JSON to MQTT broker. /!\ Split JSON if longer than 100 bytes
+        //send a JSON to MQTT broker. /!\ Split JSON if longer than 192 bytes
         //Will publish something like {"Tmp":818,"pH":321,"PSI":56,"Orp":583,"FilUpT":8995,"PhUpT":0,"ChlUpT":0}
         const int capacity = JSON_OBJECT_SIZE(7);
         StaticJsonDocument<capacity> root;

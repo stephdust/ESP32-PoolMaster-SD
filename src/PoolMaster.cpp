@@ -18,7 +18,7 @@ SMTP_Message message;
 #endif
 // Functions prototypes
 
-void readLocalTime(void);
+bool readLocalTime(void);
 bool saveParam(const char*,uint8_t );
 bool saveParam(const char*,bool );
 bool saveParam(const char*,unsigned long );
@@ -123,9 +123,13 @@ void PoolMaster(void *pvParameters)
         DoneForTheDay = true;
         cleaning_done = false;
 
-        readLocalTime();
-        setTime(timeinfo.tm_hour,timeinfo.tm_min,timeinfo.tm_sec,timeinfo.tm_mday,timeinfo.tm_mon+1,timeinfo.tm_year-100);
+        // Sync with NTP everyday at midnight
+        if (readLocalTime()) {
+          setTime(timeinfo.tm_hour,timeinfo.tm_min,timeinfo.tm_sec,timeinfo.tm_mday,timeinfo.tm_mon+1,timeinfo.tm_year-100);
+        }
 
+      // Security: if WiFi disconnected in spite of system auto-reconnect, try to restart once a day
+      //if(WiFi.status() != WL_CONNECTED) esp_restart(); // Commented out, if not connection hour is possibly 0 (midnight at bootup causing infinite reboot)
     }
     else if(hour() == 1)
     {

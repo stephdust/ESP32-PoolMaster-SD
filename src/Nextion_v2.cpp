@@ -165,6 +165,11 @@ void UpdateTFT()
     myNex.writeNum(F(GLOBAL".vaPSIErr.val"),PSIError ? 1:0);
     myNex.writeNum(F(GLOBAL".vaChlUTErr.val"),ChlPump.UpTimeError ? 1:0);
     myNex.writeNum(F(GLOBAL".vapHUTErr.val"),PhPump.UpTimeError ? 1:0); 
+    sprintf(HourBuffer, PSTR("%02d:%02d:%02d"), hour(), minute(), second());
+    myNex.writeStr(F(GLOBAL".vaTime.txt"),HourBuffer);
+    sprintf(DateBuffer, PSTR("%02d/%02d/%02d"), day(), month(), year()-2000);
+    myNex.writeStr(F(GLOBAL".vaDate.txt"),DateBuffer);
+    myNex.writeNum(F(GLOBAL".vaNetW.val"),MQTTConnection ? 1:0);
 
     // Do not update switch status during 1s after a change of switch to allow the system to reflect it in real life
     if (((unsigned long)(millis() - LastAction) > 1000) || (CurrentPage==1))
@@ -228,11 +233,6 @@ void UpdateTFT()
     if(CurrentPage==1 || CurrentPage==2)    //Splash & Home
     {
       // Home page data is loaded during splash screen to avoid lag when Home page appears
-      sprintf(HourBuffer, PSTR("%02d:%02d:%02d"), hour(), minute(), second());
-      myNex.writeStr(F(GLOBAL".vaTime.txt"),HourBuffer);
-      sprintf(DateBuffer, PSTR("%02d/%02d/%02d"), day(), month(), year()-2000);
-      myNex.writeStr(F(GLOBAL".vaDate.txt"),DateBuffer);
-      myNex.writeNum(F(GLOBAL".vaNetW.val"),MQTTConnection ? 1:0);
       snprintf_P(temp,sizeof(temp),PSTR("%02d-%02dh"),storage.FiltrationStart,storage.FiltrationStop);
       myNex.writeStr(F(GLOBAL".vaStaSto.txt"),temp);
 

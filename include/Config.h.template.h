@@ -45,13 +45,13 @@
 #define PhPID_DIRECTION REVERSE
 #define OrpPID_DIRECTION DIRECT
 
-#define FILTRATION_PUMP 32
-#define ROBOT_PUMP	    33
+#define FILTRATION      32
+#define ROBOT     	    33
 #define PH_PUMP         25
 #define CHL_PUMP        26
-#define RELAY_R0        4    // Projecteur
+#define PROJ            4    // Projecteur
 #define RELAY_R1        23   // Spare, not connected
-#define ORP_PROD        27
+#define SPARE           27
 
 //Digital input pins connected to Acid and Chl tank level reed switches
 #define CHL_LEVEL       39   // not wired. Use NO_LEVEL option of Pump class
