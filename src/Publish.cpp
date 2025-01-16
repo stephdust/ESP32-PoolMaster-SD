@@ -10,7 +10,7 @@
 #include "PoolMaster.h"
 
 //Size of the buffer to store outgoing JSON messages
-#define PAYLOAD_BUFFER_LENGTH 170
+#define PAYLOAD_BUFFER_LENGTH 200
 
 // BitMaps with GPIO states
 static uint8_t BitMap1 = 0;
@@ -71,7 +71,8 @@ void PublishTopic(const char* topic, JsonDocument& root)
   size_t n=serializeJson(root,Payload);
   if (mqttClient.publish(topic, 1, true, Payload,n) != 0)
   {
-    //Debug.print(DBG_DEBUG,"Publish: %s - size: %d/%d",Payload,root.size(),n);
+    delay(50);
+    Debug.print(DBG_DEBUG,"Publish: %s - size: %d/%d",Payload,root.size(),n);
   }
   else
   {

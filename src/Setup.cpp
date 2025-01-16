@@ -257,13 +257,13 @@ void setup()
   // note: in timeinfo struct, months are from 0 to 11 and years are from 1900. Thus the corrections
   // to pass arguments to setTime which needs months from 1 to 12 and years from 2000...
   // DST (Daylight Saving Time) is managed automatically
-  StartTime();
-  if (readLocalTime()) {
-    setTime(timeinfo.tm_hour,timeinfo.tm_min,timeinfo.tm_sec,timeinfo.tm_mday,timeinfo.tm_mon+1,timeinfo.tm_year-100);
-    Debug.print(DBG_INFO,"%d/%02d/%02d %02d:%02d:%02d",year(),month(),day(),hour(),minute(),second());
-    SetNTPReady();  // Inform Nextion Screen
-    UpdateTFT();
-  }
+  //StartTime();
+  //if (readLocalTime()) {
+    //setTime(timeinfo.tm_hour,timeinfo.tm_min,timeinfo.tm_sec,timeinfo.tm_mday,timeinfo.tm_mon+1,timeinfo.tm_year-100);
+    //Debug.print(DBG_INFO,"%d/%02d/%02d %02d:%02d:%02d",year(),month(),day(),hour(),minute(),second());
+    //SetNTPReady();  // Inform Nextion Screen
+    //UpdateTFT();
+  //}
 
   // Initialize the mDNS library.
   ConnectionTimeout = millis();
@@ -509,7 +509,7 @@ void setup()
 
 void onOTAStart() {
   // Log when OTA has started
-  Serial.println("OTA update started!");
+  Debug.print(DBG_WARNING,"OTA update started!");
   // <Add your own code here>
 }
 
@@ -518,16 +518,16 @@ void onOTAProgress(size_t current, size_t final) {
   // Log every 1 second
   if (millis() - ota_progress_millis > 1000) {
     ota_progress_millis = millis();
-    Serial.printf("OTA Progress Current: %u bytes, Final: %u bytes\n", current, final);
+    Debug.print(DBG_INFO,"OTA Progress Current: %u bytes, Final: %u bytes", current, final);
   }
 }
 
 void onOTAEnd(bool success) {
   // Log when OTA has finished
   if (success) {
-    Serial.println("OTA update finished successfully!");
+    Debug.print(DBG_INFO,"OTA update finished successfully!");
   } else {
-    Serial.println("There was an error during OTA update!");
+    Debug.print(DBG_ERROR,"There was an error during OTA update!");
   }
   // <Add your own code here>
 }
@@ -752,10 +752,10 @@ void StartTime(){
   int retry = 0;
   const int retry_count = 15;
   while(sntp_get_sync_status() == SNTP_SYNC_STATUS_RESET && ++retry < retry_count){
-    Serial.print(".");
+    //Serial.print(".");
     vTaskDelay(2000 / portTICK_PERIOD_MS);
   }
-  Serial.println("");
+  //Serial.println("");
   Debug.print(DBG_INFO,"NTP configured");
 }
 
@@ -764,7 +764,7 @@ bool readLocalTime(){
     Debug.print(DBG_WARNING,"Failed to obtain time");
     return false;
   }
-  Serial.println(&timeinfo,"%A, %B %d %Y %H:%M:%S");
+  //Debug.print("%A, %B %d %Y %H:%M:%S",&timeinfo);
   return true;
 }
 
