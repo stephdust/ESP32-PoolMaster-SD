@@ -71,7 +71,7 @@ void PublishTopic(const char* topic, JsonDocument& root)
   size_t n=serializeJson(root,Payload);
   if (mqttClient.publish(topic, 1, true, Payload,n) != 0)
   {
-    Debug.print(DBG_DEBUG,"Publish: %s - size: %d/%d",Payload,root.size(),n);
+    //Debug.print(DBG_DEBUG,"Publish: %s - size: %d/%d",Payload,root.size(),n);
   }
   else
   {
