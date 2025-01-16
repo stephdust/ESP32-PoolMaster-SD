@@ -1320,7 +1320,7 @@ number:
 
 - name: "SWG Startup Delay"
   command_topic: "Home/Pool/API"
-  command_template: "{ ElectroDelay: {{value}} }"
+  command_template: "{ ElectroConfig:[{{states('number.poolmaster_swg_security_temperature')}},{{value}}]}"
   min: 0
   max: 25
   mode: slider
@@ -1345,7 +1345,7 @@ number:
 
 - name: "SWG Security Temperature"
   command_topic: "Home/Pool/API"
-  command_template: "{ ElectroSecure: {{value}} }"
+  command_template: "{ ElectroConfig:[{{value}},{{states('number.poolmaster_swg_startup_delay')}}]}"
   min: 1
   max: 25
   mode: slider

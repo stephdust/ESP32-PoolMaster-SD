@@ -68,7 +68,7 @@ void ProcessCommand(void *pvParameters)
         }
         //"PhCalib" command which computes and sets the calibration coefficients of the pH sensor response based on a multi-point linear regression
         //{"PhCalib":[4.02,3.8,9.0,9.11]}  -> multi-point linear regression calibration (minimum 1 point-couple, 6 max.) in the form [ProbeReading_0, BufferRating_0, xx, xx, ProbeReading_n, BufferRating_n]
-        else if (command.containsKey(F("PhCalib")))
+        else if (command.containsKey(F("pHCalib")))
         {
           float CalibPoints[12]; //Max six calibration point-couples! Should be plenty enough
           int NbPoints = (int)copyArray(command[F("PhCalib")].as<JsonArray>(),CalibPoints);        

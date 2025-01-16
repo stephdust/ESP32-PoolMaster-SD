@@ -441,14 +441,15 @@ void trigger10()
   LastAction = millis();
 }
 
-//Probe calibration completed or new pH, Orp or Water Temp setpoints or New tank
+//Direct command sending from Nextion
+//Used when command line is directly formatted by Nextion (NewTank, Calib, Electrolyser)
 //printh 23 02 54 0B
 void trigger11()
 {
   char Cmd[100] = "";
   strcpy(Cmd,myNex.readStr(F(GLOBAL".vaCommand.txt")).c_str());
   xQueueSendToBack(queueIn,&Cmd,0);
-  Debug.print(DBG_VERBOSE,"Nextion cal page command: %s",Cmd);
+  Debug.print(DBG_VERBOSE,"Nextion direct command: %s",Cmd);
   LastAction = millis();
 }
 
@@ -546,14 +547,14 @@ void trigger20()
 
 //Electrolyser configuration
 //printh 23 02 54 15
-void trigger21()
+/*void trigger21()
 {
   char Cmd[100] = "";
   strcpy(Cmd,myNex.readStr(F(GLOBAL".vaCommand.txt")).c_str());
   xQueueSendToBack(queueIn,&Cmd,0);
   Debug.print(DBG_VERBOSE,"Nextion cal page command: %s",Cmd);
   LastAction = millis();
-}
+}*/
 
 //Page 5 has finished loading - KeyPad & KeyBoard
 //printh 23 02 54 16
@@ -565,12 +566,12 @@ void trigger22()
 
 //DateTime information
 //printh 23 02 54 17
-void trigger23()
+/*void trigger23()
 {
   char Cmd[100] = "";
   strcpy(Cmd,myNex.readStr(F(GLOBAL".vaCommand.txt")).c_str());
   xQueueSendToBack(queueIn,&Cmd,0);
   Debug.print(DBG_VERBOSE,"Nextion set date time page command: %s",Cmd);
   LastAction = millis();
-}
+}*/
 #endif
