@@ -301,13 +301,13 @@ void UpdateTFT()
     {  
       //snprintf_P(temp,sizeof(temp),PSTR("%d%% / %4.1fmin"),(int)round(PhPump.GetTankFill()),float(PhPump.UpTime)/1000./60.);
       snprintf_P(temp,sizeof(temp),PSTR("%4.1fmn"),float(PhPump.UpTime)/1000./60.);
-      myNex.writeStr(F("pageSettings.vapHTk.txt"),temp);
+      myNex.writeStr(F("pageFillPopup.vapHTk.txt"),temp);
       //snprintf_P(temp,sizeof(temp),PSTR("%d%% / %4.1fmin"),(int)round(ChlPump.GetTankFill()),float(ChlPump.UpTime)/1000./60.);
       snprintf_P(temp,sizeof(temp),PSTR("%4.1fmn"),float(ChlPump.UpTime)/1000./60.);
-      myNex.writeStr(F("pageSettings.vaChlTk.txt"),temp);
+      myNex.writeStr(F("pageFillPopup.vaChlTk.txt"),temp);
 
-      myNex.writeNum(F("pageSettings.vapHGauge.val"), (int)(round(PhPump.GetTankFill())));
-      myNex.writeNum(F("pageSettings.vaChlGauge.val"), (int)(round(ChlPump.GetTankFill())));      
+      myNex.writeNum(F("pageFillPopup.vapHGauge.val"), (int)(round(PhPump.GetTankFill())));
+      myNex.writeNum(F("pageFillPopup.vaChlGauge.val"), (int)(round(ChlPump.GetTankFill())));      
       UpdateWiFi(WiFi.status() == WL_CONNECTED);
       myNex.writeStr(F(GLOBAL".vaMCFW.txt"),FIRMW);
       myNex.writeStr(F(GLOBAL".vaTFTFW.txt"),TFT_FIRMW);
