@@ -61,7 +61,7 @@ Below two examples of live deployments:
 An extended board is also available which includes additional interfaces as well as a second ESP32 slot for watchdog and remote maintenance. This is particularly useful for remote pool management features such as:
 - Logs sent to cloud (and long term storage & statistics)
 - ESP32 power toggle switch (if reboot needed)
-- Over-the-Internet software upgrades
+- Over-the-Internet software upgrades (for PoolMaster and Nextion screen)
 - Alarm Buzzer included onto the board
 - External 5V output to power additional device
 
