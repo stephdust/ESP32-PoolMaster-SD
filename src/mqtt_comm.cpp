@@ -21,12 +21,16 @@ static TimerHandle_t wifiReconnectTimer;      // Reconnect timer for WiFi
 static const char* PoolTopicAPI       = POOLTOPIC"API";
 static const char* PoolTopicStatus    = POOLTOPIC"Status";
 static const char* PoolTopicError     = POOLTOPIC"Err";
+bool Wifi_Activated = true;
 
 // Functions prototypes
 void initTimers(void);
 void mqttInit(void);
 void mqttErrorPublish(const char* );
+void InitWiFi(void);
+void ScanWiFiNetworks(void);
 void connectToWiFi(void);
+void DisconnectFromWiFi(bool);
 void reconnectToWiFi();
 void connectToMqtt(void);
 void WiFiEvent(WiFiEvent_t );
@@ -36,15 +40,14 @@ void onMqttSubscribe(uint16_t, uint8_t);
 void onMqttUnSubscribe(uint16_t);
 void onMqttMessage(char* , char* , AsyncMqttClientMessageProperties , size_t , size_t , size_t );
 void onMqttPublish(uint16_t);
-void UpdateWiFi(bool);
 int  freeRam(void);
-void SetMQTTReady(void);  // To inform the Nextion that MQTT is ready
-void UpdateTFT(void);
 
 // Function to set NTP
 extern void StartTime(void);
 extern bool readLocalTime(void);
-extern void SetNTPReady(void);
+extern void SetWifiReady(bool);
+extern void SetNTPReady(bool);
+extern void SetMQTTReady(bool);
 
 void initTimers() {
   mqttReconnectTimer = xTimerCreate("mqttTimer", pdMS_TO_TICKS(2000), pdFALSE, (void*)0, reinterpret_cast<TimerCallbackFunction_t>(connectToMqtt));
@@ -78,13 +81,27 @@ void mqttErrorPublish(const char* Payload){
   }
 }    
 
-void connectToWiFi(){
-  Debug.print(DBG_INFO,"[WiFi] Connecting to WiFi...");
+
+
+void InitWiFi(){
+  Debug.print(DBG_INFO,"[WiFi] Initializing WiFi...");
   WiFi.mode(WIFI_STA);
   WiFi.config(INADDR_NONE, INADDR_NONE, INADDR_NONE);
   WiFi.setHostname(HOSTNAME); 
-  WiFi.begin(WIFI_NETWORK, WIFI_PASSWORD);
 }
+
+void connectToWiFi(){
+  //WiFi.begin(WIFI_NETWORK, WIFI_PASSWORD); /
+  Wifi_Activated=true;
+  WiFi.begin(); // We must reconnect to the latest used network. Or change the network via Nextion Screen
+}
+
+void DisconnectFromWiFi(bool disc_permanent = false){ // if disc_permanent=true, do not try to reconnect
+  //WiFi.begin(WIFI_NETWORK, WIFI_PASSWORD); /
+  Wifi_Activated = !disc_permanent;
+  WiFi.disconnect(); // We must reconnect to the latest used network. Or change the network via Nextion Screen
+}
+
 
 void reconnectToWiFi(){
   if(WiFi.status() != WL_CONNECTED){
@@ -108,21 +125,23 @@ void WiFiEvent(WiFiEvent_t event){
       xTimerStop(wifiReconnectTimer,0);
       Debug.print(DBG_INFO,"[WiFi] IP address: %s",WiFi.localIP().toString().c_str());
       Debug.print(DBG_INFO,"[WiFi] Hostname: %s",WiFi.getHostname());
-      UpdateWiFi(true);
+      SetWifiReady(true);
       //Attemps to synchronize to NTP upon Wifi reconnection
       StartTime();
       if (readLocalTime()) {
         setTime(timeinfo.tm_hour,timeinfo.tm_min,timeinfo.tm_sec,timeinfo.tm_mday,timeinfo.tm_mon+1,timeinfo.tm_year-100);
         Debug.print(DBG_INFO,"From NTP time %d/%02d/%02d %02d:%02d:%02d",year(),month(),day(),hour(),minute(),second());
-        SetNTPReady();  // Inform Nextion Screen
+        SetNTPReady(true);  // Inform Nextion Screen
+      } else {
+        SetNTPReady(false);  // Inform Nextion Screen
       }
       xTimerStart(mqttReconnectTimer,0);
       break;
     case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
       Debug.print(DBG_WARNING,"[WiFi] Connection lost");
       xTimerStop(mqttReconnectTimer,0);
-      xTimerStart(wifiReconnectTimer,0);
-      UpdateWiFi(false);
+      if(Wifi_Activated) xTimerStart(wifiReconnectTimer,0);
+      SetWifiReady(false);
       break;    
     default:
       break;  
@@ -137,14 +156,14 @@ void onMqttConnect(bool sessionPresent){
   mqttClient.subscribe(PoolTopicAPI,2);
   mqttClient.publish(PoolTopicStatus,1,true,"{\"PoolMaster Online\":1}");
   MQTTConnection = true;
-  SetMQTTReady();
-  UpdateTFT();
+  SetMQTTReady(true);
 }
 
 void onMqttDisconnect(AsyncMqttClientDisconnectReason reason){
   Debug.print(DBG_WARNING,"Disconnected from MQTT");
   if(WiFi.isConnected()) xTimerStart(mqttReconnectTimer,0);
   MQTTConnection = false;
+  SetMQTTReady(false);
 }
 
 void onMqttSubscribe(uint16_t packetId, uint8_t qos){

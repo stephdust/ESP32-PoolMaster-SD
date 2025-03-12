@@ -40,7 +40,8 @@ StoreStruct storage =
   2700000.0, 0.0, 0.0, 18000.0, 0.0, 0.0, 0.0, 0.0, 28.0, 7.3, 720., 1.3,
   100.0, 100.0, 20.0, 20.0, 1.5, 1.5,
   15, 2,  //ajout
-  0, 1, 0
+  0, 1, 0,
+  0
 };
 #else
 StoreStruct storage =
@@ -54,7 +55,8 @@ StoreStruct storage =
   2700000.0, 0.0, 0.0, 18000.0, 0.0, 0.0, 0.0, 0.0, 28.0, 7.3, 720., 1.3,
   25.0, 60.0, 20.0, 20.0, 1.5, 1.5,
   15, 2,  //ajout
-  0, 1, 0
+  0, 1, 0,
+  0
 };
 #endif
 tm timeinfo;
@@ -138,9 +140,10 @@ bool loadConfig(void);
 bool saveConfig(void);
 void WiFiEvent(WiFiEvent_t);
 void initTimers(void);
+void InitWiFi(void);
+void ScanWiFiNetworks(void);
 void connectToWiFi(void);
 void mqttInit(void);                     
-void InitTFT(void);
 void ResetTFT(void);
 void PublishSettings(void);
 void SetPhPID(bool);
@@ -154,10 +157,9 @@ void stack_mon(UBaseType_t&);
 void info();
 
 // Functions to inform Nextion of bootup process
-void SetBoardReady(void);
-void SetWifiReady(void);
-void SetNTPReady(void);
-void UpdateTFT(void);
+extern void SetBoardReady(void);
+extern void SetWifiReady(bool);
+extern void SetNTPReady(bool);
 
 // Functions used as Tasks
 void PoolMaster(void*);
@@ -169,6 +171,8 @@ void ProcessCommand(void*);
 void SettingsPublish(void*);
 void MeasuresPublish(void*);
 void StatusLights(void*);
+void UpdateTFT(void*);
+void StoreHistory(void *);
 
 // For ElegantOTA
 void onOTAStart(void);
@@ -185,6 +189,7 @@ void setup()
   Debug.setDebugLevel(DEBUG_LEVEL);
   Debug.timestampOn();
   Debug.debugLabelOn();
+  Debug.newlineOn();
   Debug.formatTimestampOn();
 
   //get board info
@@ -192,9 +197,7 @@ void setup()
   Debug.print(DBG_INFO,"Booting PoolMaster Version: %s",FIRMW);
   // Initialize Nextion TFT
   ResetTFT();
-  InitTFT();
   SetBoardReady();
-  UpdateTFT();
   //Read ConfigVersion. If does not match expected value, restore default values
   if(nvs.begin("PoolMaster",true))
   {
@@ -238,6 +241,8 @@ void setup()
   // Initialize WiFi events management (on connect/disconnect)
   WiFi.onEvent(WiFiEvent);
   initTimers();
+  InitWiFi();
+  ScanWiFiNetworks();
   connectToWiFi();
 
   delay(500);    // let task start-up and wait for connection
@@ -248,22 +253,11 @@ void setup()
   }
   
   if(WiFi.status() == WL_CONNECTED) {
-    SetWifiReady(); // Inform Nextion screen
+    SetWifiReady(true); // Inform Nextion screen
   } else {
+    SetWifiReady(false); // Inform Nextion screen
     Serial.print("Ignored Wifi Connection (timeout)");
   }
-  UpdateTFT();
-  // Config NTP, get time and set system time. This is done here in setup then every day at midnight
-  // note: in timeinfo struct, months are from 0 to 11 and years are from 1900. Thus the corrections
-  // to pass arguments to setTime which needs months from 1 to 12 and years from 2000...
-  // DST (Daylight Saving Time) is managed automatically
-  //StartTime();
-  //if (readLocalTime()) {
-    //setTime(timeinfo.tm_hour,timeinfo.tm_min,timeinfo.tm_sec,timeinfo.tm_mday,timeinfo.tm_mon+1,timeinfo.tm_year-100);
-    //Debug.print(DBG_INFO,"%d/%02d/%02d %02d:%02d:%02d",year(),month(),day(),hour(),minute(),second());
-    //SetNTPReady();  // Inform Nextion Screen
-    //UpdateTFT();
-  //}
 
   // Initialize the mDNS library.
   ConnectionTimeout = millis();
@@ -444,6 +438,28 @@ void setup()
     app_cpu
   );
 
+  // NEXTION Screen Update
+  xTaskCreatePinnedToCore(
+    UpdateTFT,
+    "UpdateTFT",
+    2048,
+    NULL,
+    1,
+    nullptr, 
+    app_cpu
+  );
+
+  // History Stats Storage
+  xTaskCreatePinnedToCore(
+    StoreHistory,
+    "StoreHistory",
+    2048,
+    NULL,
+    1,
+    nullptr,
+    app_cpu
+  );
+
 #ifdef ELEGANT_OTA
 // ELEGANTOTA Configuration
   //server.on("/", []() {
@@ -590,6 +606,7 @@ bool loadConfig()
   storage.ElectrolyseMode       = nvs.getBool("ElectrolyseMode",false);  //ajout
   storage.pHAutoMode            = nvs.getBool("pHAutoMode",false);  //ajout
   storage.OrpAutoMode           = nvs.getBool("OrpAutoMode",false);  //ajout
+  storage.Lang_Locale           = nvs.getUChar("Lang_Locale",0);  //ajout
 
 
   nvs.end();
@@ -610,8 +627,8 @@ bool loadConfig()
               storage.PhPIDOutput,storage.OrpPIDOutput,storage.WaterTemp,storage.PhValue,storage.OrpValue,storage.PSIValue);
   Debug.print(DBG_INFO,"%3.0f, %3.0f, %3.0f, %3.0f, %3.1f, %3.1f ",storage.AcidFill,storage.ChlFill,storage.pHTankVol,storage.ChlTankVol,
               storage.pHPumpFR,storage.ChlPumpFR);
-  Debug.print(DBG_INFO,"%d, %d, %d, %d, %d",storage.SecureElectro,storage.DelayElectro,storage.ElectrolyseMode,storage.pHAutoMode,
-              storage.OrpAutoMode);
+  Debug.print(DBG_INFO,"%d, %d, %d, %d, %d %d",storage.SecureElectro,storage.DelayElectro,storage.ElectrolyseMode,storage.pHAutoMode,
+              storage.OrpAutoMode,storage.Lang_Locale);
 
   return (storage.ConfigVersion == CONFIG_VERSION);
 }
@@ -674,6 +691,7 @@ bool saveConfig()
   i += nvs.putBool("ElectrolyseMode",storage.ElectrolyseMode);  //ajout
   i += nvs.putBool("pHAutoMode",storage.pHAutoMode);  //ajout
   i += nvs.putBool("OrpAutoMode",storage.OrpAutoMode);  //ajout
+  i += nvs.putBool("Lang_Locale",storage.Lang_Locale);  //ajout
   nvs.end();
 
   Debug.print(DBG_INFO,"Bytes saved: %d / %d\n",i,sizeof(storage));

@@ -22,10 +22,14 @@
 #include <ArduinoOTA.h>           // Over the Air WiFi update 
 #include "AsyncMqttClient.h"      // Async. MQTT client
 #include "ADS1115.h"              // ADS1115 sensors library
+#include "Helpers.h"
 #ifdef ELEGANT_OTA
 #include <ESPAsyncWebServer.h>            // Used for ElegantOTA
 #include <ElegantOTA.h>
 #endif
+
+
+
 // General shared data structure
 struct StoreStruct
 {
@@ -39,6 +43,7 @@ struct StoreStruct
   double AcidFill, ChlFill, pHTankVol, ChlTankVol, pHPumpFR, ChlPumpFR;
   uint8_t SecureElectro, DelayElectro; //ajout
   bool ElectrolyseMode,pHAutoMode,OrpAutoMode;
+  uint8_t Lang_Locale;
 } ;
 
 extern StoreStruct storage;

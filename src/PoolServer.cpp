@@ -463,6 +463,12 @@ void ProcessCommand(void *pvParameters)
             PhPump.Stop();       //stop Acid pump
           else
             PhPump.Start();      //start Acid pump
+          
+          // If pH Pump commanded manually, stop the automode
+          storage.pHAutoMode = 0;
+          saveParam("pHAutoMode",storage.pHAutoMode);
+          if (storage.pHAutoMode == 0) SetPhPID(false);
+          PublishSettings();
         }
         else if (command.containsKey(F("ChlPump"))) //"ChlPump" command which starts or stops the Acid pump
         {
@@ -470,6 +476,11 @@ void ProcessCommand(void *pvParameters)
             ChlPump.Stop();      //stop Chl pump
           else
             ChlPump.Start();     //start Chl pump
+          
+          storage.OrpAutoMode = 0;
+          saveParam("OrpAutoMode",storage.OrpAutoMode);
+          if (storage.OrpAutoMode == 0) SetOrpPID(false);
+          PublishSettings();
         }
         else if (command.containsKey(F("PhPID"))) //"PhPID" command which starts or stops the Ph PID loop
         {
@@ -478,11 +489,10 @@ void ProcessCommand(void *pvParameters)
           else
             SetPhPID(true);
         }
-        else if (command.containsKey(F("PhAutoMode"))) //"PhPID" command which starts or stops the Ph PID loop
+        else if (command.containsKey(F("PhAutoMode"))) //"PhAutoMode" command which starts or stops the Ph Automatic Regulation
         {
           storage.pHAutoMode = (int)command[F("PhAutoMode")];
           saveParam("pHAutoMode",storage.pHAutoMode);
-          Debug.print(DBG_DEBUG,"pHAutomode become %d",storage.pHAutoMode);
           if (storage.pHAutoMode == 0) SetPhPID(false);
           PublishSettings();
         }
@@ -559,13 +569,26 @@ void ProcessCommand(void *pvParameters)
           int	rtc_year = (int)command[F("SetDateTime")][5];
           setTime(rtc_hour,rtc_min,rtc_sec,rtc_mday,rtc_mon+1,rtc_year);
         }
-        digitalWrite(BUZZER,HIGH);
+        //"WifiConfig" command which sets the ESP32 Wifi network
+        else if (command.containsKey(F("WifiConfig")))
+        {
+          const char* WIFI_SSID = command[F("WifiConfig")][0];
+          const char* WIFI_PASS = command[F("WifiConfig")][1];
+          Debug.print(DBG_WARNING,"Configure WIFI %s, %s",WIFI_SSID,WIFI_PASS);
+          WiFi.begin(WIFI_SSID, WIFI_PASS);
+        }
+        //"Lang Locale" command which sets PoolMaster language
+        else if (command.containsKey(F("Lang_Locale")))
+        {
+          storage.Lang_Locale = (uint8_t)command[F("Lang_Locale")];
+        }
+        /*digitalWrite(BUZZER,HIGH);
         delay(30);
         digitalWrite(BUZZER,LOW);
         delay(40);
         digitalWrite(BUZZER,HIGH);
         delay(30);
-        digitalWrite(BUZZER,LOW);   
+        digitalWrite(BUZZER,LOW);   */
         // Publish Update on the MQTT broker the status of our variables
         PublishMeasures();
       }

@@ -27,8 +27,8 @@ void SetPhPID(bool);
 void SetOrpPID(bool);
 void mqttErrorPublish(const char*);
 void PublishSettings(void);
-void UpdateTFT(void);
 void SetFullyLoaded(void);
+void SetNTPReady(bool);
 void stack_mon(UBaseType_t&);
 #ifdef SMTP
 void smtpCallback(SMTP_Status);
@@ -126,6 +126,10 @@ void PoolMaster(void *pvParameters)
         // Sync with NTP everyday at midnight
         if (readLocalTime()) {
           setTime(timeinfo.tm_hour,timeinfo.tm_min,timeinfo.tm_sec,timeinfo.tm_mday,timeinfo.tm_mon+1,timeinfo.tm_year-100);
+          Debug.print(DBG_INFO,"From NTP time %d/%02d/%02d %02d:%02d:%02d",year(),month(),day(),hour(),minute(),second());
+          SetNTPReady(true);
+        } else {
+          SetNTPReady(false);
         }
 
       // Security: if WiFi disconnected in spite of system auto-reconnect, try to restart once a day
@@ -251,9 +255,6 @@ void PoolMaster(void *pvParameters)
 /* ******************************************* 
     END OF MAIN POOLMASTER AUTOMATION LOGIC
    ******************************************* */
-
-    //UPdate Nextion TFT
-    UpdateTFT();
 
     #ifdef SMTP
     //Send email if alarm(s) occured
