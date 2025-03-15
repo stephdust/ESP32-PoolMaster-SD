@@ -12,6 +12,6 @@
 void stack_mon(UBaseType_t&);
 
 // RTOS Task
-void StoreHistory(void *);
+void StatsAndReconnects(void *);
 
 #endif

@@ -44,6 +44,9 @@ struct StoreStruct
   uint8_t SecureElectro, DelayElectro; //ajout
   bool ElectrolyseMode,pHAutoMode,OrpAutoMode;
   uint8_t Lang_Locale;
+  IPAddress MQTT_IP;
+  uint MQTT_PORT;
+  char MQTT_LOGIN[30], MQTT_PASS[30], MQTT_ID[30], MQTT_TOPIC[30];
 } ;
 
 extern StoreStruct storage;

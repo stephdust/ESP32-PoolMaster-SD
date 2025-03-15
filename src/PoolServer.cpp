@@ -11,6 +11,9 @@ bool saveParam(const char*,uint8_t );
 bool saveParam(const char*,bool );
 bool saveParam(const char*,unsigned long );
 bool saveParam(const char*,double );
+bool saveParam(const char*,u_int);
+bool saveParam(const char*,char*);
+bool saveParam(const char*,IPAddress);
 void PublishSettings(void);
 void mqttErrorPublish(const char*);
 void simpLinReg(float * , float * , double & , double &, int );
@@ -18,6 +21,9 @@ void PublishMeasures();
 void SetPhPID(bool);
 void SetOrpPID(bool);
 void stack_mon(UBaseType_t&);
+
+extern void mqttInit(void);
+extern void mqttDisconnect(void);
 
 void ProcessCommand(void *pvParameters)
 {
@@ -459,28 +465,29 @@ void ProcessCommand(void *pvParameters)
         }
         else if (command.containsKey(F("PhPump"))) //"PhPump" command which starts or stops the Acid pump
         {
+          // If pH Pump commanded manually, stop the automode
+          storage.pHAutoMode = 0;
+          saveParam("pHAutoMode",storage.pHAutoMode);
+          if (storage.pHAutoMode == 0) SetPhPID(false);
+
           if ((int)command[F("PhPump")] == 0)
             PhPump.Stop();       //stop Acid pump
           else
             PhPump.Start();      //start Acid pump
           
-          // If pH Pump commanded manually, stop the automode
-          storage.pHAutoMode = 0;
-          saveParam("pHAutoMode",storage.pHAutoMode);
-          if (storage.pHAutoMode == 0) SetPhPID(false);
           PublishSettings();
         }
         else if (command.containsKey(F("ChlPump"))) //"ChlPump" command which starts or stops the Acid pump
         {
-          if ((int)command[F("ChlPump")] == 0)
-            ChlPump.Stop();      //stop Chl pump
-          else
-            ChlPump.Start();     //start Chl pump
-          
           storage.OrpAutoMode = 0;
           saveParam("OrpAutoMode",storage.OrpAutoMode);
           if (storage.OrpAutoMode == 0) SetOrpPID(false);
           PublishSettings();
+
+          if ((int)command[F("ChlPump")] == 0)
+            ChlPump.Stop();      //stop Chl pump
+          else
+            ChlPump.Start();     //start Chl pump
         }
         else if (command.containsKey(F("PhPID"))) //"PhPID" command which starts or stops the Ph PID loop
         {
@@ -581,7 +588,32 @@ void ProcessCommand(void *pvParameters)
         else if (command.containsKey(F("Lang_Locale")))
         {
           storage.Lang_Locale = (uint8_t)command[F("Lang_Locale")];
+
+          saveParam("Lang_Locale",storage.Lang_Locale);
         }
+        //"MQTT Config" command which sends all MQTT Details
+        else if (command.containsKey(F("MQTTConfig")))
+        {
+          storage.MQTT_IP.fromString((const char*)command[F("MQTTConfig")][0]);
+          storage.MQTT_PORT = (uint)command[F("MQTTConfig")][1];
+          strcpy(storage.MQTT_LOGIN,command[F("MQTTConfig")][2]);
+          strcpy(storage.MQTT_PASS,command[F("MQTTConfig")][3]);
+          strcpy(storage.MQTT_ID,command[F("MQTTConfig")][4]);
+          strcpy(storage.MQTT_TOPIC,command[F("MQTTConfig")][5]);
+          Debug.print(DBG_WARNING,"Configure MQTT %s, %d, %s, %s, %s, %s",storage.MQTT_IP.toString().c_str(),storage.MQTT_PORT,storage.MQTT_LOGIN,storage.MQTT_PASS,storage.MQTT_ID,storage.MQTT_TOPIC);
+          saveParam("MQTT_IP",storage.MQTT_IP);
+          saveParam("MQTT_PORT",storage.MQTT_PORT);
+          saveParam("MQTT_LOGIN",storage.MQTT_LOGIN);
+          saveParam("MQTT_PASS",storage.MQTT_PASS);
+          saveParam("MQTT_ID",storage.MQTT_ID);
+          saveParam("MQTT_TOPIC",storage.MQTT_TOPIC);
+
+          // Connect to new MQTT Credentials
+          mqttDisconnect();
+          mqttInit();
+          // It automatically tries to reconnect using a timer
+        }
+
         /*digitalWrite(BUZZER,HIGH);
         delay(30);
         digitalWrite(BUZZER,LOW);

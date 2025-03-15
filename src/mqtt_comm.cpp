@@ -26,6 +26,7 @@ bool Wifi_Activated = true;
 // Functions prototypes
 void initTimers(void);
 void mqttInit(void);
+void mqttDisconnect(void);
 void mqttErrorPublish(const char* );
 void InitWiFi(void);
 void ScanWiFiNetworks(void);
@@ -63,11 +64,15 @@ void mqttInit() {
   mqttClient.onMessage(onMqttMessage);
   mqttClient.onPublish(onMqttPublish);
   mqttClient.setWill(PoolTopicStatus,1,true,"{\"PoolMaster Online\":0}");
-  mqttClient.setServer(MQTT_SERVER_IP,MQTT_SERVER_PORT);
-#ifdef MQTT_LOGIN  
-  mqttClient.setCredentials(MqttServerLogin,MqttServerPwd);
-  mqttClient.setClientId(MqttServerClientID);
-#endif
+  mqttClient.setServer(storage.MQTT_IP,storage.MQTT_PORT);
+  if(strlen(storage.MQTT_LOGIN)>0) {
+    mqttClient.setCredentials(storage.MQTT_LOGIN,storage.MQTT_PASS);
+  }
+  mqttClient.setClientId(storage.MQTT_ID);
+//#ifdef MQTT_LOGIN  
+//  mqttClient.setCredentials(MqttServerLogin,MqttServerPwd);
+//  mqttClient.setClientId(MqttServerClientID);
+//#endif
 } 
 
 void mqttErrorPublish(const char* Payload){
@@ -81,7 +86,9 @@ void mqttErrorPublish(const char* Payload){
   }
 }    
 
-
+void mqttDisconnect() {
+  mqttClient.disconnect();
+}
 
 void InitWiFi(){
   Debug.print(DBG_INFO,"[WiFi] Initializing WiFi...");

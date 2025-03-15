@@ -1,3 +1,13 @@
+/*
+  NEXTION TFT related code, based on EasyNextion library by Seithan / Athanasios Seitanis (https://github.com/Seithan/EasyNextionLibrary)
+  The trigger(s) functions at the end are called by the Nextion library on event (buttons, page change).
+
+  Completely reworked and simplified. These functions only update Nextion variables. The display is then updated localy by the
+  Nextion itself.
+
+  Remove every usages of String in order to avoid duplication, fragmentation and random crashes.
+  Note usage of snprintf_P which uses a fmt string that resides in program memory.
+*/
 #include "Nextion.h"
 
 //Reset TFT at start of controller - Change transmission rate to 115200 bauds on both side (Nextion then ESP)
@@ -202,6 +212,7 @@ void UpdateTFT(void *pvParameters)
       {
         period=PT10/5;
         
+        // Rebuild menu if language has changed
         if(storage.Lang_Locale != Current_Language)
         {
           Current_Language = storage.Lang_Locale;
@@ -209,10 +220,15 @@ void UpdateTFT(void *pvParameters)
           MainMenu.MenuDisplay(true);
         }
 
-        // Redraw only the submenu currently selected for status change
-        MainMenu.Refresh();
+        if ((unsigned long)(millis() - myNex.LastSentCommandMillis) > 1000)
+        {
+          // Redraw only the submenu currently selected for status change
+          MainMenu.Refresh();
 
-        // Show Menu
+          myNex.LastSentCommandMillis = millis();
+        }
+
+        // Draw complete menu only once when page appears
         if(myNex.hasPageChanged()) {
           MainMenu.MenuDisplay(true);
         }
@@ -402,7 +418,6 @@ void UpdateTFT(void *pvParameters)
           myNex.writeStr(PSTR("tTitle.txt"),Helpers::translated_word(FL_(NXT_LANG_TITLE),storage.Lang_Locale));
           printLanguages();
         }        
-
       }
 
       if(myNex.currentPageId == 16)     //MQTT Configuration
@@ -415,16 +430,29 @@ void UpdateTFT(void *pvParameters)
           myNex.writeStr(PSTR("tSrvID.txt"),Helpers::translated_word(FL_(NXT_MQTT_ID),storage.Lang_Locale));
           myNex.writeStr(PSTR("tTopic.txt"),Helpers::translated_word(FL_(NXT_MQTT_TOPIC),storage.Lang_Locale));
           myNex.writeStr(PSTR("tMQTTStatus.txt"),Helpers::translated_word(FL_(NXT_MQTT_STATUS),storage.Lang_Locale));
-          myNex.writeStr(PSTR("bConnect.txt"),Helpers::translated_word(FL_(NXT_CONNECT),storage.Lang_Locale));          
-        }
+          myNex.writeStr(PSTR("bConnect.txt"),Helpers::translated_word(FL_(NXT_CONNECT),storage.Lang_Locale));
 
-        // Update MQTT Server
-        snprintf_P(temp,sizeof(temp),PSTR("%s"),MQTT_SERVER_IP);
-        myNex.writeStr(F("tMQTTSERVER.txt"),temp);
-        snprintf_P(temp,sizeof(temp),PSTR("%s"),MQTT_SERVER_ID);
-        myNex.writeStr(F("tMQTTSRVID.txt"),temp);
-        snprintf_P(temp,sizeof(temp),PSTR("%s"),POOLTOPIC);
-        myNex.writeStr(F("tMQTTTopic.txt"),temp);
+          // Update MQTT parameters
+          snprintf_P(temp,sizeof(temp),PSTR("%s"),storage.MQTT_IP.toString().c_str());
+          myNex.writeStr(F("vaMQTTSERVER.txt"),temp);
+          snprintf_P(temp,sizeof(temp),PSTR("%d"),storage.MQTT_PORT);
+          myNex.writeStr(F("vaMQTTPORT.txt"),temp);
+          snprintf_P(temp,sizeof(temp),PSTR("%s"),storage.MQTT_LOGIN);
+          myNex.writeStr(F("vaMQTTLOGIN.txt"),temp);   
+          snprintf_P(temp,sizeof(temp),PSTR("%s"),storage.MQTT_PASS);
+          myNex.writeStr(F("vaMQTTPASSWORD.txt"),temp);   
+          snprintf_P(temp,sizeof(temp),PSTR("%s"),storage.MQTT_ID);
+          myNex.writeStr(F("vaMQTTSRVID.txt"),temp);   
+          snprintf_P(temp,sizeof(temp),PSTR("%s"),storage.MQTT_TOPIC);
+          myNex.writeStr(F("vaMQTTTopic.txt"),temp);   
+        }
+      }
+
+      if(myNex.currentPageId == 17)     //Switches overlay menu
+      {
+        if(myNex.hasPageChanged()) {
+          myNex.writeStr(PSTR("tTitle.txt"),Helpers::translated_word(FL_(NXT_MODE_TITLE),storage.Lang_Locale));
+        }
       }
 
       if(myNex.currentPageId == 30)      //Help Popup
@@ -438,8 +466,6 @@ void UpdateTFT(void *pvParameters)
               myNex.writeStr(PSTR("tContent.txt"),Helpers::translated_word(FL_(NXT_HELP_1_CONTENT),storage.Lang_Locale));
               break;
           }
-
-
         }
       }
     } else {
@@ -592,7 +618,7 @@ void trigger11()
   char Cmd[100] = "";
   strcpy(Cmd,myNex.readStr(F(GLOBAL".vaCommand.txt")).c_str());
   xQueueSendToBack(queueIn,&Cmd,0);
-  Debug.print(DBG_VERBOSE,"Nextion direct command: %s",Cmd);
+  Debug.print(DBG_INFO,"Nextion direct command: %s",Cmd);
   LastAction = millis();
 }
 
@@ -774,7 +800,7 @@ void easyNexReadCustomCommand()
         myNex.writeNum(temp_command,GRAPH_PH_BASELINE+100);
 
         // Initialize table
-        for(int i=NUMBER_OF_HISTORY_SAMPLES-1;i>=0;i--)
+        for(int i=0;i<NUMBER_OF_HISTORY_SAMPLES;i++)
         {
         if(i<pH_Samples.size())
           // Get the pH Sample with 640 as baseline reference
@@ -782,10 +808,10 @@ void easyNexReadCustomCommand()
         else
           buf[i] = 0;
         }
-        snprintf_P(temp_command,sizeof(temp_command),PSTR("addt %d,%d,%d"),2,0,NUMBER_OF_HISTORY_SAMPLES);
+        snprintf_P(temp_command,sizeof(temp_command),PSTR("addt %d,%d,%d"),2,0,pH_Samples.size());
         myNex.writeStr(temp_command);
         vTaskDelay(5 / portTICK_PERIOD_MS);
-        Serial2.write(buf,NUMBER_OF_HISTORY_SAMPLES);
+        Serial2.write(buf,pH_Samples.size());
         break;
         case 0x01:  // Orp
           Debug.print(DBG_INFO,"Orp Graph Requested");
@@ -798,7 +824,7 @@ void easyNexReadCustomCommand()
           snprintf_P(temp_command,sizeof(temp_command),PSTR("nMed.val"));
           myNex.writeNum(temp_command,GRAPH_ORP_BASELINE+100);
           // Initialize table
-          for(int i=NUMBER_OF_HISTORY_SAMPLES-1;i>=0;i--)
+          for(int i=0;i<NUMBER_OF_HISTORY_SAMPLES;i++)
           {
           if(i<Orp_Samples.size())
             // Get the Orp Sample with 600 as baseline reference
@@ -806,10 +832,10 @@ void easyNexReadCustomCommand()
           else
             buf[i] = 0;
           }
-          snprintf_P(temp_command,sizeof(temp_command),PSTR("addt %d,%d,%d"),2,0,NUMBER_OF_HISTORY_SAMPLES);
+          snprintf_P(temp_command,sizeof(temp_command),PSTR("addt %d,%d,%d"),2,0,Orp_Samples.size());
           myNex.writeStr(temp_command);
           vTaskDelay(5 / portTICK_PERIOD_MS);
-          Serial2.write(buf,NUMBER_OF_HISTORY_SAMPLES);
+          Serial2.write(buf,Orp_Samples.size());
         break;
         case 0x02:  // Temperature
           // Not implemented yet
@@ -905,10 +931,10 @@ void InitMenu()
   //SubMenu1.AddItem([]() {ToggleValue("OrpAutoMode",storage.OrpAutoMode);},nullptr,Helpers::translated_word(FL_(NXT_SUBMENU4),storage.Lang_Locale),ENM_BISTABLE, []() {return (storage.OrpAutoMode==1);});
 
   SubMenu2.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU8),storage.Lang_Locale),"▦",nullptr,ENM_ACTION,121);
-  SubMenu2.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU9),storage.Lang_Locale),"▦",nullptr,ENM_ACTION,122);
+  //SubMenu2.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU9),storage.Lang_Locale),"▦",nullptr,ENM_ACTION,122);
   //SubMenu2.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU10),storage.Lang_Locale),ENM_ACTION,123);
   //SubMenu2.AddItem(nullptr,[]() {return (storage.ElectrolyseMode==0);},Helpers::translated_word(FL_(NXT_SUBMENU11),storage.Lang_Locale),ENM_ACTION,124);
-  SubMenu2.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU10),storage.Lang_Locale),"▓",nullptr,ENM_ACTION,125);
+  SubMenu2.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU9),storage.Lang_Locale),"▓",nullptr,ENM_ACTION,125);
 
   SubMenu3.AddItem([]() {ToggleValue("ElectrolyseMode",storage.ElectrolyseMode);},nullptr,Helpers::translated_word(FL_(NXT_SUBMENU15),storage.Lang_Locale),MENU_ICONS_UNSELECTED,MENU_ICONS_SELECTED,ENM_BISTABLE, []() {return (storage.ElectrolyseMode==1);});
   SubMenu3.AddItem(nullptr,[]() {return (storage.ElectrolyseMode==1);},Helpers::translated_word(FL_(NXT_SUBMENU16),storage.Lang_Locale),"┗",nullptr,ENM_ACTION,132);

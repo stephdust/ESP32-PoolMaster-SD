@@ -73,6 +73,10 @@ bool AntiFreezeFiltering = false;               // Filtration anti freeze mode
 bool PSIError = false;                          // Water pressure OK
 bool cleaning_done = false;                     // daily cleaning done   
 
+// NTP & MQTT Connected
+bool NTP_Connected = false;
+bool MQTT_Connected = false;
+
 // Queue object to store incoming JSON commands (up to 10)
 QueueHandle_t queueIn;
 
@@ -172,7 +176,7 @@ void SettingsPublish(void*);
 void MeasuresPublish(void*);
 void StatusLights(void*);
 void UpdateTFT(void*);
-void StoreHistory(void *);
+void StatsAndReconnects(void *);
 
 // For ElegantOTA
 void onOTAStart(void);
@@ -242,7 +246,7 @@ void setup()
   WiFi.onEvent(WiFiEvent);
   initTimers();
   InitWiFi();
-  ScanWiFiNetworks();
+  //ScanWiFiNetworks();
   connectToWiFi();
 
   delay(500);    // let task start-up and wait for connection
@@ -260,7 +264,7 @@ void setup()
   }
 
   // Initialize the mDNS library.
-  ConnectionTimeout = millis();
+  /*ConnectionTimeout = millis();
   while (!MDNSStatus&&((unsigned long)(millis() - ConnectionTimeout) < WIFI_TIMEOUT)) {
     MDNSStatus = MDNS.begin("PoolMaster");
     Debug.print(DBG_ERROR,"Error setting up MDNS responder!");
@@ -270,7 +274,7 @@ void setup()
     MDNS.addService("http", "tcp", SERVER_PORT);
   } else {
     Serial.print("Ignored MDNS (timeout)");
-  }
+  }*/
 
   // Start I2C for ADS1115 and status lights through PCF8574A
   Wire.begin(I2C_SDA,I2C_SCL);
@@ -451,8 +455,8 @@ void setup()
 
   // History Stats Storage
   xTaskCreatePinnedToCore(
-    StoreHistory,
-    "StoreHistory",
+    StatsAndReconnects,
+    "StatsAndReconnects",
     2048,
     NULL,
     1,
@@ -576,7 +580,7 @@ bool loadConfig()
   storage.PSI_MedThreshold      = nvs.getDouble("PSI_Med",0.25);
   storage.WaterTempLowThreshold = nvs.getDouble("WaterTempLow",10.);
   storage.WaterTemp_SetPoint    = nvs.getDouble("WaterTempSet",27.);
-  storage.AirTemp          = nvs.getDouble("TempExternal",3.);
+  storage.AirTemp               = nvs.getDouble("TempExternal",3.);
   storage.pHCalibCoeffs0        = nvs.getDouble("pHCalibCoeffs0",-2.49);
   storage.pHCalibCoeffs1        = nvs.getDouble("pHCalibCoeffs1",6.87);
   storage.OrpCalibCoeffs0       = nvs.getDouble("OrpCalibCoeffs0",431.03);
@@ -607,8 +611,13 @@ bool loadConfig()
   storage.pHAutoMode            = nvs.getBool("pHAutoMode",false);  //ajout
   storage.OrpAutoMode           = nvs.getBool("OrpAutoMode",false);  //ajout
   storage.Lang_Locale           = nvs.getUChar("Lang_Locale",0);  //ajout
-
-
+  storage.MQTT_IP               = nvs.getUInt("MQTT_IP",0);  //ajout
+  storage.MQTT_PORT             = nvs.getUInt("MQTT_PORT",1883);  //ajout
+  nvs.getString("MQTT_LOGIN",storage.MQTT_LOGIN,30);  //ajout
+  nvs.getString("MQTT_PASS",storage.MQTT_PASS,30);  //ajout
+  nvs.getString("MQTT_ID",storage.MQTT_ID,30);  //ajout
+  nvs.getString("MQTT_TOPIC",storage.MQTT_TOPIC,30);  //ajout
+  
   nvs.end();
 
   Debug.print(DBG_INFO,"%d",storage.ConfigVersion);
@@ -629,7 +638,9 @@ bool loadConfig()
               storage.pHPumpFR,storage.ChlPumpFR);
   Debug.print(DBG_INFO,"%d, %d, %d, %d, %d %d",storage.SecureElectro,storage.DelayElectro,storage.ElectrolyseMode,storage.pHAutoMode,
               storage.OrpAutoMode,storage.Lang_Locale);
-
+  Debug.print(DBG_INFO,"%s, %d, %s, %s, %s %s",storage.MQTT_IP.toString().c_str(),storage.MQTT_PORT,storage.MQTT_LOGIN,storage.MQTT_PASS,
+    storage.MQTT_ID,storage.MQTT_TOPIC);
+  
   return (storage.ConfigVersion == CONFIG_VERSION);
 }
 
@@ -692,6 +703,12 @@ bool saveConfig()
   i += nvs.putBool("pHAutoMode",storage.pHAutoMode);  //ajout
   i += nvs.putBool("OrpAutoMode",storage.OrpAutoMode);  //ajout
   i += nvs.putBool("Lang_Locale",storage.Lang_Locale);  //ajout
+  i += nvs.putUInt("MQTT_IP",storage.MQTT_IP);  //ajout
+  i += nvs.putUInt("MQTT_PORT",storage.MQTT_PORT);  //ajout
+  i += nvs.putString("MQTT_LOGIN",storage.MQTT_LOGIN);  //ajout
+  i += nvs.putString("MQTT_PASS",storage.MQTT_PASS);  //ajout
+  i += nvs.putString("MQTT_ID",storage.MQTT_ID);  //ajout
+  i += nvs.putString("MQTT_TOPIC",storage.MQTT_TOPIC);  //ajout
   nvs.end();
 
   Debug.print(DBG_INFO,"Bytes saved: %d / %d\n",i,sizeof(storage));
@@ -726,6 +743,27 @@ bool saveParam(const char* key, double val)
 {
   nvs.begin("PoolMaster",false);
   size_t i = nvs.putDouble(key,val);
+  return(i == sizeof(val));
+}
+
+bool saveParam(const char* key, u_int val)
+{
+  nvs.begin("PoolMaster",false);
+  size_t i = nvs.putUInt(key,val);
+  return(i == sizeof(val));
+}
+
+bool saveParam(const char* key,char* val)
+{
+  nvs.begin("PoolMaster",false);
+  size_t i = nvs.putString(key,val);
+  return(i == sizeof(val));
+}
+
+bool saveParam(const char* key,IPAddress val)
+{
+  nvs.begin("PoolMaster",false);
+  size_t i = nvs.putUInt(key,val);
   return(i == sizeof(val));
 }
 

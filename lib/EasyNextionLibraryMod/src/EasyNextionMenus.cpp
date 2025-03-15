@@ -1,12 +1,11 @@
+/*!
+ * EasyNextionMenus.h - Easy library for building menus on Nextion Displays
+ * Copyright (c) 2025 Christophe Belmont
+ * All rights reserved under the library's licence
+ */
+
 #include "EasyNextionMenus.h"
 
-/*EasyNextionMenus::EasyNextionMenus(EasyNex* _nextion_display, int _max_number_of_items, void(*_DisplayCallBack)(),int _menu_type)
-{
-    nextion_display = _nextion_display;
-    menu_type = _menu_type;
-    max_number_of_items = _max_number_of_items;
-    DisplayCallBack = _DisplayCallBack;
-}*/
 EasyNextionMenus::EasyNextionMenus(EasyNex* _nextion_display, int _max_number_of_items, int _menu_type)
 {
     nextion_display = _nextion_display;
@@ -154,7 +153,7 @@ void EasyNextionMenus::MenuDisplay(bool _full_menu_drawing)
                 break;
                 case ENM_OVERLAYPAGE:   // Load an overlay pge if this menu is selected
                     if(_full_menu_drawing) {    // Items that should change only when selected (not at each loop)
-                        WriteNextionItemAttributeCmd(menu_items[i].mnu_overlay_page_name,-1,"page",-1);
+                        WriteNextionItemCmd(menu_items[i].mnu_overlay_page_name,-1,"page",-1);
                     }
                 break;
             }
@@ -165,14 +164,14 @@ void EasyNextionMenus::MenuDisplay(bool _full_menu_drawing)
                     // Grey Out if the function returns false (leave as this if it returns true)
                     WriteNextionItemEnabled(menu_nxt_obj_name,i,MNU_NO);
                     WriteNextionItemEnabled(menu_nxt_check_name,i,MNU_NO); 
-                    WriteNextionItemAttributeNum(menu_nxt_obj_name,i,"pco",48599);
-                    WriteNextionItemAttributeNum(menu_nxt_check_name,i,"pco",48599);
+                    WriteNextionItemAttribute(menu_nxt_obj_name,i,"pco",48599);
+                    WriteNextionItemAttribute(menu_nxt_check_name,i,"pco",48599);
                 } else {
                     // Grey Out if the function returns false (leave as this if it returns true)
                     WriteNextionItemEnabled(menu_nxt_obj_name,i,MNU_YES);
                     WriteNextionItemEnabled(menu_nxt_check_name,i,MNU_YES); 
-                    WriteNextionItemAttributeNum(menu_nxt_obj_name,i,"pco",14890);
-                    WriteNextionItemAttributeNum(menu_nxt_check_name,i,"pco",14890);
+                    WriteNextionItemAttribute(menu_nxt_obj_name,i,"pco",14890);
+                    WriteNextionItemAttribute(menu_nxt_check_name,i,"pco",14890);
                 }
             }
         }
@@ -210,34 +209,42 @@ void EasyNextionMenus::Select(uint8_t _menu_item_index)
     }
 }
 
+
+/*****************************************************
+ ********** HELPER FUNCTIONS *************************
+ *****************************************************/
 void EasyNextionMenus::WriteNextionItemVisible(const char * _nextion_object,int _object_index, int _visibility_status)
 {
-    WriteNextionItemAttributeCmd(_nextion_object,_object_index,"vis",_visibility_status);
+    WriteNextionItemCmd(_nextion_object,_object_index,"vis",_visibility_status);
 }
 
 void EasyNextionMenus::WriteNextionItemEnabled(const char * _nextion_object,int _object_index, int _enable_status)
 {
-    WriteNextionItemAttributeCmd(_nextion_object,_object_index,"tsw",_enable_status);
+    WriteNextionItemCmd(_nextion_object,_object_index,"tsw",_enable_status);
 }
 
 void EasyNextionMenus::WriteNextionItemStr(const char * _nextion_object,int _object_index, const char* _text_to_write)
 {
-    WriteNextionItemAttributeStr(_nextion_object,_object_index, "txt",_text_to_write);
+    WriteNextionItemAttribute(_nextion_object,_object_index, "txt",_text_to_write);
 }   
 
 void EasyNextionMenus::WriteNextionItemNum(const char * _nextion_object,int _object_index, int _number_to_write)
 {
-    WriteNextionItemAttributeNum(_nextion_object,_object_index, "val",_number_to_write);
+    WriteNextionItemAttribute(_nextion_object,_object_index, "val",_number_to_write);
 }
 
 // Click on a button object (this is how function can be simulated with Nextion)
 void EasyNextionMenus::WriteNextionExecute(const char * _nextion_object)
 {
-    WriteNextionItemAttributeCmd(_nextion_object,-1,"click",1);
+    WriteNextionItemCmd(_nextion_object,-1,"click",1);
 }
 
-// Write a command
-void EasyNextionMenus::WriteNextionItemAttributeCmd(const char * _nextion_object,int _object_index,const char* _cmd_to_execute,int _value)
+// Write Nextion Command
+// _nextion_object : Name of the objects part of the menu
+// _object_index : if >=0, append "_index" with the actual menu item, do not append anything
+// Ex: "MainMenu", 1, "vis", 1
+//  ==> "vis MainMenu_1, 1"
+void EasyNextionMenus::WriteNextionItemCmd(const char * _nextion_object,int _object_index,const char* _cmd_to_execute,int _value)
 {
     char _menu__display_cmd[MAX_NEXT_CMD_LENGTH];
     if(_object_index>=0){
@@ -257,8 +264,14 @@ void EasyNextionMenus::WriteNextionItemAttributeCmd(const char * _nextion_object
     nextion_display->writeStr(_menu__display_cmd);
 }   
 
-// Write a value for any object attribute
-void EasyNextionMenus::WriteNextionItemAttributeNum(const char * _nextion_object,int _object_index,const char* _attribute,int _value)
+// Write Nextion Attribute
+// _nextion_object : Name of the objects part of the menu
+// _object_index : if >=0, append "_index" with the actual menu item, if negative, do not append anything
+// _attribute: Attribute of the object which should be modified
+// _value: value to write which can be a char* or an int depending on the attribute
+// Ex: "MainMenu", 4, "val", 1
+//  ==> "MainMenu_4.val=1"
+void EasyNextionMenus::WriteNextionItemAttribute(const char * _nextion_object,int _object_index,const char* _attribute,int _value)
 {
     char _menu__display_cmd[MAX_NEXT_CMD_LENGTH];
     if(_object_index>=0){
@@ -269,7 +282,7 @@ void EasyNextionMenus::WriteNextionItemAttributeNum(const char * _nextion_object
     //Serial.printf("%s %d\n",_menu__display_cmd,_value);
     nextion_display->writeNum(_menu__display_cmd,_value);
 }   
-void EasyNextionMenus::WriteNextionItemAttributeStr(const char * _nextion_object,int _object_index,const char* _attribute,const char* _value)
+void EasyNextionMenus::WriteNextionItemAttribute(const char * _nextion_object,int _object_index,const char* _attribute,const char* _value)
 {
     char _menu__display_cmd[MAX_NEXT_CMD_LENGTH];
     if(_object_index>=0){

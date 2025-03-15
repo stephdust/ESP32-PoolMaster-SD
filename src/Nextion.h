@@ -111,6 +111,8 @@ void printScannedNetworks(uint16_t);
 void WriteSwitches(void);
 extern void DisconnectFromWiFi(bool);
 extern void reconnectToWiFi(void);
+extern void mqttInit(void);
+extern void mqttDisconnect(void);
 void printLanguages(void);
 
 #endif

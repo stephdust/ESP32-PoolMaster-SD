@@ -98,9 +98,11 @@ class EasyNextionMenus {
         void WriteNextionItemNum(const char *,int, int);
         void WriteNextionItemVisible(const char * ,int , int );
         void WriteNextionItemEnabled(const char * ,int , int );
-        void WriteNextionItemAttributeNum(const char * ,int , const char* ,int );
-        void WriteNextionItemAttributeStr(const char * ,int , const char* ,const char*  );
-        void WriteNextionItemAttributeCmd(const char * ,int , const char* ,int  );
+        void WriteNextionItemAttribute(const char * ,int , const char* ,int );
+        void WriteNextionItemAttribute(const char * ,int , const char* ,const char* );
+        //void WriteNextionItemAttributeNum(const char * ,int , const char* ,int );
+        //void WriteNextionItemAttributeStr(const char * ,int , const char* ,const char*  );
+        void WriteNextionItemCmd(const char * ,int , const char* ,int  );
         void WriteNextionExecute(const char *);
         
         const char* menu_nxt_obj_name = nullptr;

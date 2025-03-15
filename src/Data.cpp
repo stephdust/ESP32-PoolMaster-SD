@@ -8,7 +8,7 @@ CircularBuffer<int,NUMBER_OF_HISTORY_SAMPLES> WTemp_Samples;
 //Function to update TFT display
 //update the global variables of the TFT + the widgets of the active page
 //call this function at least every second to ensure fluid display
-void StoreHistory(void *pvParameters)
+void StatsAndReconnects(void *pvParameters)
 {
   static UBaseType_t hwm=0;     // free stack size
 
@@ -35,10 +35,12 @@ void StoreHistory(void *pvParameters)
     td = millis();
     #endif    
 
-    // Add the samples in the table
+    // Store History Samples
     pH_Samples.push((int)(storage.PhValue*100));
     Orp_Samples.push((int)(storage.OrpValue));
     WTemp_Samples.push((int)(storage.WaterTemp*10));
+
+    // Check NTP Connection and reconnect if needed
 
     #ifdef CHRONO
     t_act = millis() - td;

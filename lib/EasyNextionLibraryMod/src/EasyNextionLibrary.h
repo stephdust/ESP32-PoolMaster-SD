@@ -117,6 +117,7 @@ class EasyNex {
     bool Nextion_Sleeping;
     bool Nextion_CanSleep = true;
     unsigned long LastActionMillis; // Last action time done on TFT. Used if needed to go to sleep.
+    unsigned long LastSentCommandMillis;
     byte cmdGroup;
     byte cmdLength;
     
