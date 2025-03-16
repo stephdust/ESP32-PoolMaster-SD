@@ -614,13 +614,13 @@ void ProcessCommand(void *pvParameters)
           // It automatically tries to reconnect using a timer
         }
 
-        /*digitalWrite(BUZZER,HIGH);
+        digitalWrite(BUZZER,HIGH);
         delay(30);
         digitalWrite(BUZZER,LOW);
         delay(40);
         digitalWrite(BUZZER,HIGH);
         delay(30);
-        digitalWrite(BUZZER,LOW);   */
+        digitalWrite(BUZZER,LOW);
         // Publish Update on the MQTT broker the status of our variables
         PublishMeasures();
       }

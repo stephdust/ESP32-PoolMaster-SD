@@ -1,8 +1,8 @@
 #pragma once
 
 // Define language codes here and add to languages[] in system.cpp
-#define POOLMASTER_LOCALE_EN "English"
-#define POOLMASTER_LOCALE_FR "Français"
+#define POOLMASTER_LOCALE_EN " English"
+#define POOLMASTER_LOCALE_FR " Français"
 
 // IMPORTANT! translations are in the order: en, fr
 //
@@ -32,7 +32,8 @@ MAKE_WORD_TRANSLATION(NXT_ELECTRO_TITLE, "SWG Configuration", "Configuration Ele
 MAKE_WORD_TRANSLATION(NXT_ELECTRO_TEMP, "Minimum\\rTemperature", "Température\\rMinimum", "", "")
 MAKE_WORD_TRANSLATION(NXT_ELECTRO_DELAY, "Delay Before\\rStart", "Délai Avant\\rDémarrage (min)", "", "")
 MAKE_WORD_TRANSLATION(NXT_INFO_TITLE, "System Information", "Information Système", "", "")
-MAKE_WORD_TRANSLATION(NXT_INFO_ALARMS, "Alarms", "Alarmes", "", "")
+MAKE_WORD_TRANSLATION(NXT_INFO_ALARMS, "Alarms:", "Alarmes:", "", "")
+MAKE_WORD_TRANSLATION(NXT_INFO_COMPILE, "Compiled:", "Compilé:", "", "")
 MAKE_WORD_TRANSLATION(NXT_DATE_TITLE, "Set Date/Time", "Réglage Horloge", "", "")
 
 MAKE_WORD_TRANSLATION(NXT_WIFI_TITLE, "Wifi Settings", "Réglages Wifi", "", "")

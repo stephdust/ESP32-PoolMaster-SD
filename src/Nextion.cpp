@@ -313,7 +313,9 @@ void UpdateTFT(void *pvParameters)
         if(myNex.hasPageChanged()) {
           myNex.writeStr(PSTR("tInfoTitle.txt"),Helpers::translated_word(FL_(NXT_INFO_TITLE),storage.Lang_Locale));
           myNex.writeStr(PSTR("tAlarms.txt"),Helpers::translated_word(FL_(NXT_INFO_ALARMS),storage.Lang_Locale));
-          myNex.writeStr(F(GLOBAL".vaMCFW.txt"), FIRMW);
+          myNex.writeStr(PSTR("tCompiledTitle.txt"),Helpers::translated_word(FL_(NXT_INFO_COMPILE),storage.Lang_Locale));
+          myNex.writeStr(PSTR("tCompiledValue.txt"), compile_date); //FIRMW
+          myNex.writeStr(F(GLOBAL".vaMCFW.txt"), FIRMW); 
         }
       }
 
@@ -792,12 +794,19 @@ void easyNexReadCustomCommand()
         case 0x00:  // pH
         Debug.print(DBG_INFO,"pH Graph Requested");
         // Change scale values
-        snprintf_P(temp_command,sizeof(temp_command),PSTR("nMax.val"));
-        myNex.writeNum(temp_command,GRAPH_PH_BASELINE+200);
-        snprintf_P(temp_command,sizeof(temp_command),PSTR("nMin.val"));
-        myNex.writeNum(temp_command,GRAPH_PH_BASELINE);
-        snprintf_P(temp_command,sizeof(temp_command),PSTR("nMed.val"));
-        myNex.writeNum(temp_command,GRAPH_PH_BASELINE+100);
+        // snprintf_P(temp_command,sizeof(temp_command),PSTR("nMax.val"));
+        // myNex.writeNum(temp_command,GRAPH_PH_BASELINE+200);
+        snprintf_P(temp,sizeof(temp),PSTR("%4.2f"),((float(GRAPH_PH_BASELINE)+200)/100));
+        Debug.print(DBG_INFO,"%s",temp);
+        myNex.writeStr(F("tMax.txt"),temp);
+        snprintf_P(temp,sizeof(temp),PSTR("%4.2f"),float(GRAPH_PH_BASELINE)/100);
+        myNex.writeStr(F("tMin.txt"),temp);
+        snprintf_P(temp,sizeof(temp),PSTR("%4.2f"),(float(GRAPH_PH_BASELINE)+100)/100);
+        myNex.writeStr(F("tMed.txt"),temp);
+        //snprintf_P(temp_command,sizeof(temp_command),PSTR("nMin.val"));
+        //myNex.writeNum(temp_command,GRAPH_PH_BASELINE);
+        //snprintf_P(temp_command,sizeof(temp_command),PSTR("nMed.val"));
+        //myNex.writeNum(temp_command,GRAPH_PH_BASELINE+100);
 
         // Initialize table
         for(int i=0;i<NUMBER_OF_HISTORY_SAMPLES;i++)
@@ -817,12 +826,19 @@ void easyNexReadCustomCommand()
           Debug.print(DBG_INFO,"Orp Graph Requested");
 
           // Change scale values
-          snprintf_P(temp_command,sizeof(temp_command),PSTR("nMax.val"));
+          snprintf_P(temp,sizeof(temp),PSTR("%d"),(GRAPH_ORP_BASELINE+200));
+          myNex.writeStr(F("tMax.txt"),temp);
+          snprintf_P(temp,sizeof(temp),PSTR("%d"),GRAPH_ORP_BASELINE);
+          myNex.writeStr(F("tMin.txt"),temp);
+          snprintf_P(temp,sizeof(temp),PSTR("%d"),(GRAPH_ORP_BASELINE+100));
+          myNex.writeStr(F("tMed.txt"),temp);
+  
+          /*snprintf_P(temp_command,sizeof(temp_command),PSTR("nMax.val"));
           myNex.writeNum(temp_command,GRAPH_ORP_BASELINE+200);
           snprintf_P(temp_command,sizeof(temp_command),PSTR("nMin.val"));
           myNex.writeNum(temp_command,GRAPH_ORP_BASELINE);
           snprintf_P(temp_command,sizeof(temp_command),PSTR("nMed.val"));
-          myNex.writeNum(temp_command,GRAPH_ORP_BASELINE+100);
+          myNex.writeNum(temp_command,GRAPH_ORP_BASELINE+100);*/
           // Initialize table
           for(int i=0;i<NUMBER_OF_HISTORY_SAMPLES;i++)
           {

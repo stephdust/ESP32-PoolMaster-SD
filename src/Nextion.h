@@ -22,7 +22,7 @@
 #define GLOBAL  "globals" // Name of Nextion page to store global variables
 #define MAX_SHOWN_NETWORKS  15  // Maximum number of scanned networks to display
 #define constrain(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt)))
-#define GRAPH_PH_BASELINE  640
+#define GRAPH_PH_BASELINE  620
 #define GRAPH_ORP_BASELINE  600
 
 //static volatile int CurrentPage = 0;
@@ -35,6 +35,7 @@ static char HourBuffer[9];
 static char DateBuffer[11];
 static int LeftMenuPosition = 0;
 static uint8_t Current_Language = 0;
+const char compile_date[] = __DATE__ " " __TIME__;
 
 static unsigned long LastWifiScan = 0; // Last Wifi Networks Scan
 
