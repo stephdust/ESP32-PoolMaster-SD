@@ -1,5 +1,5 @@
 // Firmware revisions
-#define FIRMW "ESP-3.4b"
+#define FIRMW "ESP-4.6"
 #define TFT_FIRMW "TFT-4.0"
 
 // Choose Nextion version to Compile (only one choice possible)
@@ -14,15 +14,15 @@
 //Random value. Change this value (to any other value) to revert the config to default values
 #define CONFIG_VERSION 60
 
-// WiFi credentials
-#ifdef DEVT
-  #define WIFI_NETWORK "<WIFI_DEVT_NETWORK>"
-  #define WIFI_PASSWORD "<WIFI_DEVT_PASSWORD>"
-#else
-  #define WIFI_NETWORK "<WIFI_NETWORK>"
-  #define WIFI_PASSWORD "<WIFI_PASSWORD>"
-#endif 
+// WiFi items
+// Interval between two Wifi Scan in Wifi Configuration Mode
+#define WIFI_SCAN_INTERVAL  10000
+// Time to wait for Wifi to connect. If not connected resume startup without network connection
+#define WIFI_TIMEOUT  10000
+// NTP Timeout before switching to internal clock
+#define NTP_TIMEOUT 300000
 
+// OTA Information
 #define OTA_PWDHASH   "<OTA_PASS>"
 #ifdef DEVT
   #define HOSTNAME "PoolMaster_Dev"
@@ -49,13 +49,14 @@
 #define ROBOT     	    33
 #define PH_PUMP         25
 #define CHL_PUMP        26
-#define PROJ            4    // Projecteur
-#define RELAY_R1        23   // Spare, not connected
-#define SPARE           27
+#define PROJ            27    // Projecteur
+#define RELAY_R1        13   // Spare, not connected
+#define SPARE           4
 
 //Digital input pins connected to Acid and Chl tank level reed switches
-#define CHL_LEVEL       39   // not wired. Use NO_LEVEL option of Pump class
-#define PH_LEVEL        36   //                - " -
+#define CHL_LEVEL       39   // If chlorine tank empty switch used (contact open if low level)
+#define PH_LEVEL        36   // If acid tank empty switch used (contact open if low level)
+#define POOL_LEVEL      34   //	If pool level switch used (contact open if low level)         
 
 //One wire bus for the air/water temperature measurement
 #define ONE_WIRE_BUS_A  18
@@ -79,35 +80,19 @@
 
 #define WDT_TIMEOUT     10
 
-// Server port
-#define SERVER_PORT 8060
-
 //OTA port
 #define OTA_PORT    8063
 
 //12bits (0,06°C) temperature sensors resolution
 #define TEMPERATURE_RESOLUTION 12
 
-//MQTT stuff including local broker/server IP address, login and pwd
-//------------------------------------------------------------------
-
-//interval (in millisec) between MQTT publishement of measurement data
+// MQTT Configuration
+//default interval (in millisec) between MQTT publishement of measurement data
 #define PUBLISHINTERVAL 30000
 
-#define MQTT_SERVER_IP IPAddress(192, 168, 1, 57)
-#define MQTT_SERVER_PORT 1883
-
-// Uncomment if MQTT broker needs login/pwd
-#define MQTT_LOGIN 				
-#define MQTT_SERVER_ID    "ESP32Pool"		   // MQTT server ID
-#define MQTT_SERVER_LOGIN "<MQTT_LOGIN>"
-#define MQTT_SERVER_PWD   "<MQTT_PASSWORD>"
-
 #ifdef DEVT
-  #define MQTT_SERVER_ID "ESP32Pool-Dev"	
   #define POOLTOPIC "Home/Pool6/"
 #else
-  #define MQTT_SERVER_ID "ESP32Pool"	
   #define POOLTOPIC "Home/Pool/"
 #endif 
 
@@ -124,7 +109,7 @@
 
 //Display timeout before blanking
 //-------------------------------
-#define TFT_SLEEP 60000L 
+//#define TFT_SLEEP 60000L 
 
 // Loop tasks scheduling parameters
 //---------------------------------
@@ -148,6 +133,9 @@
 #define PT6 1000
 #define PT7 3000
 #define PT8 30000
+#define PT9 1000
+#define PT10 1000
+#define PT11 120000 // Run once every 2 minutes
 
 //Start offsets to spread tasks along time
 // Task1 has no delay
@@ -159,6 +147,8 @@
 #define DT7 100/portTICK_PERIOD_MS
 #define DT8 570/portTICK_PERIOD_MS
 #define DT9 940/portTICK_PERIOD_MS
+#define DT10 50/portTICK_PERIOD_MS
+#define DT11 2000/portTICK_PERIOD_MS
 
 //#define CHRONO                    // Activate tasks timings traces for profiling
 //#define SIMU                      // Used to simulate pH/ORP sensors. Very simple simulation:
