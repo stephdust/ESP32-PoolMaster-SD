@@ -88,13 +88,10 @@ The version V6, (aka ESP-2.0) implement direct usage of FreeRTOS functions for m
 |T5| `ORPRegulation` |  manage Chlorine pump |`1000ms`|`560`
 |T6| `pHRegulation` |  manage Acid/Soda pump |`1000ms`|`920`
 |T7| `StatusLights` | display a row of 8 status LEDs on the mother board, through a PCF8574A on the I2C bus |`3000ms`|`100`
-|T3| `PublishMeasures` | publish measurement on the MQTT topic (Meas1 - Meas2) |`30s`|`570`
-|T3| `PublishSettings` | publish settings on the MQTT topic (Set1 - Set5) |`When notifed`|`940`
-
-![enter image description here](https://github.com/Gixy31/ESP32-PoolMaster/blob/main/docs/Profiling.jpg)
-
-PoolMaster's filtering logic is described in following flowchart:
-![Filtering Logic](https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/Filtering_Logic.svg)
+|T8| `PublishMeasures` | publish measurement on the MQTT topic (Meas1 - Meas2) |`30s`|`570`
+|T9| `PublishSettings` | publish settings on the MQTT topic (Set1 - Set5) |`When notifed`|`940`
+|T10| `UpdateTFT` | update Screen |`1s screen off, 500ms screen on, 200ms menu page`|`50`
+|T11| `DataHistory` | store last 12h statistics of pH, Orp and Temp |`2 mn`|`2000`
 
 [https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/PoolMaster_FullLogic.pdf](https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/PoolMaster_FullLogic.pdf)
 
