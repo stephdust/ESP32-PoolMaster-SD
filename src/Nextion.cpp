@@ -141,10 +141,10 @@ void UpdateTFT(void *pvParameters)
         // Home page data is loaded during splash screen to avoid lag when Home page appears
         snprintf_P(temp,sizeof(temp),PSTR("%02d-%02dh"),storage.FiltrationStart,storage.FiltrationStop);
         myNex.writeStr(F(GLOBAL".vaStaSto.txt"),temp);
-        sprintf(HourBuffer, PSTR("%02d:%02d:%02d"), hour(), minute(), second());
-        myNex.writeStr(F(GLOBAL".vaTime.txt"),HourBuffer);
-        sprintf(DateBuffer, PSTR("%02d/%02d/%02d"), day(), month(), year()-2000);
-        myNex.writeStr(F(GLOBAL".vaDate.txt"),DateBuffer);
+        sprintf(temp, PSTR("%02d:%02d:%02d"), hour(), minute(), second());
+        myNex.writeStr(F(GLOBAL".vaTime.txt"),temp);
+        sprintf(temp, PSTR("%02d/%02d/%02d"), day(), month(), year()-2000);
+        myNex.writeStr(F(GLOBAL".vaDate.txt"),temp);
         snprintf_P(temp,sizeof(temp),PSTR("%4.2f"),storage.PhValue);
         myNex.writeStr(F(GLOBAL".vapH.txt"),temp);
         snprintf_P(temp,sizeof(temp),PSTR("%3.0f"),storage.OrpValue);
@@ -367,7 +367,7 @@ void UpdateTFT(void *pvParameters)
         myNex.writeStr(F("vaChlTk.txt"),temp);
 
         myNex.writeNum(F("vapHGauge.val"), (int)(round(PhPump.GetTankFill())));
-        myNex.writeNum(F("vaChlGauge.val"), (int)(round(ChlPump.GetTankFill())));      
+        myNex.writeNum(F("vaChlGauge.val"), (int)(round(ChlPump.GetTankFill())));
       }
 
       if(myNex.currentPageId == 13)      //Graph card
@@ -379,6 +379,19 @@ void UpdateTFT(void *pvParameters)
 
       if(myNex.currentPageId == 14)     //Page Home Minimalist
       {
+        // Date and Time
+        sprintf(temp, PSTR("%02d/%02d/%04d %02d:%02d:%02d"), day(), month(), year(), hour(), minute(), second());
+        myNex.writeStr(F("tTimeDate.txt"),temp);
+
+        // PSI difference with Threshold
+        if (storage.PSIValue <= storage.PSI_MedThreshold) {
+          myNex.writeNum(F("vaPSINiddle.val"), 0);
+        } else if (storage.PSIValue > storage.PSI_HighThreshold){
+          myNex.writeNum(F("vaPSINiddle.val"), 4);
+        } else {
+          myNex.writeNum(F("vaPSINiddle.val"), 2);
+        }
+
         // pH & Orp niddle position
         if(abs(storage.PhValue-storage.Ph_SetPoint) <= 0.1) 
           myNex.writeNum(F("vaPHNiddle.val"),0);
@@ -409,8 +422,10 @@ void UpdateTFT(void *pvParameters)
         myNex.writeStr(F(GLOBAL".vaOrp.txt"),temp);
   
         // Water Temperature
-        snprintf_P(temp,sizeof(temp),PSTR("%4.1f°"),storage.WaterTemp);
-        myNex.writeStr(F("tTemp.txt"),temp);        
+        snprintf_P(temp,sizeof(temp),PSTR("%4.1f°C"),storage.WaterTemp);
+        myNex.writeStr(F("tTemp.txt"),temp);
+        
+        
       }
 
       if(myNex.currentPageId == 15)     //Page Language Selection

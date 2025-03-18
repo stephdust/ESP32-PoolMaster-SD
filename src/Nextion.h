@@ -31,8 +31,6 @@
 static char temp[32];
 static char temp_command[32];
 static unsigned long LastAction = 0; // Last action time done on TFT. Go to sleep after TFT_SLEEP
-static char HourBuffer[9];
-static char DateBuffer[11];
 static int LeftMenuPosition = 0;
 static uint8_t Current_Language = 0;
 const char compile_date[] = __DATE__ " " __TIME__;
