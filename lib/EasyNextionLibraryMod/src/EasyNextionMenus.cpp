@@ -260,7 +260,7 @@ void EasyNextionMenus::WriteNextionItemCmd(const char * _nextion_object,int _obj
             snprintf_P(_menu__display_cmd,sizeof(_menu__display_cmd),PSTR("%s %s"),_cmd_to_execute, _nextion_object);
         }
     }
-    //Serial.println(_menu__display_cmd);
+    Serial.println(_menu__display_cmd);
     nextion_display->writeStr(_menu__display_cmd);
 }   
 
@@ -279,7 +279,7 @@ void EasyNextionMenus::WriteNextionItemAttribute(const char * _nextion_object,in
     } else {
         snprintf_P(_menu__display_cmd,sizeof(_menu__display_cmd),PSTR("%s.%s"),_nextion_object,_attribute);
     }
-    //Serial.printf("%s %d\n",_menu__display_cmd,_value);
+    Serial.printf("%s %d\n",_menu__display_cmd,_value);
     nextion_display->writeNum(_menu__display_cmd,_value);
 }   
 void EasyNextionMenus::WriteNextionItemAttribute(const char * _nextion_object,int _object_index,const char* _attribute,const char* _value)
@@ -290,7 +290,7 @@ void EasyNextionMenus::WriteNextionItemAttribute(const char * _nextion_object,in
     } else {
         snprintf_P(_menu__display_cmd,sizeof(_menu__display_cmd),PSTR("%s.%s"),_nextion_object,_attribute);
     }
-    //Serial.printf("%s %s\n",_menu__display_cmd,_value);
+    Serial.printf("%s %s\n",_menu__display_cmd,_value);
     nextion_display->writeStr(_menu__display_cmd,_value);
 }   
 
