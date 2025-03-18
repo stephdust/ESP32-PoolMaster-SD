@@ -93,9 +93,10 @@ The version V6, (aka ESP-2.0) implement direct usage of FreeRTOS functions for m
 
 ![enter image description here](https://github.com/Gixy31/ESP32-PoolMaster/blob/main/docs/Profiling.jpg)
 
-To better understand PoolMaster's logic, please review the flowchart below:
+PoolMaster's filtering logic is described in following flowchart:
+![Filtering Logic](https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/Filtering_Logic.svg)
 
-[https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/PoolMaster-LogicFlowChart.pdf](https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/PoolMaster-LogicFlowChart.pdf)
+[https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/PoolMaster_FullLogic.pdf](https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/PoolMaster_FullLogic.pdf)
 
 ### 3.5'' TouchScreen control
 ![Nextion TouchScreen HMI](https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/Nextion_Screens.jpg)
