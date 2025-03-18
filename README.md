@@ -93,12 +93,14 @@ The version V6, (aka ESP-2.0) implement direct usage of FreeRTOS functions for m
 
 ![enter image description here](https://github.com/Gixy31/ESP32-PoolMaster/blob/main/docs/Profiling.jpg)
 
-To better understand PoolMaster's logic, please review the flowchart below:
+PoolMaster's filtering logic is described in following flowchart:
+![Filtering Logic](https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/Filtering_Logic.svg)
 
-[https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/PoolMaster-LogicFlowChart.pdf](https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/PoolMaster-LogicFlowChart.pdf)
+[https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/PoolMaster_FullLogic.pdf](https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/PoolMaster_FullLogic.pdf)
 
 ### 3.5'' TouchScreen control
-![Nextion TouchScreen HMI](https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/Nextion_Screens.jpg)
+Below a mosaïc of 3.5'' 480x320 control touchscreen:
+![Nextion TouchScreen HMI](https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/Nextion_Screens_v5.jpg)
 ### Home Automation Integration
 Example of integration in Grafana and Home Assistant
 ![Home Automation Integration](https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/Grafana%20and%20App.png)
