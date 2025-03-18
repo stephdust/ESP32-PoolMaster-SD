@@ -99,6 +99,7 @@ PoolMaster's filtering logic is described in following flowchart:
 [https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/PoolMaster_FullLogic.pdf](https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/PoolMaster_FullLogic.pdf)
 
 ### 3.5'' TouchScreen control
+Below a mosaïc of 3.5'' 480x320 control touchscreen:
 ![Nextion TouchScreen HMI](https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/Nextion_Screens_v5.jpg)
 ### Home Automation Integration
 Example of integration in Grafana and Home Assistant
