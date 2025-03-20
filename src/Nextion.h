@@ -82,7 +82,7 @@ void stack_mon(UBaseType_t&);
 //you wish to connect to (not "Serial" which is used for debug), here Serial2 UART
 static EasyNex myNex(Serial2);
 static EasyNextionMenus  MainMenu(&myNex,15,ENM_MAIN);
-static EasyNextionMenus  SubMenu1(&myNex,1,ENM_SUB);
+static EasyNextionMenus  SubMenu1(&myNex,7,ENM_SUB);
 static EasyNextionMenus  SubMenu2(&myNex,7,ENM_SUB);
 static EasyNextionMenus  SubMenu3(&myNex,7,ENM_SUB);
 static EasyNextionMenus  SubMenu4(&myNex,7,ENM_SUB);

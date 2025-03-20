@@ -45,9 +45,10 @@ int EasyNextionMenus::AddItem(void (*_CallBackFunction)(),bool (*_checkEnabledFu
     menu_items[number_of_recorded_items].submenu = _easy_nextion_menu;
     return AddItem(_CallBackFunction,_checkEnabledFunction,_menu_item,_icon_off,_icon_on,ENM_SUBMENU);
 }
-int EasyNextionMenus::AddItem(void (*_CallBackFunction)(),bool (*_checkEnabledFunction)(),const char* _menu_item, const char* _icon_off,const char* _icon_on,int _menu_item_type, int _menu_item_action_ref)
+int EasyNextionMenus::AddItem(void (*_CallBackFunction)(),bool (*_checkEnabledFunction)(),const char* _menu_item, const char* _icon_off,const char* _icon_on,int _menu_item_type, int _menu_item_action_ref, int _menu_item_overlay_index)
 {
     menu_items[number_of_recorded_items].mnu_action_reference = _menu_item_action_ref;
+    menu_items[number_of_recorded_items].mnu_overlay_index = _menu_item_overlay_index;
     return AddItem(_CallBackFunction,_checkEnabledFunction,_menu_item,_icon_off,_icon_on,_menu_item_type);
 }
 int EasyNextionMenus::AddItem(void (*_CallBackFunction)(),bool (*_checkEnabledFunction)(),const char* _menu_item, const char* _icon_off,const char* _icon_on,int _menu_item_type, const char* _menu_overlay_page_name)
@@ -197,6 +198,7 @@ void EasyNextionMenus::Select(uint8_t _menu_item_index)
             case ENM_ACTION:
                 if(menu_items[selected_item].mnu_action_reference >= 0) {
                     WriteNextionItemNum(MENU_ACTION_OBJECT_CLICK,-1,menu_items[selected_item].mnu_action_reference);
+                    WriteNextionItemNum(MENU_ACTION_NEXT_PAGE_OBJECT,-1,menu_items[selected_item].mnu_overlay_index);
                     WriteNextionExecute("MenuActions");  // Click on button Menu Action
                 }
             break;
@@ -260,7 +262,7 @@ void EasyNextionMenus::WriteNextionItemCmd(const char * _nextion_object,int _obj
             snprintf_P(_menu__display_cmd,sizeof(_menu__display_cmd),PSTR("%s %s"),_cmd_to_execute, _nextion_object);
         }
     }
-    Serial.println(_menu__display_cmd);
+    //Serial.println(_menu__display_cmd);
     nextion_display->writeStr(_menu__display_cmd);
 }   
 
@@ -279,7 +281,7 @@ void EasyNextionMenus::WriteNextionItemAttribute(const char * _nextion_object,in
     } else {
         snprintf_P(_menu__display_cmd,sizeof(_menu__display_cmd),PSTR("%s.%s"),_nextion_object,_attribute);
     }
-    Serial.printf("%s %d\n",_menu__display_cmd,_value);
+    //Serial.printf("%s %d\n",_menu__display_cmd,_value);
     nextion_display->writeNum(_menu__display_cmd,_value);
 }   
 void EasyNextionMenus::WriteNextionItemAttribute(const char * _nextion_object,int _object_index,const char* _attribute,const char* _value)
@@ -290,7 +292,7 @@ void EasyNextionMenus::WriteNextionItemAttribute(const char * _nextion_object,in
     } else {
         snprintf_P(_menu__display_cmd,sizeof(_menu__display_cmd),PSTR("%s.%s"),_nextion_object,_attribute);
     }
-    Serial.printf("%s %s\n",_menu__display_cmd,_value);
+    //Serial.printf("%s %s\n",_menu__display_cmd,_value);
     nextion_display->writeStr(_menu__display_cmd,_value);
 }   
 

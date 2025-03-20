@@ -446,7 +446,7 @@ void setup()
   xTaskCreatePinnedToCore(
     UpdateTFT,
     "UpdateTFT",
-    2048,
+    3072,
     NULL,
     1,
     nullptr, 

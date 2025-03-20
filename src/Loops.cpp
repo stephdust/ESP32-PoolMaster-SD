@@ -338,7 +338,7 @@ void pHRegulation(void *pvParameters)
       if (FiltrationPump.IsRunning()) {
   
           if(PhPID.Compute()){
-            Debug.print(DBG_VERBOSE,"Ph  regulation: %10.2f, %13.9f, %13.9f, %17.9f",storage.PhPIDOutput,storage.PhValue,storage.Ph_SetPoint,storage.Ph_Kp);
+            Debug.print(DBG_INFO,"Ph  regulation: %10.2f, %13.9f, %13.9f, %17.9f",storage.PhPIDOutput,storage.PhValue,storage.Ph_SetPoint,storage.Ph_Kp);
             if(storage.PhPIDOutput < (double)30000.) storage.PhPIDOutput = 0.;
             Debug.print(DBG_INFO,"Ph  regulation: %10.2f",storage.PhPIDOutput);
         #ifdef SIMU
@@ -411,7 +411,7 @@ void OrpRegulation(void *pvParameters)
       if (FiltrationPump.IsRunning())
       {
         if(OrpPID.Compute()){
-          Debug.print(DBG_VERBOSE,"ORP regulation: %10.2f, %13.9f, %12.9f, %17.9f",storage.OrpPIDOutput,storage.OrpValue,storage.Orp_SetPoint,storage.Orp_Kp);
+          Debug.print(DBG_INFO,"ORP regulation: %10.2f, %13.9f, %12.9f, %17.9f",storage.OrpPIDOutput,storage.OrpValue,storage.Orp_SetPoint,storage.Orp_Kp);
           if(storage.OrpPIDOutput < (double)30000.) storage.OrpPIDOutput = 0.;    
             Debug.print(DBG_INFO,"Orp regulation: %10.2f",storage.OrpPIDOutput);
       #ifdef SIMU

@@ -8,14 +8,15 @@
 #include "EasyNextionLibrary.h"
 
 #define MAX_MENU_ITEMS      20  // Maximum Number of Items in each menu (main and sub)
-#define MAX_NEXT_CMD_LENGTH 32  // Maximum length of commands send to screen via serial
+#define MAX_NEXT_CMD_LENGTH 40  // Maximum length of commands send to screen via serial
 
 // Default value for Nextion objects names configured in Nextion Editor
 #define MENU_MAIN_OBJECT_TXT        "MainItem"  //Object dual-state button that needs to be selected or not
 #define MENU_SUB_OBJECT_TXT         "SubItem"    //Object dual-state button that needs to be selected or not
 #define MENU_SUB_OBJECT_CHK         "SubIcon"     //Object dual-state button that needs to be selected or not
 #define MENU_SUB_OBJECT_SEP         "Separator"     //Object dual-state button that needs to be selected or not
-#define MENU_ACTION_OBJECT_CLICK    "vaActionIndex"     //Object dual-state button that needs to be selected or not
+#define MENU_ACTION_OBJECT_CLICK    "vaActionIndex"     //Num Object containing the ID of the command to be executed
+#define MENU_ACTION_NEXT_PAGE_OBJECT    "pageOVControls.vaOverlayIndex"     //Num Object to be sent to next page for initialization (must be global variable on Nextion)
 #define MENU_ICONS_UNSELECTED    "┡"     //Uncheckbox icon (see dedicated font for corresponding icon)
 #define MENU_ICONS_SELECTED      "┢"     //Checked icon  (see dedicated font for corresponding icon)
 
@@ -59,6 +60,7 @@ struct Menu_Item {
         bool (*checkStatusFunction)() = nullptr; // The function executed to know whether item is selected (checked) or not
         void (*callBackFunction)() = nullptr;    // The function executed on microcontroller if the item is clicked
         int mnu_action_reference = -1;           // The function executed on Nextion if the item is clicked (via a reference of function)
+        int mnu_overlay_index = -1;              // The value passed to the called overlay page to initialize differently
         const char* mnu_overlay_page_name = nullptr;     // The name of the page Nextion must jump to if clicked
         EasyNextionMenus* submenu = nullptr;     // The submenu reference if the item is of type ENM_SUBMENU
 
@@ -78,7 +80,7 @@ class EasyNextionMenus {
     int AddItem(void (*_CallBackFunction)(),bool (*_checkEnabledFunction)(),const char*, const char* ,const char* ,int);
     int AddItem(void (*_CallBackFunction)(),bool (*_checkEnabledFunction)(),const char*, const char* ,const char* ,int, bool (*_checkStatusFunction)());
     int AddItem(void (*_CallBackFunction)(),bool (*_checkEnabledFunction)(),const char*, const char* ,const char* ,EasyNextionMenus*);
-    int AddItem(void (*_CallBackFunction)(),bool (*_checkEnabledFunction)(),const char*, const char* ,const char* ,int, int);
+    int AddItem(void (*_CallBackFunction)(),bool (*_checkEnabledFunction)(),const char*, const char* ,const char* ,int, int, int = -1);
     int AddItem(void (*_CallBackFunction)(),bool (*_checkEnabledFunction)(),const char*, const char* ,const char* ,int, const char*);
 
     void Reinitialize(void);
