@@ -52,6 +52,11 @@ It includes Wifi connectivity to communicate via MQTT and SMTP. Project includes
 
 Finally code and PCB are made with high flexibility to precisely tailor the features to the user.
 
+### Work in Progress
+Below the main features to be implemented:
+- As of today, the Salt Water Chlorine Generator mode switches the chlorinator ON when Orp reaches 90% of setpoint and OFF when it reaches 105%. Unless pH and Orp regulation with pump there is not PID style logic. This would need evolving with possibly a longer PID window value to avoid switching chlorinator ON/OFF too frequently.
+- Ability to configure all the setpoints, PID Windows, Pump Flow Rates, PSI Thresholds on the Nextion (not much work)
+
 ### Hardware
 A dedicated board has been designed to host all components. There are 8 LEDs at the bottom to display status, warnings and alarms.
 Below two examples of live deployments:
@@ -88,13 +93,10 @@ The version V6, (aka ESP-2.0) implement direct usage of FreeRTOS functions for m
 |T5| `ORPRegulation` |  manage Chlorine pump |`1000ms`|`560`
 |T6| `pHRegulation` |  manage Acid/Soda pump |`1000ms`|`920`
 |T7| `StatusLights` | display a row of 8 status LEDs on the mother board, through a PCF8574A on the I2C bus |`3000ms`|`100`
-|T3| `PublishMeasures` | publish measurement on the MQTT topic (Meas1 - Meas2) |`30s`|`570`
-|T3| `PublishSettings` | publish settings on the MQTT topic (Set1 - Set5) |`When notifed`|`940`
-
-![enter image description here](https://github.com/Gixy31/ESP32-PoolMaster/blob/main/docs/Profiling.jpg)
-
-PoolMaster's filtering logic is described in following flowchart:
-![Filtering Logic](https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/Filtering_Logic.svg)
+|T8| `PublishMeasures` | publish measurement on the MQTT topic (Meas1 - Meas2) |`30s`|`570`
+|T9| `PublishSettings` | publish settings on the MQTT topic (Set1 - Set5) |`When notifed`|`940`
+|T10| `UpdateTFT` | update Screen |`1s screen off, 500ms screen on, 200ms menu page`|`50`
+|T11| `DataHistory` | store last 12h statistics of pH, Orp and Temp |`2 mn`|`2000`
 
 [https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/PoolMaster_FullLogic.pdf](https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/PoolMaster_FullLogic.pdf)
 
@@ -289,8 +291,7 @@ Below are the Payloads/commands to publish on the "PoolTopicAPI" topic in Json f
 |{"ChlPump":1} or {"ChlPump":0} | manually start/stop the Chl pump to add more Chlorine
 |{"ElectrolyseMode":1} or {"ElectrolyseMode":0} | set auto mode for Chlorine production via Salt Water Chlorine Generation. In Auto mode the Orp regulates itself (when filtration pump on) with Salt Water Chlorine Generator.
 |{"Electrolyse":1} or {"Electrolyse":0} | start/stop the Salt Water Chlorine Generator device (if exists)
-|{"ElectroSecure:16} | set the minimum temperature for Salt Water Chlorine Generation system to operate
-|{"ElectroDelay:2} | set the delay between filtration pump start and Salt Water Chlorine Generation system start.
+|{"ElectroConfig":[15, 2]} | set the minimum temperature for Salt Water Chlorine Generation system to operate and the delay between filtration pump start and Salt Water Chlorine Generation system start.
 |{"PhCalib":[4.02,3.8,9.0,9.11]} | multi-point linear regression calibration (minimum 1 point-couple, 6 max.) in the form [ProbeReading_0, BufferRating_0, xx, xx, ProbeReading_n, BufferRating_n]
 |{"OrpCalib":[450,465,750,784]} | multi-point linear regression calibration (minimum 1 point-couple, 6 max.) in the form [ProbeReading_0, BufferRating_0, xx, xx, ProbeReading_n, BufferRating_n]
 |{"PhSetPoint":7.4} | set the Ph setpoint, 7.4 in this example
@@ -302,7 +303,6 @@ Below are the Payloads/commands to publish on the "PoolTopicAPI" topic in Json f
 |{"PhPIDParams":[1330000,0,0.0]} | respectively set Kp,Ki,Kd parameters of the Ph PID loop. In this example they are set to 1330000, 0 and 0
 |{"OrpPIDWSize":3600000} | set the window size of the Orp PID loop in msec, 60mins in this example
 |{"PhPIDWSize":1200000} | set the window size of the Ph PID loop in msec, 20mins in this example
-|{"Date":[1,1,1,18,13,32,0]} | set date/time of RTC module in the following format: (Day of the month, Day of the week, Month, Year, Hour, Minute, Seconds), in this example: Monday 1st January 2018 - 13h32mn00secs
 |{"FiltT0":9} | set the earliest hour (9:00 in this example) to run filtration pump. Filtration pump will not run beofre that hour
 |{"FiltT1":20} | set the latest hour (20:00 in this example) to run filtration pump. Filtration pump will not run after that hour
 |{"PubPeriod":30} | set the periodicity (in seconds) at which the system measurement (pumps states, tank levels states, measured values, etc) will be published to the MQTT broker
@@ -314,13 +314,18 @@ Below are the Payloads/commands to publish on the "PoolTopicAPI" topic in Json f
 |{"pHTank":[20,100]} | call this function when the Acid tank is replaced or refilled. First parameter is the tank volume in Liters, second parameter is its percentage fill (100% when full)
 |{"ChlTank":[20,100]} | call this function when the Chlorine tank is replaced or refilled. First parameter is the tank volume in Liters, second parameter is its percentage fill (100% when full)
 |{"Relay":[1,1]} | call this generic command to actuate spare relays. Parameter 1 is the relay number (R1 in this example), parameter 2 is the relay state (ON in this example). This command is useful to use spare relays for additional features (lighting, etc). Available relay numbers are 1 and 2
-|{"Reboot":1} | call this command to reboot the controller (after 8 seconds from calling this command)
-|{"Settings":1} | force settings (Set1-Set5) publication to MQTT to refresh values
 |{"pHPumpFR":1.5} | call this command to set pH pump flow rate un L/s. In this example 1.5L/s
 |{"ChlPumpFR":3} | call this command to set Chl pump flow rate un L/s. In this example 3L/s
 |{"RstpHCal":1} | call this command to reset the calibration coefficients of the pH probe
 |{"RstOrpCal":1} | call this command to reset the calibration coefficients of the Orp probe
 |{"RstPSICal":1} | call this command to reset the calibration coefficients of the pressure sensor
+|{"Date":[1,1,1,18,13,32,0]} | set date/time of RTC module in the following format: (Day of the month, Day of the week, Month, Year, Hour, Minute, Seconds), in this example: Monday 1st January 2018 - 13h32mn00secs
+|{"SetDateTime":[11,30,15,3,6,2025]} | set Date/Time with format setTime(rtc_hour,rtc_min,rtc_sec,rtc_mday,rtc_mon+1,rtc_year) in order of appearance in JSON table.
+|{"WifiConfig":["SSID","PASSWORD"]} | configure WIFI Network
+|{"Lang_Locale":1} | configure PoolMaster language (0=English, 1=French)
+|{"MQTTConfig":["IP",PORT,"LOGIN","PASSWORD","SERVER_ID","TOPIC"]} | configure MQTT connection
+|{"Reboot":1} | call this command to reboot the controller (after 8 seconds from calling this command)
+|{"Settings":1} | force settings (Set1-Set5) publication to MQTT to refresh values
 <!--stackedit_data:
 eyJoaXN0b3J5IjpbLTQwNjYwOTEyNSwxOTU3MjAzMDc5XX0=
 -->
