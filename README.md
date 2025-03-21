@@ -30,10 +30,11 @@ Tank-levels are estimated based on the running-time and flow-rate of each pump. 
  - Phone App templates for home automation systems
 
 ### Automation
- - Defined time-slots and water temperature are used to start/stop the filtration pump for a daily given amount of time (a relay starts/stops the filtration pump)
- - Winter mode to starts the filtration if temperature reaches -2°C until it rises back above +2°C
+ - Filtration pump automation reduces energy consumption and adapt filtering time slots according to water temperature (70% of swimming pool energy consumption is for filter pump)
+ - Thanks to its embedded RTC (Real Time Clock) the system keeps track of precise date/time even when powered off (Adjusted automatically via NTP or manually)
+ - Winter mode reduces filtering at its minimum and ensure freezing protection (perfect for active filtering during winter)
  - 2 spare relay outputs for controlling external equipment (heating, lighting, etc.)
-
+   
 ![Ecosystem](https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/PoolMaster%20Ecosystem.png)
 
 ##  Project Details
