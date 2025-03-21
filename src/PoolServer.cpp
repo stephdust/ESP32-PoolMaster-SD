@@ -564,6 +564,18 @@ void ProcessCommand(void *pvParameters)
           saveParam("DelayElectro",storage.DelayElectro);               
           PublishSettings();
         }
+        else if (command.containsKey(F("SecureElectro")))
+        {
+          storage.SecureElectro = (uint8_t)command[F("SecureElectro")];
+          saveParam("SecureElectro",storage.SecureElectro);
+          PublishSettings();
+        }
+        else if (command.containsKey(F("DelayElectro")))
+        {
+          storage.DelayElectro = (uint8_t)command[F("DelayElectro")];
+          saveParam("DelayElectro",storage.DelayElectro);
+          PublishSettings();
+        }
         //"SetDateTime" command which sets the ESP32 local time based
         // on Nextion's RTC
         else if (command.containsKey(F("SetDateTime")))
@@ -614,13 +626,13 @@ void ProcessCommand(void *pvParameters)
           // It automatically tries to reconnect using a timer
         }
 
-        digitalWrite(BUZZER,HIGH);
+        /*digitalWrite(BUZZER,HIGH);
         delay(30);
         digitalWrite(BUZZER,LOW);
         delay(40);
         digitalWrite(BUZZER,HIGH);
         delay(30);
-        digitalWrite(BUZZER,LOW);
+        digitalWrite(BUZZER,LOW);*/
         // Publish Update on the MQTT broker the status of our variables
         PublishMeasures();
       }
