@@ -17,7 +17,7 @@
 #include "EasyNextionLibrary.h"
 #include "EasyNextionMenus.h"
 #include "translation.h"           // Include all translated strings into flash
-#include "Data.h"
+#include "HistoryStats.h"
 
 #define GLOBAL  "globals" // Name of Nextion page to store global variables
 #define MAX_SHOWN_NETWORKS  15  // Maximum number of scanned networks to display
@@ -67,12 +67,6 @@ static uint32_t MASK_ORP_AUTO = 1;
 
 BaseType_t xWasDelayed;     // Return value for task delay
 
-static bool PoolMaster_BoardReady = false;      // Is Board Up
-static bool PoolMaster_WifiReady = false;      // Is Wifi Up
-static bool PoolMaster_MQTTReady = false;      // Is MQTT Connected
-static bool PoolMaster_NTPReady = false;      // Is NTP Connected
-static bool PoolMaster_FullyLoaded = false;      // At startup gives time for everything to start before exiting Nextion's splash screen
-
 static bool MainMenuLoaded = false;
 static bool SubMenuLoaded = false;
 
@@ -99,11 +93,8 @@ static EasyNextionMenus  SubMenu12(&myNex,7,ENM_SUB);
 void InitMenu(void);
 void ResetTFT(void);
 double map(double, double, double, int, int);
-void SetFullyLoaded(void);
-void SetBoardReady(void);
-void SetWifiReady(bool);
-void SetMQTTReady(bool);
-void SetNTPReady(bool);
+void syncESP2RTC(uint32_t , uint32_t , uint32_t , uint32_t , uint32_t , uint32_t );
+void syncRTC2ESP(void);
 void UpdateTFT(void*);
 void ScanWiFiNetworks(void);
 void printScannedNetworks(uint16_t);

@@ -74,8 +74,12 @@ bool PSIError = false;                          // Water pressure OK
 bool cleaning_done = false;                     // daily cleaning done   
 
 // NTP & MQTT Connected
-bool NTP_Connected = false;
-bool MQTT_Connected = false;
+bool PoolMaster_BoardReady = false;      // Is Board Up
+bool PoolMaster_WifiReady = false;      // Is Wifi Up
+bool PoolMaster_MQTTReady = false;      // Is MQTT Connected
+bool PoolMaster_NTPReady = false;      // Is NTP Connected
+bool PoolMaster_FullyLoaded = false;      // At startup gives time for everything to start before exiting Nextion's splash screen
+
 
 // Queue object to store incoming JSON commands (up to 10)
 QueueHandle_t queueIn;
@@ -160,11 +164,6 @@ unsigned stack_hwm();
 void stack_mon(UBaseType_t&);
 void info();
 
-// Functions to inform Nextion of bootup process
-extern void SetBoardReady(void);
-extern void SetWifiReady(bool);
-extern void SetNTPReady(bool);
-
 // Functions used as Tasks
 void PoolMaster(void*);
 void AnalogPoll(void*);
@@ -176,7 +175,7 @@ void SettingsPublish(void*);
 void MeasuresPublish(void*);
 void StatusLights(void*);
 void UpdateTFT(void*);
-void StatsAndReconnects(void *);
+void HistoryStats(void *);
 
 // For ElegantOTA
 void onOTAStart(void);
@@ -201,7 +200,7 @@ void setup()
   Debug.print(DBG_INFO,"Booting PoolMaster Version: %s",FIRMW);
   // Initialize Nextion TFT
   ResetTFT();
-  SetBoardReady();
+  PoolMaster_BoardReady = true;
   //Read ConfigVersion. If does not match expected value, restore default values
   if(nvs.begin("PoolMaster",true))
   {
@@ -256,12 +255,12 @@ void setup()
     Serial.print(".");
   }
   
-  if(WiFi.status() == WL_CONNECTED) {
+/*  if(WiFi.status() == WL_CONNECTED) {
     SetWifiReady(true); // Inform Nextion screen
   } else {
     SetWifiReady(false); // Inform Nextion screen
     Serial.print("Ignored Wifi Connection (timeout)");
-  }
+  }*/
 
   // Initialize the mDNS library.
   /*ConnectionTimeout = millis();
@@ -455,8 +454,8 @@ void setup()
 
   // History Stats Storage
   xTaskCreatePinnedToCore(
-    StatsAndReconnects,
-    "StatsAndReconnects",
+    HistoryStats,
+    "HistoryStats",
     2048,
     NULL,
     1,

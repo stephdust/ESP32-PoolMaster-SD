@@ -19,12 +19,6 @@ void ResetTFT()
   myNex.writeStr(F("rest"));
   myNex.writeStr(F("wup=1")); // Exit from sleep on last page
   myNex.writeStr(F("usup=1")); // Authorize auto wake up on serial data
-  PoolMaster_BoardReady = false;
-  PoolMaster_WifiReady = false;
-  PoolMaster_MQTTReady = false;
-  PoolMaster_NTPReady = false;
-  PoolMaster_FullyLoaded = false;
-  //myNex.writeStr(F(GLOBAL".vaMCFW.txt"), FIRMW);
   myNex.writeStr("page pageSplash");
   delay(500);
   InitMenu();
@@ -65,12 +59,6 @@ void WriteSwitches()
   myNex.writeNum(F(GLOBAL".vaSwitches.val"),switches_bitmap);
 }
 
-// Update the splash screen
-void SetFullyLoaded() {PoolMaster_FullyLoaded = true;}
-void SetBoardReady() {PoolMaster_BoardReady = true;}
-void SetWifiReady(bool status) {PoolMaster_WifiReady = status;}
-void SetMQTTReady(bool status) {PoolMaster_MQTTReady = status;}
-void SetNTPReady(bool status) {PoolMaster_NTPReady = status;}
 
 //Function to update TFT display
 //update the global variables of the TFT + the widgets of the active page
@@ -277,7 +265,7 @@ void UpdateTFT(void *pvParameters)
         if (WiFiScanStatus < 0) {  // it is busy scanning or got an error
           if (WiFiScanStatus == WIFI_SCAN_FAILED) {
             Debug.print(DBG_INFO,"[WiFi] Scan has failed. Starting again.");
-            //ScanWiFiNetworks();
+            ScanWiFiNetworks();
           }
           // other option is status WIFI_SCAN_RUNNING - just wait.
         } else {  // Found Zero or more Wireless Networks
@@ -328,6 +316,7 @@ void UpdateTFT(void *pvParameters)
         if(myNex.hasPageChanged()) {
           myNex.writeStr(PSTR("tDateTitle.txt"),Helpers::translated_word(FL_(NXT_DATE_TITLE),storage.Lang_Locale));
           myNex.writeStr(PSTR("bApply.txt"),Helpers::translated_word(FL_(NXT_APPLY),storage.Lang_Locale));
+          myNex.writeStr(PSTR("tStatus.txt"),Helpers::translated_word(FL_(NXT_MQTT_STATUS),storage.Lang_Locale));
         }
       }
 
@@ -459,11 +448,11 @@ void UpdateTFT(void *pvParameters)
           myNex.writeStr(PSTR("tIcon_0.txt"),"╄");
           myNex.writeStr(PSTR("tItem_1.txt"),Helpers::translated_word(FL_(NXT_SETPPOINTS_PH),storage.Lang_Locale));
           myNex.writeStr(PSTR("tIcon_1.txt"),"╆");
-          myNex.writeStr(PSTR("vaDecimal_1.txt"),"2|1|1");
+          myNex.writeStr(PSTR("vaDecimal_1.txt"),"2|1|1|");
           myNex.writeStr(PSTR("vaCommand_1.txt"),"PhSetPoint");
           myNex.writeStr(PSTR("tItem_2.txt"),Helpers::translated_word(FL_(NXT_PUMPFLOW_PH),storage.Lang_Locale));
           myNex.writeStr(PSTR("tIcon_2.txt"),"├");
-          myNex.writeStr(PSTR("vaDecimal_2.txt"),"1|1|1");
+          myNex.writeStr(PSTR("vaDecimal_2.txt"),"1|1|1|l/mn");
           myNex.writeStr(PSTR("vaCommand_2.txt"),"pHPumpFR");
           myNex.writeStr(F("tsw 255,1"));
         }
@@ -490,11 +479,11 @@ void UpdateTFT(void *pvParameters)
           myNex.writeStr(PSTR("tIcon_0.txt"),"╅");
           myNex.writeStr(PSTR("tItem_1.txt"),Helpers::translated_word(FL_(NXT_SETPPOINTS_ORP),storage.Lang_Locale));
           myNex.writeStr(PSTR("tIcon_1.txt"),"╇");
-          myNex.writeStr(PSTR("vaDecimal_1.txt"),"3|0|5");
+          myNex.writeStr(PSTR("vaDecimal_1.txt"),"3|0|5|mV");
           myNex.writeStr(PSTR("vaCommand_1.txt"),"OrpSetPoint");
           myNex.writeStr(PSTR("tItem_2.txt"),Helpers::translated_word(FL_(NXT_PUMPFLOW_CHL),storage.Lang_Locale));
           myNex.writeStr(PSTR("tIcon_2.txt"),"├");
-          myNex.writeStr(PSTR("vaDecimal_2.txt"),"1|1|1");
+          myNex.writeStr(PSTR("vaDecimal_2.txt"),"1|1|1|l/mn");
           myNex.writeStr(PSTR("vaCommand_2.txt"),"ChlPumpFR");
           myNex.writeStr(F("tsw 255,1"));
         }
@@ -518,17 +507,22 @@ void UpdateTFT(void *pvParameters)
           myNex.writeStr(PSTR("tTitle.txt"),Helpers::translated_word(FL_(NXT_MODE_PUMP_TITLE),storage.Lang_Locale));
           myNex.writeStr(PSTR("tItem_0.txt"),Helpers::translated_word(FL_(NXT_MODE_PUMP),storage.Lang_Locale));
           myNex.writeStr(PSTR("tIcon_0.txt"),"╛");
+          myNex.writeStr(PSTR("vis tValue_0,1"));
           myNex.writeStr(PSTR("tItem_1.txt"),Helpers::translated_word(FL_(NXT_MODE_PUMP_START),storage.Lang_Locale));
           myNex.writeStr(PSTR("tIcon_1.txt"),"╃");
           myNex.writeStr(PSTR("tItem_2.txt"),Helpers::translated_word(FL_(NXT_MODE_PUMP_END),storage.Lang_Locale));
           myNex.writeStr(PSTR("tIcon_2.txt"),"╹");
-          myNex.writeStr(PSTR("vaDecimal_1.txt"),"2|0|1");
+          myNex.writeStr(PSTR("vaDecimal_1.txt"),"2|0|1|h");
           myNex.writeStr(PSTR("vaCommand_1.txt"),"FiltT0");
-          myNex.writeStr(PSTR("vaDecimal_2.txt"),"2|0|1");
+          myNex.writeStr(PSTR("vaDecimal_2.txt"),"2|0|1|h");
           myNex.writeStr(PSTR("vaCommand_2.txt"),"FiltT1");
           myNex.writeStr(F("tsw 255,1"));
         }
         
+
+        snprintf_P(temp,sizeof(temp),PSTR("%02d-%02dh"),storage.FiltrationStart,storage.FiltrationStop);
+        myNex.writeStr(F("tValue_0.txt"),temp);
+
         if (myNex.readNumber(F("vaUpdAuth.val"))==1) {
           //Update Button when authorized
           myNex.writeNum(F("btAUTO_0.val"),storage.AutoMode);
@@ -554,9 +548,9 @@ void UpdateTFT(void *pvParameters)
           myNex.writeStr(PSTR("tIcon_1.txt"),"┬");
           myNex.writeStr(PSTR("tItem_2.txt"),Helpers::translated_word(FL_(NXT_MODE_HEAT_TMP_HIGH),storage.Lang_Locale));
           myNex.writeStr(PSTR("tIcon_2.txt"),"┬");
-          myNex.writeStr(PSTR("vaDecimal_1.txt"),"2|1|5");
+          myNex.writeStr(PSTR("vaDecimal_1.txt"),"2|1|5|°C");
           myNex.writeStr(PSTR("vaCommand_1.txt"),"WTempLow");
-          myNex.writeStr(PSTR("vaDecimal_2.txt"),"2|1|5");
+          myNex.writeStr(PSTR("vaDecimal_2.txt"),"2|1|5|°C");
           myNex.writeStr(PSTR("vaCommand_2.txt"),"WSetPoint");
           myNex.writeStr(F("tsw 255,1"));
         }
@@ -578,10 +572,12 @@ void UpdateTFT(void *pvParameters)
           myNex.writeStr(PSTR("tIcon_1.txt"),"▫");
           myNex.writeStr(PSTR("tItem_2.txt"),Helpers::translated_word(FL_(NXT_MODE_PSI_CURRENT),storage.Lang_Locale));
           myNex.writeStr(PSTR("tIcon_2.txt"),"├");
-          myNex.writeStr(PSTR("vaDecimal_0.txt"),"1|1|1");
+          myNex.writeStr(PSTR("vaDecimal_0.txt"),"1|1|1|psi");
           myNex.writeStr(PSTR("vaCommand_0.txt"),"PSILow");
-          myNex.writeStr(PSTR("vaDecimal_1.txt"),"1|1|1");
+          myNex.writeStr(PSTR("vaDecimal_1.txt"),"1|1|1|psi");
           myNex.writeStr(PSTR("vaCommand_1.txt"),"PSIHigh");
+          myNex.writeStr(PSTR("vaDecimal_2.txt"),"1|1|1|psi");
+          myNex.writeStr(PSTR("vaCommand_2.txt"),"");
           myNex.writeStr(F("tsw 255,1"));
         }
 
@@ -603,9 +599,9 @@ void UpdateTFT(void *pvParameters)
           myNex.writeStr(PSTR("tIcon_1.txt"),"┬");
           myNex.writeStr(PSTR("tItem_2.txt"),Helpers::translated_word(FL_(NXT_REGULATION_SWG_START),storage.Lang_Locale));
           myNex.writeStr(PSTR("tIcon_2.txt"),"╃");
-          myNex.writeStr(PSTR("vaDecimal_1.txt"),"2|0|1");
+          myNex.writeStr(PSTR("vaDecimal_1.txt"),"2|0|1|°C");
           myNex.writeStr(PSTR("vaCommand_1.txt"),"SecureElectro");
-          myNex.writeStr(PSTR("vaDecimal_2.txt"),"2|0|1");
+          myNex.writeStr(PSTR("vaDecimal_2.txt"),"2|0|1|mn");
           myNex.writeStr(PSTR("vaCommand_2.txt"),"DelayElectro");
           myNex.writeStr(F("tsw 255,1"));
         }
@@ -633,9 +629,9 @@ void UpdateTFT(void *pvParameters)
           myNex.writeStr(PSTR("tIcon_1.txt"),"╅");
           myNex.writeStr(PSTR("tItem_2.txt"),Helpers::translated_word(FL_(NXT_PHORPTANKS_FILL),storage.Lang_Locale));
           myNex.writeStr(PSTR("tIcon_2.txt"),"▓");
-          myNex.writeStr(PSTR("vaDecimal_0.txt"),"2|0|1");
+          myNex.writeStr(PSTR("vaDecimal_0.txt"),"2|0|1|mn");
           myNex.writeStr(PSTR("vaCommand_0.txt"),"");
-          myNex.writeStr(PSTR("vaDecimal_1.txt"),"2|0|1");
+          myNex.writeStr(PSTR("vaDecimal_1.txt"),"2|0|1|mn");
           myNex.writeStr(PSTR("btOFF_2.txt"),Helpers::translated_word(FL_(NXT_PHORPTANKS_FILL_PH),storage.Lang_Locale));
           myNex.writeStr(PSTR("btON_2.txt"),Helpers::translated_word(FL_(NXT_PHORPTANKS_FILL_CHL),storage.Lang_Locale));
 
@@ -1290,20 +1286,45 @@ void InitMenu()
   SubMenu2.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU11),storage.Lang_Locale),"▓",nullptr,ENM_ACTION,1,24);    // Tank Status
   SubMenu2.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU12),storage.Lang_Locale),"▭",nullptr,ENM_ACTION,1,23);   // SWG Options
 
-  SubMenu3.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU17),storage.Lang_Locale),"╯",nullptr,ENM_ACTION,1,25);   // Control Relays
+  SubMenu3.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU17),storage.Lang_Locale),"╂",nullptr,ENM_ACTION,1,25);   // Control Relays
 
   SubMenu4.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU22),storage.Lang_Locale),"╴",nullptr,ENM_ACTION,141);
-  SubMenu4.AddItem([]() {ToggleValue("Clear",false);},nullptr,Helpers::translated_word(FL_(NXT_SUBMENU23),storage.Lang_Locale),"┨",nullptr,ENM_ACTION);
-  SubMenu4.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU24),storage.Lang_Locale),"▯",nullptr,ENM_ACTION,143);
-  SubMenu4.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU25),storage.Lang_Locale),"╃",nullptr,ENM_ACTION,144);
+  SubMenu4.AddItem([]() {ToggleValue("Clear",false);},nullptr,Helpers::translated_word(FL_(NXT_SUBMENU23),storage.Lang_Locale),"△",nullptr,ENM_ACTION);
   SubMenu4.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU26),storage.Lang_Locale),"┮",nullptr,ENM_ACTION,145);
   SubMenu4.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU27),storage.Lang_Locale),"▪",nullptr,ENM_ACTION,146);
+  SubMenu4.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU25),storage.Lang_Locale),"╃",nullptr,ENM_ACTION,144);
+  SubMenu4.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU24),storage.Lang_Locale),"▴",nullptr,ENM_ACTION,143); // System Info
 }
 
 
-// Helper function
+// Helper functions
 double map(double x, double in_min, double in_max, int out_min, int out_max) {
   if ((in_max - in_min)==0)
     return 0;
   return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
+
+void syncESP2RTC(uint32_t _second, uint32_t _minute, uint32_t _hour, uint32_t _day, uint32_t _month, uint32_t _year) {
+  Debug.print(DBG_INFO,"[TIME] ESP/NTP -> RTC");
+
+  myNex.writeNum(F("rtc5"),_second);
+  myNex.writeNum(F("rtc4"),_minute);
+  myNex.writeNum(F("rtc3"),_hour);
+  myNex.writeNum(F("rtc2"),_day);
+  myNex.writeNum(F("rtc1"),_month);
+  myNex.writeNum(F("rtc0"),_year);
+}
+
+void syncRTC2ESP() {
+  Debug.print(DBG_INFO,"[TIME] RTC Time -> ESP");
+
+  setTime(
+    (int)myNex.readNumber(F("rtc3")),
+    (int)myNex.readNumber(F("rtc4")),
+    (int)myNex.readNumber(F("rtc5")),
+    (int)myNex.readNumber(F("rtc2")),
+    (int)myNex.readNumber(F("rtc1")),
+    (int)myNex.readNumber(F("rtc0"))
+  );
+}
+

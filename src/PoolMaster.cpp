@@ -27,8 +27,9 @@ void SetPhPID(bool);
 void SetOrpPID(bool);
 void mqttErrorPublish(const char*);
 void PublishSettings(void);
-void SetFullyLoaded(void);
-void SetNTPReady(bool);
+
+//void SetFullyLoaded(void);
+//void SetNTPReady(bool);
 void stack_mon(UBaseType_t&);
 #ifdef SMTP
 void smtpCallback(SMTP_Status);
@@ -39,6 +40,7 @@ void Send_Email(void);
 void PoolMaster(void *pvParameters)
 {
   bool DoneForTheDay = false;                     // Reset actions done once per day
+  bool NTPCheked = false;                         // If disconnected attemps to connect NTP every 10 minutes
   bool d_calc = false;                            // Filtration duration computed
 
   static UBaseType_t hwm=0;                       // free stack size
@@ -126,18 +128,38 @@ void PoolMaster(void *pvParameters)
         // Sync with NTP everyday at midnight
         if (readLocalTime()) {
           setTime(timeinfo.tm_hour,timeinfo.tm_min,timeinfo.tm_sec,timeinfo.tm_mday,timeinfo.tm_mon+1,timeinfo.tm_year-100);
+          syncESP2RTC(second(),minute(),hour(),day(),month(),year()); // Send to Nextion RTC
           Debug.print(DBG_INFO,"From NTP time %d/%02d/%02d %02d:%02d:%02d",year(),month(),day(),hour(),minute(),second());
-          SetNTPReady(true);
+          PoolMaster_NTPReady = true;
         } else {
-          SetNTPReady(false);
+          syncRTC2ESP();  // If NTP not available, get from Nextion RTC
+          Debug.print(DBG_INFO,"From RTC time %d/%02d/%02d %02d:%02d:%02d",year(),month(),day(),hour(),minute(),second());
+          PoolMaster_NTPReady = false;
         }
 
       // Security: if WiFi disconnected in spite of system auto-reconnect, try to restart once a day
       //if(WiFi.status() != WL_CONNECTED) esp_restart(); // Commented out, if not connection hour is possibly 0 (midnight at bootup causing infinite reboot)
     }
-    else if(hour() == 1)
+    else if((hour() == 1) && DoneForTheDay)
     {
         DoneForTheDay = false;
+    }
+
+    // If NTP is not in synch, try to synch every 10 minutes
+    if(!PoolMaster_NTPReady && (minute()%10 == 0) && !NTPCheked) {
+      // NTP is disconnected, attemps to reconnect (if WIFI is up)
+      if (PoolMaster_WifiReady && readLocalTime()) {
+        setTime(timeinfo.tm_hour,timeinfo.tm_min,timeinfo.tm_sec,timeinfo.tm_mday,timeinfo.tm_mon+1,timeinfo.tm_year-100);
+        syncESP2RTC(second(),minute(),hour(),day(),month(),year()); // Send to Nextion RTC
+        Debug.print(DBG_INFO,"From NTP time %d/%02d/%02d %02d:%02d:%02d",year(),month(),day(),hour(),minute(),second());
+        PoolMaster_NTPReady = true;
+      } else {
+        syncRTC2ESP();  // If NTP not available, get from Nextion RTC
+        Debug.print(DBG_INFO,"From RTC time %d/%02d/%02d %02d:%02d:%02d",year(),month(),day(),hour(),minute(),second());
+      }
+      NTPCheked = true;
+    } else if ((minute()%10 == 1) && NTPCheked) {
+      NTPCheked = false;
     }
 
     // Compute next Filtering duration and start/stop hours at 15:00 (to filter during the hotest period of the day)
@@ -272,7 +294,7 @@ void PoolMaster(void *pvParameters)
 
     stack_mon(hwm);
     vTaskDelayUntil(&ticktime,period);
-    SetFullyLoaded();
+    PoolMaster_FullyLoaded = true;
   }
 }
 

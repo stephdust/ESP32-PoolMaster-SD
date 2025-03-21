@@ -46,9 +46,9 @@ int  freeRam(void);
 // Function to set NTP
 extern void StartTime(void);
 extern bool readLocalTime(void);
-extern void SetWifiReady(bool);
-extern void SetNTPReady(bool);
-extern void SetMQTTReady(bool);
+//extern void SetWifiReady(bool);
+//extern void SetNTPReady(bool);
+//extern void SetMQTTReady(bool);
 
 void initTimers() {
   mqttReconnectTimer = xTimerCreate("mqttTimer", pdMS_TO_TICKS(2000), pdFALSE, (void*)0, reinterpret_cast<TimerCallbackFunction_t>(connectToMqtt));
@@ -132,23 +132,28 @@ void WiFiEvent(WiFiEvent_t event){
       xTimerStop(wifiReconnectTimer,0);
       Debug.print(DBG_INFO,"[WiFi] IP address: %s",WiFi.localIP().toString().c_str());
       Debug.print(DBG_INFO,"[WiFi] Hostname: %s",WiFi.getHostname());
-      SetWifiReady(true);
+      PoolMaster_WifiReady = true;
       //Attemps to synchronize to NTP upon Wifi reconnection
       StartTime();
+
       if (readLocalTime()) {
         setTime(timeinfo.tm_hour,timeinfo.tm_min,timeinfo.tm_sec,timeinfo.tm_mday,timeinfo.tm_mon+1,timeinfo.tm_year-100);
+        syncESP2RTC(second(),minute(),hour(),day(),month(),year()); // Send to Nextion RTC
         Debug.print(DBG_INFO,"From NTP time %d/%02d/%02d %02d:%02d:%02d",year(),month(),day(),hour(),minute(),second());
-        SetNTPReady(true);  // Inform Nextion Screen
+        PoolMaster_NTPReady = true;
       } else {
-        SetNTPReady(false);  // Inform Nextion Screen
+        syncRTC2ESP();  // If NTP not available, get from Nextion RTC
+        Debug.print(DBG_INFO,"From RTC time %d/%02d/%02d %02d:%02d:%02d",year(),month(),day(),hour(),minute(),second());
+        PoolMaster_NTPReady = false;
       }
+
       xTimerStart(mqttReconnectTimer,0);
       break;
     case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
       Debug.print(DBG_WARNING,"[WiFi] Connection lost");
       xTimerStop(mqttReconnectTimer,0);
       if(Wifi_Activated) xTimerStart(wifiReconnectTimer,0);
-      SetWifiReady(false);
+      PoolMaster_WifiReady = false;
       break;    
     default:
       break;  
@@ -163,14 +168,14 @@ void onMqttConnect(bool sessionPresent){
   mqttClient.subscribe(PoolTopicAPI,2);
   mqttClient.publish(PoolTopicStatus,1,true,"{\"PoolMaster Online\":1}");
   MQTTConnection = true;
-  SetMQTTReady(true);
+  PoolMaster_MQTTReady = true;
 }
 
 void onMqttDisconnect(AsyncMqttClientDisconnectReason reason){
   Debug.print(DBG_WARNING,"Disconnected from MQTT");
   if(WiFi.isConnected()) xTimerStart(mqttReconnectTimer,0);
   MQTTConnection = false;
-  SetMQTTReady(false);
+  PoolMaster_MQTTReady = false;
 }
 
 void onMqttSubscribe(uint16_t packetId, uint8_t qos){

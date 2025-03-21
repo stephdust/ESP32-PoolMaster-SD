@@ -69,7 +69,7 @@ MAKE_WORD_TRANSLATION(NXT_WIFI_PASSWORD, "Password:", "Mot de Passe:", "", "")
 MAKE_WORD_TRANSLATION(NXT_WIFI_WIFI, "Wifi:", "Wifi:", "", "")
 MAKE_WORD_TRANSLATION(NXT_WIFI_IP, "IP:", "IP:", "", "")
 MAKE_WORD_TRANSLATION(NXT_WIFI_NOTCONNECTED, "Not Connected", "Non Connecté", "", "")
-MAKE_WORD_TRANSLATION(NXT_WIFI_NONETWORKFOUND, "No Network Found", "Aucune Réseau Trouvé", "", "")
+MAKE_WORD_TRANSLATION(NXT_WIFI_NONETWORKFOUND, "Please Wait...", "Recherche...", "", "")
 
 MAKE_WORD_TRANSLATION(NXT_MQTT_TITLE, "MQTT Settings", "Configuration MQTT", "", "")
 MAKE_WORD_TRANSLATION(NXT_MQTT_SERVER, "Server:", "Serveur:", "", "")

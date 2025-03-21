@@ -28,8 +28,6 @@
 #include <ElegantOTA.h>
 #endif
 
-
-
 // General shared data structure
 struct StoreStruct
 {
@@ -49,7 +47,18 @@ struct StoreStruct
   char MQTT_LOGIN[30], MQTT_PASS[30], MQTT_ID[30], MQTT_TOPIC[30];
 } ;
 
+// Global status of the board
+extern bool PoolMaster_BoardReady;      // Is Board Up
+extern bool PoolMaster_WifiReady;      // Is Wifi Up
+extern bool PoolMaster_MQTTReady;      // Is MQTT Connected
+extern bool PoolMaster_NTPReady;      // Is NTP Connected
+extern bool PoolMaster_FullyLoaded;      // At startup gives time for everything to start before exiting Nextion's splash screen
+
 extern StoreStruct storage;
+
+// For NTP Synch
+extern void syncESP2RTC(uint32_t , uint32_t , uint32_t , uint32_t , uint32_t , uint32_t );
+extern void syncRTC2ESP(void);
 
 //Queue object to store incoming JSON commands (up to 10)
 #define QUEUE_ITEMS_NBR 10
