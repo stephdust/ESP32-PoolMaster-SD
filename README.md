@@ -31,9 +31,10 @@ Tank-levels are estimated based on the running-time and flow-rate of each pump. 
 
 ### Automation
  - Defined time-slots and water temperature are used to start/stop the filtration pump for a daily given amount of time (a relay starts/stops the filtration pump)
+ - With CR1220 battery cell, the system includes a RTC (Real Time Clock) which keeps date/time accurate even when powered off (even without internet connection)
  - Winter mode to starts the filtration if temperature reaches -2°C until it rises back above +2°C
  - 2 spare relay outputs for controlling external equipment (heating, lighting, etc.)
-
+ - 
 ![Ecosystem](https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/PoolMaster%20Ecosystem.png)
 
 ##  Project Details
