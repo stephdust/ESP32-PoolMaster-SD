@@ -1114,14 +1114,14 @@ void InitMenu()
   // Sub Menus
   SubMenu1.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU1),storage.Lang_Locale),"┖",nullptr,ENM_ACTION,1,19);   // Filtration Options
   SubMenu1.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU2),storage.Lang_Locale),"▫",nullptr,ENM_ACTION,1,22);   // PSI  Options
-  SubMenu1.AddItem([]() {ToggleValue("Winter",storage.WinterMode);},nullptr,Helpers::translated_word(FL_(NXT_SUBMENU4),storage.Lang_Locale),"┡","┢",ENM_BISTABLE, []() {return (storage.WinterMode==1);});
+  SubMenu1.AddItem([]() {ToggleValue("Winter",storage.WinterMode);},nullptr,Helpers::translated_word(FL_(NXT_SUBMENU3),storage.Lang_Locale),"┡","┢",ENM_BISTABLE, []() {return (storage.WinterMode==1);});
   
   SubMenu2.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU8),storage.Lang_Locale),"▦",nullptr,ENM_ACTION,121);   // Calibrate Probes
   SubMenu2.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU9),storage.Lang_Locale),"╆",nullptr,ENM_ACTION,1,17);  // pH Regulation
   SubMenu2.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU10),storage.Lang_Locale),"╇",nullptr,ENM_ACTION,1,18); // Orp Regulation
   SubMenu2.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU11),storage.Lang_Locale),"▓",nullptr,ENM_ACTION,1,24); // Tank Status
   SubMenu2.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU12),storage.Lang_Locale),"▭",nullptr,ENM_ACTION,1,23);// SWG Options
-  SubMenu2.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU3),storage.Lang_Locale),"▮",nullptr,ENM_ACTION,1,21); // Heat Options
+  SubMenu2.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU13),storage.Lang_Locale),"▮",nullptr,ENM_ACTION,1,21); // Heat Options
 
   SubMenu3.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU17),storage.Lang_Locale),"╂",nullptr,ENM_ACTION,1,25); // Control Relays
 
