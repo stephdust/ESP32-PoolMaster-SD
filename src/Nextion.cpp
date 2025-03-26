@@ -43,6 +43,8 @@ void WriteSwitches()
   switches_bitmap |= (PhPump.UpTimeError & 1)       << 22;     //4 194 304
   switches_bitmap |= (ChlPump.UpTimeError & 1)      << 21;     //2 097 152
 //  switches_bitmap |= (PhPump.IsRunning() & 1)       << 20;   //1 048 576
+  switches_bitmap |= (PhPID.GetMode() & 1)          << 13;     //8192
+  switches_bitmap |= (OrpPID.GetMode() & 1)         << 12;     //4096
   switches_bitmap |= (PhPump.IsRunning() & 1)       << 11;     //2048
   switches_bitmap |= (ChlPump.IsRunning() & 1)      << 10;     //1024
   switches_bitmap |= (storage.AutoMode & 1)         << 9;      //512
@@ -232,6 +234,8 @@ void UpdateTFT(void *pvParameters)
       {
         // Translations for page
         if(myNex.hasPageChanged()) {
+          myNex.Deactivate_Sleep(); // Deactivate Sleep until next page change
+
           myNex.writeStr(PSTR("tTitleCalib.txt"),Helpers::translated_word(FL_(NXT_CALIB_TITLE),storage.Lang_Locale));
           myNex.writeStr(PSTR("tReference.txt"),Helpers::translated_word(FL_(NXT_CALIB_REFERENCE),storage.Lang_Locale));
           myNex.writeStr(PSTR("tMeasured.txt"),Helpers::translated_word(FL_(NXT_CALIB_MEASURED),storage.Lang_Locale));
@@ -247,7 +251,7 @@ void UpdateTFT(void *pvParameters)
         myNex.writeStr(F(GLOBAL".vapH.txt"),temp);
         snprintf_P(temp,sizeof(temp),PSTR("%3.0f"),storage.OrpValue);
         myNex.writeStr(F(GLOBAL".vaOrp.txt"),temp);
-      }
+      } 
 
       if(myNex.currentPageId == 5)      //Keypad & Keyboard
       {
@@ -352,43 +356,43 @@ void UpdateTFT(void *pvParameters)
         }           
       }
 
-      if(myNex.currentPageId == 14)     //Page Home Minimalist
-      {
+      //if(myNex.currentPageId == 14)     //Page Home Minimalist always refresh
+      //{
         // Date and Time
         sprintf(temp, PSTR("%02d/%02d/%04d %02d:%02d:%02d"), day(), month(), year(), hour(), minute(), second());
-        myNex.writeStr(F("tTimeDate.txt"),temp);
+        myNex.writeStr(F("pageHomeSimple.tTimeDate.txt"),temp);
 
         // PSI difference with Threshold
         if (storage.PSIValue <= storage.PSI_MedThreshold) {
-          myNex.writeNum(F("vaPSINiddle.val"), 0);
+          myNex.writeNum(F("pageHomeSimple.vaPSINiddle.val"), 0);
         } else if (storage.PSIValue > storage.PSI_HighThreshold){
-          myNex.writeNum(F("vaPSINiddle.val"), 4);
+          myNex.writeNum(F("pageHomeSimple.vaPSINiddle.val"), 4);
         } else {
-          myNex.writeNum(F("vaPSINiddle.val"), 2);
+          myNex.writeNum(F("pageHomeSimple.vaPSINiddle.val"), 2);
         }
 
         // pH & Orp niddle position
         if(abs(storage.PhValue-storage.Ph_SetPoint) <= 0.1) 
-          myNex.writeNum(F("vaPHNiddle.val"),0);
-        if((storage.PhValue-storage.Ph_SetPoint) > 0.1 && (storage.PhValue-storage.Ph_SetPoint) <= 0.2)  
-          myNex.writeNum(F("vaPHNiddle.val"),1);
-        if((storage.PhValue-storage.Ph_SetPoint) < -0.1 && (storage.PhValue-storage.Ph_SetPoint) >= -0.2)  
-          myNex.writeNum(F("vaPHNiddle.val"),-1);
-        if((storage.PhValue-storage.Ph_SetPoint) > 0.2)  
-          myNex.writeNum(F("vaPHNiddle.val"),2);
-        if((storage.PhValue-storage.Ph_SetPoint) < -0.2)  
-          myNex.writeNum(F("vaPHNiddle.val"),-2);
+          myNex.writeNum(F("pageHomeSimple.vaPHNiddle.val"),0);
+        if((storage.PhValue-storage.Ph_SetPoint) > 0.1 && (storage.PhValue-storage.Ph_SetPoint) <= 0.3)  
+          myNex.writeNum(F("pageHomeSimple.vaPHNiddle.val"),1);
+        if((storage.PhValue-storage.Ph_SetPoint) < -0.1 && (storage.PhValue-storage.Ph_SetPoint) >= -0.3)  
+          myNex.writeNum(F("pageHomeSimple.vaPHNiddle.val"),-1);
+        if((storage.PhValue-storage.Ph_SetPoint) > 0.3)  
+          myNex.writeNum(F("pageHomeSimple.vaPHNiddle.val"),2);
+        if((storage.PhValue-storage.Ph_SetPoint) < -0.3)  
+          myNex.writeNum(F("pageHomeSimple.vaPHNiddle.val"),-2);
 
-        if(abs(storage.OrpValue-storage.Orp_SetPoint) <= 20.) 
-          myNex.writeNum(F("vaOrpNiddle.val"),0);
-        if((storage.OrpValue-storage.Orp_SetPoint) > 20. && (storage.OrpValue-storage.Orp_SetPoint) <= 40.)  
-          myNex.writeNum(F("vaOrpNiddle.val"),1);
-        if((storage.OrpValue-storage.Orp_SetPoint) < -20. && (storage.OrpValue-storage.Orp_SetPoint) >= -40.)  
-          myNex.writeNum(F("vaOrpNiddle.val"),-1);
-        if((storage.OrpValue-storage.Orp_SetPoint) > 40.)  
-          myNex.writeNum(F("vaOrpNiddle.val"),2);    
-        if((storage.OrpValue-storage.Orp_SetPoint) < -40.)  
-          myNex.writeNum(F("vaOrpNiddle.val"),-2); 
+        if(abs(storage.OrpValue-storage.Orp_SetPoint) <= 70.) 
+          myNex.writeNum(F("pageHomeSimple.vaOrpNiddle.val"),0);
+        if((storage.OrpValue-storage.Orp_SetPoint) > 70. && (storage.OrpValue-storage.Orp_SetPoint) <= 200.)  
+          myNex.writeNum(F("pageHomeSimple.vaOrpNiddle.val"),1);
+        if((storage.OrpValue-storage.Orp_SetPoint) < -70. && (storage.OrpValue-storage.Orp_SetPoint) >= -200.)  
+          myNex.writeNum(F("pageHomeSimple.vaOrpNiddle.val"),-1);
+        if((storage.OrpValue-storage.Orp_SetPoint) > 200.)  
+          myNex.writeNum(F("pageHomeSimple.vaOrpNiddle.val"),2);    
+        if((storage.OrpValue-storage.Orp_SetPoint) < -200.)  
+          myNex.writeNum(F("pageHomeSimple.vaOrpNiddle.val"),-2); 
 
         // pH & Orp Values
         snprintf_P(temp,sizeof(temp),PSTR("%4.2f"),storage.PhValue);
@@ -398,8 +402,8 @@ void UpdateTFT(void *pvParameters)
   
         // Water Temperature
         snprintf_P(temp,sizeof(temp),PSTR("%4.1f°C"),storage.WaterTemp);
-        myNex.writeStr(F("tTemp.txt"),temp);
-      }
+        myNex.writeStr(F("pageHomeSimple.tTemp.txt"),temp);
+      //}
 
       if(myNex.currentPageId == 15)     //Page Language Selection
       {
@@ -504,7 +508,7 @@ void UpdateTFT(void *pvParameters)
       if(myNex.currentPageId == 19)     // Filtration Control
       {
         if(myNex.hasPageChanged()) {
-          myNex.writeStr(PSTR("tTitle.txt"),Helpers::translated_word(FL_(NXT_MODE_PUMP_TITLE),storage.Lang_Locale));
+          myNex.writeStr(PSTR("tTitle.txt"),Helpers::translated_word(FL_(NXT_SUBMENU1),storage.Lang_Locale));
           myNex.writeStr(PSTR("tItem_0.txt"),Helpers::translated_word(FL_(NXT_MODE_PUMP),storage.Lang_Locale));
           myNex.writeStr(PSTR("tIcon_0.txt"),"╛");
           myNex.writeStr(PSTR("vis tValue_0,1"));
@@ -521,7 +525,7 @@ void UpdateTFT(void *pvParameters)
         
 
         snprintf_P(temp,sizeof(temp),PSTR("%02d-%02dh"),storage.FiltrationStart,storage.FiltrationStop);
-        myNex.writeStr(F("tValue_0.txt"),temp);
+        myNex.writeStr(F("btAUTO_0.txt"),temp);
 
         if (myNex.readNumber(F("vaUpdAuth.val"))==1) {
           //Update Button when authorized
@@ -678,7 +682,7 @@ void UpdateTFT(void *pvParameters)
           myNex.writeNum(F("btOFF_2.val"),!RELAYR1.IsActive());
         }
       }
-      // vaControl configuration
+      // vaControl Main Configuration
       // Menu Type
       // -1: Hide Control
       //  0: SLIDER with value indication
@@ -686,12 +690,11 @@ void UpdateTFT(void *pvParameters)
       //     B: Minimum slider value
       //     C: Maximum slider value
       //  1: ON/OFF without value indication
-      //     X: Custom Command index as in "easyNexReadCustomCommand" (values are OFF=0, AUTO=1, ON=2)
+      //     X: Custom Command index as in "easyNexReadCustomCommand" (values returned are OFF=0, ON=1, AUTO=2)
       //  2: ON/AUTO:OFF without value indication
-      //     X: Custom Command index as in "easyNexReadCustomCommand" (values are OFF=0, AUTO=1, ON=2)
+      //     X: Custom Command index as in "easyNexReadCustomCommand" (values returnedare OFF=0, ON=1, AUTO=2)
       //  3: GAUGE with value indication
       //     A: <unused>
-      
       if(myNex.currentPageId == 20)     // Empty Control Overlay page (to be initialized)
       {
         if(myNex.hasPageChanged()) {
@@ -785,239 +788,13 @@ void UpdateTFT(void *pvParameters)
       Debug.print(DBG_ERROR,"Error delaying Nextion task. Possibly took too long to execute.");
   } 
 }
+/*******************************************************************
+ * ******************** END OF TASK LOOP ***************************
+ *******************************************************************/
 
-// Function to send standard commands to PoolServer
-// either toggle or force set a value
-void ToggleValue(const char* _server_command, int _current_state)
-{
-  char Cmd[100];
-  _current_state = (_current_state)? false:true;
-  sprintf(Cmd,"{\"%s\":%d}",_server_command,_current_state); // Build JSON Command
-  xQueueSendToBack(queueIn,&Cmd,0);
-  LastAction = millis();
-}
 
-void SetValue(const char* _server_command, int _force_state, int _state_table = -1)
-{
-  char Cmd[100];
-  if(_state_table == -1) {
-    sprintf(Cmd,"{\"%s\":%d}",_server_command,_force_state); // Build JSON Command
-  } else {
-    sprintf(Cmd,"{\"%s\":[%d,%d]}",_server_command,_state_table,_force_state); // Build JSON Command
-  }
-  xQueueSendToBack(queueIn,&Cmd,0);
-  LastAction = millis();
-}
-
-//Command 3 - Request HELP Strings
-//printh 23 02 54 03
-void trigger3()
-{
-  uint32_t help_index = myNex.readNumber(F("pageHelpPopup.vaHelpIndex.val"));
-
-  switch(help_index) {
-    case 1: // Calibration Help
-      myNex.writeStr(PSTR("tTitle.txt"),Helpers::translated_word(FL_(NXT_HELP_1_TITLE),storage.Lang_Locale));
-      myNex.writeStr(PSTR("tContent.txt"),Helpers::translated_word(FL_(NXT_HELP_1_CONTENT),storage.Lang_Locale));
-      break;
-  }
-}
-/*
-//Page 3 has finished loading - Calib & Electrolyse
-//printh 23 02 54 04
-void trigger4()
-{
-  CurrentPage = 4;
-  LastAction = millis();
-}
-*/
-//MODE button was toggled
-//printh 23 02 54 05
-void trigger5()
-{
-  ToggleValue("Mode",storage.AutoMode);
- /* char Cmd[100] = "{\"Mode\":1}";
-  if(storage.AutoMode) Cmd[8] = '0';
-  xQueueSendToBack(queueIn,&Cmd,0);
-  LastAction = millis();*/
-}
-
-//FILT button was toggled
-//printh 23 02 54 06
-void trigger6()
-{
-  char Cmd[100] = "{\"FiltPump\":1}";
-  if(FiltrationPump.IsRunning()) Cmd[12] = '0';
-  //else TFT_Filt = true;
-  xQueueSendToBack(queueIn,&Cmd,0);
-  LastAction = millis();
-}
-
-//Robot button was toggled
-//printh 23 02 54 07
-void trigger7()
-{
-  char Cmd[100] = "{\"RobotPump\":1}";
-  if(RobotPump.IsRunning()) Cmd[13] = '0';
-  //else TFT_Robot = true;
-  xQueueSendToBack(queueIn,&Cmd,0);
-  LastAction = millis();
-}
-
-//Relay 0 button was toggled
-//printh 23 02 54 08
-void trigger8()
-{
-  char Cmd[100] = "{\"Relay\":[0,1]}";
-  if(RELAYR0.IsActive()) Cmd[12] = '0';
-  //else TFT_R0 = true; 
-  xQueueSendToBack(queueIn,&Cmd,0);
-  LastAction = millis();
-}
-
-//Relay 1 button was toggled
-//printh 23 02 54 09
-void trigger9()
-{
-  char Cmd[100] = "{\"Relay\":[1,1]}";
-  if (RELAYR1.IsActive()) Cmd[12] = '0';
-  //else TFT_R1 = true;
-  xQueueSendToBack(queueIn, &Cmd, 0);
-  LastAction = millis();
-}
-
-//Winter button was toggled
-//printh 23 02 54 0A
-void trigger10()
-{
-  char Cmd[100] = "{\"Winter\":1}";
-  if(storage.WinterMode) Cmd[10] = '0';
-  //else TFT_Winter = true;
-  xQueueSendToBack(queueIn,&Cmd,0);
-  LastAction = millis();
-}
-
-//Direct command sending from Nextion
-//Used when command line is directly formatted by Nextion (NewTank, Calib, Electrolyser)
-//printh 23 02 54 0B
-void trigger11()
-{
-  char Cmd[100] = "";
-  strcpy(Cmd,myNex.readStr(F(GLOBAL".vaCommand.txt")).c_str());
-  xQueueSendToBack(queueIn,&Cmd,0);
-  Debug.print(DBG_INFO,"Nextion direct command: %s",Cmd);
-  LastAction = millis();
-}
-
-//Clear Errors button pressed
-//printh 23 02 54 0C
-void trigger12()
-{
-  char Cmd[100] = "{\"Clear\":1}";
-  xQueueSendToBack(queueIn,&Cmd,0);
-  LastAction = millis();
-}
-
-//pH PID button pressed
-//printh 23 02 54 0D
-void trigger13()
-{
-  char Cmd[100] = "{\"PhPID\":1}";
-  if(PhPID.GetMode() == 1) Cmd[9] = '0';
-  xQueueSendToBack(queueIn,&Cmd,0);
-  LastAction = millis();
-}
-
-//Orp PID button pressed
-//printh 23 02 54 0E
-void trigger14()
-{
-  char Cmd[100] = "{\"OrpPID\":1}";
-  if(OrpPID.GetMode() == 1) Cmd[10] = '0';
-  xQueueSendToBack(queueIn,&Cmd,0);
-  LastAction = millis();
-}
-
-// Electrolyse option switched
-// printh 23 02 54 0F
-void trigger15()
-{
-  char Cmd[100] = "{\"Electrolyse\":1}";
-  if (SWG.IsRunning())  Cmd[15] = '0';
-  //else TFT_Electro = true;
-  xQueueSendToBack(queueIn, &Cmd, 0);
-  LastAction = millis();
-}
-
-//  pH Operation Mode option switched (normal or PID)
-// printh 23 02 54 10
-void trigger16()
-{
-  char Cmd[100] = "{\"PhAutoMode\":1}";
-  if (storage.pHAutoMode) Cmd[14] = '0';
-  //else TFT_pHAutoMode = true;
-  xQueueSendToBack(queueIn, &Cmd, 0);
-  LastAction = millis();
-}
-
-//  Orp Operating Mode option switched (normal or PID)
-// printh 23 02 54 11
-void trigger17()
-{
-  char Cmd[100] = "{\"OrpAutoMode\":1}";
-  if (storage.OrpAutoMode) Cmd[15] = '0';
-  //else TFT_OrpAutoMode = true;
-  xQueueSendToBack(queueIn, &Cmd, 0);
-  LastAction = millis();
-}
-
-//  Electrolyse Operating Mode option switched (Electrolyser or not)
-// printh 23 02 54 12
-void trigger18()
-{
-  char Cmd[100] = "{\"ElectrolyseMode\":1}";
-  if (storage.ElectrolyseMode) Cmd[19] = '0';
-  xQueueSendToBack(queueIn, &Cmd, 0);
-  LastAction = millis();
-}
-
-//  Turn On and Off the pH Pump
-// printh 23 02 54 13
-void trigger19()
-{
-  char Cmd[100] = "{\"PhPump\":1}";
-  if (PhPump.IsRunning()) Cmd[10] = '0';
-  xQueueSendToBack(queueIn, &Cmd, 0);
-  LastAction = millis();
-}
-
-//  Turn On and Off the Chlorine Pump
-// printh 23 02 54 14
-void trigger20()
-{
-  char Cmd[100] = "{\"ChlPump\":1}";
-  if (ChlPump.IsRunning()) Cmd[11] = '0';
-  xQueueSendToBack(queueIn, &Cmd, 0);
-  LastAction = millis();
-}
-
-/**************** Menu Triggers and Drawing *********************
+/**************** CUSTOME COMMANDS *********************
  ***************************************************************/
-// Main Menu Item triggered via 
-// printh 23 02 4D 00 xx (_menu_item)
-void triggermainmenu(uint8_t _menu_item)
-{
-  //MainMenu.MenuDisplay(false);  // Redraw main menu selection (useless as nothing new will be drawn, select/unselect handled by Nextion)
-  MainMenu.Select(_menu_item);
-}
-
-// Sub Menu Item triggered via
-// printh 23 02 4D 01 xx (_menu_item)
-void triggersubmenu(uint8_t _menu_item)
-{
-  MainMenu.GetItemRef()->submenu->Select(_menu_item);
-}
-
 // Custom Command used for quick actions triggered via
 // printh 23 02 XX YY ZZ (XX=CmdGroup) then
 //    for Switch change, YY=SwitchIndex ZZ=Value
@@ -1026,17 +803,32 @@ void triggersubmenu(uint8_t _menu_item)
 void easyNexReadCustomCommand()
 {
   int value;
-  
+  LastAction = millis();
   switch(myNex.cmdGroup)
   {
+    case 'C': // Or <case 0x43:>  If 'C' matches Direct Command 
+    {
+      // from Nextion printh 23 01 43
+      char Cmd[100] = "";
+      strcpy(Cmd,myNex.readStr(F(GLOBAL".vaCommand.txt")).c_str());
+      xQueueSendToBack(queueIn,&Cmd,0);
+      Debug.print(DBG_INFO,"Nextion direct command: %s",Cmd);
+      break;
+    }
+
     case 'S': // Or <case 0x53:>  If 'S' matches Update Switches 
+    {
       // from Nextion printh 23 03 53 00 00
+      //                               |  |
+      //                               |  | ---> Value
+      //                               |----> Command Index
       // read the next byte that determines the position on the table
       int SwitchIndex;
       SwitchIndex = myNex.readByte();
       // read the next byte that keeps the value for the position
       value = myNex.readByte();
-      Debug.print(DBG_INFO,"Command Sent 53 %d %d",SwitchIndex,value);
+
+      Debug.print(DBG_VERBOSE,"Comma Sent 53 %d %d",SwitchIndex,value);
       switch(SwitchIndex)
       {
         case 0x00:  // Filtration Mode
@@ -1068,21 +860,21 @@ void easyNexReadCustomCommand()
           SetValue("Lang_Locale",value);
         break;
         case 0x11:  // pH Pump
-          if(value==1) {
+          if(value==BUTTON_AUTO) {
             SetValue("PhAutoMode",1);
           } else {
             SetValue("PhPump",value);
           }
         break;
         case 0x12:  // Chl Pump
-          if(value==1) {
+          if(value==BUTTON_AUTO) {
             SetValue("OrpAutoMode",1);
           } else {
             SetValue("ChlPump",value);
           }
         break;
         case 0x13:  // Pump Menu Change
-          if(value==1) {
+          if(value==BUTTON_AUTO) {
             SetValue("Mode",1);
           } else {
             SetValue("FiltPump",value);
@@ -1096,7 +888,7 @@ void easyNexReadCustomCommand()
           }
         break;
         case 0x15:  // SWG Regulation
-          if(value==1) {
+          if(value==BUTTON_AUTO) {
             SetValue("ElectrolyseMode",1);
           } else {
             SetValue("Electrolyse",value);
@@ -1122,13 +914,17 @@ void easyNexReadCustomCommand()
         break;
       }
       break;
+    }
 
-      case 'G': // Or <case 0x47:> If 'G' send graph data
+    case 'G': // Or <case 0x47:> If 'G' send graph data
+    {
+      // from Nextion printh 23 02 47 XX (graph reference)
       // Read graph reference
       int graphIndex;
       graphIndex = myNex.readByte();
       char buf[NUMBER_OF_HISTORY_SAMPLES];
-      switch(graphIndex){
+      switch(graphIndex)
+      {
         case 0x00:  // pH
         Debug.print(DBG_INFO,"pH Graph Requested");
 
@@ -1165,7 +961,7 @@ void easyNexReadCustomCommand()
           myNex.writeStr(F("tMin.txt"),temp);
           snprintf_P(temp,sizeof(temp),PSTR("%d"),(GRAPH_ORP_BASELINE+100));
           myNex.writeStr(F("tMed.txt"),temp);
-  
+
           // Initialize table
           for(int i=0;i<NUMBER_OF_HISTORY_SAMPLES;i++)
           {
@@ -1184,12 +980,29 @@ void easyNexReadCustomCommand()
           // Not implemented yet
         break;
       }
-  }  
+    } // And of Case
+  }  // End of Switch
+} // End of function
+
+/********************** MENU TRIGGERS  *********************
+ ***************************************************************/
+// Main Menu Item triggered via 
+// printh 23 02 4D 00 xx (_menu_item)
+void triggermainmenu(uint8_t _menu_item)
+{
+  //MainMenu.MenuDisplay(false);  // Redraw main menu selection (useless as nothing new will be drawn, select/unselect handled by Nextion)
+  MainMenu.Select(_menu_item);
 }
 
+// Sub Menu Item triggered via
+// printh 23 02 4D 01 xx (_menu_item)
+void triggersubmenu(uint8_t _menu_item)
+{
+  MainMenu.GetItemRef()->submenu->Select(_menu_item);
+}
 
-/********************* Prepare and send formated **********************
- **********************data to Nextion tables ******************/
+/********************* WIFI Scanning **********************
+ **********************************************************/
 // Functions used to scan and print WIfi Networks
 void ScanWiFiNetworks(){
   // WiFi.scanNetworks will return the number of networks found.
@@ -1236,7 +1049,8 @@ void printScannedNetworks(uint16_t networksFound) {
   reconnectToWiFi();
 }
 
-// Send language list to Nextion page
+/***************** LANGUAGE Scanning **********************
+ **********************************************************/
 void printLanguages()
 {
   for (int i = 0; i < NUM_LANGUAGES; ++i) {
@@ -1247,11 +1061,11 @@ void printLanguages()
   }
 }
 
-/********************* Build Menu Design ************************
+/************************ MENU DESIGN **************************
  ***************************************************************/
 void InitMenu()
 {
-  // ENM_ACTION CONFIG
+  // ENM_ACTION CONFIG (on pageMenu)
   // 1: page pageOVControls + control page index (as described in page "pageOVControls.vaOverlayIndex.val")
   // 121: Calib
   // 141: Lannguage
@@ -1275,29 +1089,29 @@ void InitMenu()
   MainMenu.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_MENU_LEFT5),storage.Lang_Locale),nullptr,nullptr,ENM_NONE);
   
   // Sub Menus
-  SubMenu1.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU1),storage.Lang_Locale),"┖",nullptr,ENM_ACTION,1,19);   // Filtering Options
+  SubMenu1.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU1),storage.Lang_Locale),"┖",nullptr,ENM_ACTION,1,19);   // Filtration Options
   SubMenu1.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU2),storage.Lang_Locale),"▫",nullptr,ENM_ACTION,1,22);   // PSI  Options
-  SubMenu1.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU3),storage.Lang_Locale),"▮",nullptr,ENM_ACTION,1,21);   // Heat Options
-  SubMenu1.AddItem([]() {ToggleValue("Winter",storage.WinterMode);},nullptr,Helpers::translated_word(FL_(NXT_SUBMENU4),storage.Lang_Locale),"▛","▛",ENM_BISTABLE, []() {return (storage.WinterMode==1);});
+  SubMenu1.AddItem([]() {ToggleValue("Winter",storage.WinterMode);},nullptr,Helpers::translated_word(FL_(NXT_SUBMENU4),storage.Lang_Locale),"┡","┢",ENM_BISTABLE, []() {return (storage.WinterMode==1);});
   
   SubMenu2.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU8),storage.Lang_Locale),"▦",nullptr,ENM_ACTION,121);   // Calibrate Probes
   SubMenu2.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU9),storage.Lang_Locale),"╆",nullptr,ENM_ACTION,1,17);  // pH Regulation
-  SubMenu2.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU10),storage.Lang_Locale),"╇",nullptr,ENM_ACTION,1,18);  // Orp Regulation
-  SubMenu2.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU11),storage.Lang_Locale),"▓",nullptr,ENM_ACTION,1,24);    // Tank Status
-  SubMenu2.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU12),storage.Lang_Locale),"▭",nullptr,ENM_ACTION,1,23);   // SWG Options
+  SubMenu2.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU10),storage.Lang_Locale),"╇",nullptr,ENM_ACTION,1,18); // Orp Regulation
+  SubMenu2.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU11),storage.Lang_Locale),"▓",nullptr,ENM_ACTION,1,24); // Tank Status
+  SubMenu2.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU12),storage.Lang_Locale),"▭",nullptr,ENM_ACTION,1,23);// SWG Options
+  SubMenu2.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU3),storage.Lang_Locale),"▮",nullptr,ENM_ACTION,1,21); // Heat Options
 
-  SubMenu3.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU17),storage.Lang_Locale),"╂",nullptr,ENM_ACTION,1,25);   // Control Relays
+  SubMenu3.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU17),storage.Lang_Locale),"╂",nullptr,ENM_ACTION,1,25); // Control Relays
 
-  SubMenu4.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU22),storage.Lang_Locale),"╴",nullptr,ENM_ACTION,141);
-  SubMenu4.AddItem([]() {ToggleValue("Clear",false);},nullptr,Helpers::translated_word(FL_(NXT_SUBMENU23),storage.Lang_Locale),"△",nullptr,ENM_ACTION);
-  SubMenu4.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU26),storage.Lang_Locale),"┮",nullptr,ENM_ACTION,145);
-  SubMenu4.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU27),storage.Lang_Locale),"▪",nullptr,ENM_ACTION,146);
-  SubMenu4.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU25),storage.Lang_Locale),"╃",nullptr,ENM_ACTION,144);
+  SubMenu4.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU22),storage.Lang_Locale),"╴",nullptr,ENM_ACTION,141); // Language
+  SubMenu4.AddItem([]() {ToggleValue("Clear",false);},nullptr,Helpers::translated_word(FL_(NXT_SUBMENU23),storage.Lang_Locale),"△","△",ENM_BISTABLE, []() {return (false);}); // Ackowledge Alerts
+  SubMenu4.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU26),storage.Lang_Locale),"┮",nullptr,ENM_ACTION,145); // Wifi Settings
+  SubMenu4.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU27),storage.Lang_Locale),"▪",nullptr,ENM_ACTION,146); // MQTT Settings
+  SubMenu4.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU25),storage.Lang_Locale),"╃",nullptr,ENM_ACTION,144); // Set Date/Time
   SubMenu4.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU24),storage.Lang_Locale),"▴",nullptr,ENM_ACTION,143); // System Info
 }
 
-
-// Helper functions
+/********************* HELPER Functions **********************
+ *************************************************************/
 double map(double x, double in_min, double in_max, int out_min, int out_max) {
   if ((in_max - in_min)==0)
     return 0;
@@ -1326,5 +1140,31 @@ void syncRTC2ESP() {
     (int)myNex.readNumber(F("rtc1")),
     (int)myNex.readNumber(F("rtc0"))
   );
+}
+
+// Function to send standard commands to PoolServer
+// either toggle or force set a value
+void ToggleValue(const char* _server_command, int _current_state)
+{
+  char Cmd[100];
+  _current_state = (_current_state)? false:true;
+  sprintf(Cmd,"{\"%s\":%d}",_server_command,_current_state); // Build JSON Command
+  Debug.print(DBG_INFO,"[NEXTION] Sending command to server %s = %d",_server_command,_current_state);
+  xQueueSendToBack(queueIn,&Cmd,0);
+  LastAction = millis();
+}
+
+void SetValue(const char* _server_command, int _force_state, int _state_table)
+{
+  char Cmd[100];
+  if(_state_table == -1) {
+    sprintf(Cmd,"{\"%s\":%d}",_server_command,_force_state); // Build JSON Command
+    Debug.print(DBG_INFO,"[NEXTION] Sending command to server %s = %d",_server_command,_force_state);
+  } else {
+    sprintf(Cmd,"{\"%s\":[%d,%d]}",_server_command,_state_table,_force_state); // Build JSON Command
+    Debug.print(DBG_INFO,"[NEXTION] Sending command to server %s = [%d,%d]",_server_command,_state_table,_force_state);
+  }
+  xQueueSendToBack(queueIn,&Cmd,0);
+  LastAction = millis();
 }
 

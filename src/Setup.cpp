@@ -41,7 +41,10 @@ StoreStruct storage =
   100.0, 100.0, 20.0, 20.0, 1.5, 1.5,
   15, 2,  //ajout
   0, 1, 0,
-  0
+  0,
+  0, // IP
+  1883,
+  "","",MQTTID,POOLTOPIC
 };
 #else
 StoreStruct storage =
@@ -51,12 +54,15 @@ StoreStruct storage =
   13, 8, 21, 8, 22, 20,
   2700, 2700, 30000,
   1800000, 1800000, 0, 0,
-  7.3, 720.0, 1.8, 0.7, 10.0, 18.0, 3.0, 3.61078313, -3.88020422, -966.946396, 2526.88809, 1.31, -0.1,
+  7.3, 720.0, 1.8, 0.7, 10.0, 18.0, 3.0, 0.9583, 4.834, 129.2, 384.1, 1.31, -0.1,
   2700000.0, 0.0, 0.0, 18000.0, 0.0, 0.0, 0.0, 0.0, 28.0, 7.3, 720., 1.3,
   25.0, 60.0, 20.0, 20.0, 1.5, 1.5,
   15, 2,  //ajout
   0, 1, 0,
-  0
+  0,
+  0, // IP
+  1883,
+  "","",MQTTID,POOLTOPIC
 };
 #endif
 tm timeinfo;
@@ -553,6 +559,7 @@ void onOTAEnd(bool success) {
 
 bool loadConfig()
 {
+  size_t read_len = 0;
   nvs.begin("PoolMaster",true);
 
   storage.ConfigVersion         = nvs.getUChar("ConfigVersion",0);
@@ -580,10 +587,10 @@ bool loadConfig()
   storage.WaterTempLowThreshold = nvs.getDouble("WaterTempLow",10.);
   storage.WaterTemp_SetPoint    = nvs.getDouble("WaterTempSet",27.);
   storage.AirTemp               = nvs.getDouble("TempExternal",3.);
-  storage.pHCalibCoeffs0        = nvs.getDouble("pHCalibCoeffs0",-2.49);
-  storage.pHCalibCoeffs1        = nvs.getDouble("pHCalibCoeffs1",6.87);
-  storage.OrpCalibCoeffs0       = nvs.getDouble("OrpCalibCoeffs0",431.03);
-  storage.OrpCalibCoeffs1       = nvs.getDouble("OrpCalibCoeffs1",0);
+  storage.pHCalibCoeffs0        = nvs.getDouble("pHCalibCoeffs0",0.9583);
+  storage.pHCalibCoeffs1        = nvs.getDouble("pHCalibCoeffs1",4.834);
+  storage.OrpCalibCoeffs0       = nvs.getDouble("OrpCalibCoeffs0",129.2);
+  storage.OrpCalibCoeffs1       = nvs.getDouble("OrpCalibCoeffs1",384.1);
   storage.PSICalibCoeffs0       = nvs.getDouble("PSICalibCoeffs0",0.377923399);
   storage.PSICalibCoeffs1       = nvs.getDouble("PSICalibCoeffs1",-0.17634473);
   storage.Ph_Kp                 = nvs.getDouble("Ph_Kp",2000000.);
@@ -604,18 +611,22 @@ bool loadConfig()
   storage.ChlTankVol            = nvs.getDouble("ChlTankVol",20.);
   storage.pHPumpFR              = nvs.getDouble("pHPumpFR",1.5);
   storage.ChlPumpFR             = nvs.getDouble("ChlPumpFR",1.5);
-  storage.SecureElectro         = nvs.getUChar("SecureElectro",15);  //ajout
-  storage.DelayElectro          = nvs.getUChar("DelayElectro",2);  //ajout
-  storage.ElectrolyseMode       = nvs.getBool("ElectrolyseMode",false);  //ajout
-  storage.pHAutoMode            = nvs.getBool("pHAutoMode",false);  //ajout
-  storage.OrpAutoMode           = nvs.getBool("OrpAutoMode",false);  //ajout
-  storage.Lang_Locale           = nvs.getUChar("Lang_Locale",0);  //ajout
-  storage.MQTT_IP               = nvs.getUInt("MQTT_IP",0);  //ajout
-  storage.MQTT_PORT             = nvs.getUInt("MQTT_PORT",1883);  //ajout
-  nvs.getString("MQTT_LOGIN",storage.MQTT_LOGIN,30);  //ajout
-  nvs.getString("MQTT_PASS",storage.MQTT_PASS,30);  //ajout
-  nvs.getString("MQTT_ID",storage.MQTT_ID,30);  //ajout
-  nvs.getString("MQTT_TOPIC",storage.MQTT_TOPIC,30);  //ajout
+  storage.SecureElectro         = nvs.getUChar("SecureElectro",15); 
+  storage.DelayElectro          = nvs.getUChar("DelayElectro",2); 
+  storage.ElectrolyseMode       = nvs.getBool("ElectrolyseMode",false); 
+  storage.pHAutoMode            = nvs.getBool("pHAutoMode",false);
+  storage.OrpAutoMode           = nvs.getBool("OrpAutoMode",false); 
+  storage.Lang_Locale           = nvs.getUChar("Lang_Locale",0);
+  storage.MQTT_IP               = nvs.getUInt("MQTT_IP",0);
+  storage.MQTT_PORT             = nvs.getUInt("MQTT_PORT",1883);
+  nvs.getString("MQTT_LOGIN",storage.MQTT_LOGIN,29); 
+  nvs.getString("MQTT_PASS",storage.MQTT_PASS,29);
+  if(nvs.getString("MQTT_ID",storage.MQTT_ID,29) == 0) {
+    snprintf(storage.MQTT_ID,sizeof(storage.MQTT_ID),"%s",MQTTID);
+  }
+  if(nvs.getString("MQTT_TOPIC",storage.MQTT_TOPIC,29) == 0) {
+    snprintf(storage.MQTT_TOPIC,sizeof(storage.MQTT_TOPIC),"%s",POOLTOPIC);
+  }
   
   nvs.end();
 
@@ -696,18 +707,18 @@ bool saveConfig()
   i += nvs.putDouble("ChlTankVol",storage.ChlTankVol);
   i += nvs.putDouble("pHPumpFR",storage.pHPumpFR);
   i += nvs.putDouble("ChlPumpFR",storage.ChlPumpFR);
-  i += nvs.putUChar("SecureElectro",storage.SecureElectro);  //ajout
-  i += nvs.putUChar("DelayElectro",storage.DelayElectro);  //ajout
-  i += nvs.putBool("ElectrolyseMode",storage.ElectrolyseMode);  //ajout
-  i += nvs.putBool("pHAutoMode",storage.pHAutoMode);  //ajout
-  i += nvs.putBool("OrpAutoMode",storage.OrpAutoMode);  //ajout
-  i += nvs.putBool("Lang_Locale",storage.Lang_Locale);  //ajout
-  i += nvs.putUInt("MQTT_IP",storage.MQTT_IP);  //ajout
-  i += nvs.putUInt("MQTT_PORT",storage.MQTT_PORT);  //ajout
-  i += nvs.putString("MQTT_LOGIN",storage.MQTT_LOGIN);  //ajout
-  i += nvs.putString("MQTT_PASS",storage.MQTT_PASS);  //ajout
-  i += nvs.putString("MQTT_ID",storage.MQTT_ID);  //ajout
-  i += nvs.putString("MQTT_TOPIC",storage.MQTT_TOPIC);  //ajout
+  i += nvs.putUChar("SecureElectro",storage.SecureElectro);
+  i += nvs.putUChar("DelayElectro",storage.DelayElectro);
+  i += nvs.putBool("ElectrolyseMode",storage.ElectrolyseMode);
+  i += nvs.putBool("pHAutoMode",storage.pHAutoMode);
+  i += nvs.putBool("OrpAutoMode",storage.OrpAutoMode);
+  i += nvs.putBool("Lang_Locale",storage.Lang_Locale); 
+  i += nvs.putUInt("MQTT_IP",storage.MQTT_IP); 
+  i += nvs.putUInt("MQTT_PORT",storage.MQTT_PORT); 
+  i += nvs.putString("MQTT_LOGIN",storage.MQTT_LOGIN); 
+  i += nvs.putString("MQTT_PASS",storage.MQTT_PASS); 
+  i += nvs.putString("MQTT_ID",storage.MQTT_ID); 
+  i += nvs.putString("MQTT_TOPIC",storage.MQTT_TOPIC);
   nvs.end();
 
   Debug.print(DBG_INFO,"Bytes saved: %d / %d\n",i,sizeof(storage));

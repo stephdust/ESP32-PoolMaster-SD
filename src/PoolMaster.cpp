@@ -208,8 +208,10 @@ void PoolMaster(void *pvParameters)
   {
     // Filtration pump is not running, check conditions to start
     if ((storage.AutoMode && hour() >= storage.FiltrationStart && hour() < storage.FiltrationStop && !PSIError ) ||
-        (storage.WinterMode && storage.AirTemp < -2.0 && !PSIError))
-      FiltrationPump.Start();
+        (storage.WinterMode && storage.AirTemp < -2.0 && !PSIError)) {
+          FiltrationPump.Start();
+          Debug.print(DBG_INFO,"[LOGIC] Start Filtration Pump %d [%d-%d] - %d - %4.1f°C",storage.AutoMode,storage.FiltrationStart,storage.FiltrationStop,storage.WinterMode,storage.AirTemp);   
+        }
   } else {  //Filtration Pump Running
 
     // Check over and under pressure alarms
@@ -217,6 +219,7 @@ void PoolMaster(void *pvParameters)
         (storage.PSIValue > storage.PSI_HighThreshold))
     {
       PSIError = true;
+      Debug.print(DBG_INFO,"[LOGIC] PSI Changed to Error");
       mqttErrorPublish("{\"PSI Error\":1}");
     }
 
@@ -229,49 +232,57 @@ void PoolMaster(void *pvParameters)
           !cleaning_done)
       {
           RobotPump.Start();
-          Debug.print(DBG_INFO,"Robot Start %d mn after Filtration",0);   
+          Debug.print(DBG_INFO,"[LOGIC] Robot Start %d mn after Filtration",0);   
       }
       if(RobotPump.IsRunning() && storage.AutoMode && ((millis() - RobotPump.LastStartTime) / 1000 / 60) >= ROBOT_DURATION)
       {
           RobotPump.Stop();
           cleaning_done = true;
-          Debug.print(DBG_INFO,"Robot Stop after: %d mn",(int)(millis()-RobotPump.LastStartTime)/1000/60);
+          Debug.print(DBG_INFO,"[LOGIC] Robot Stop after: %d mn",(int)(millis()-RobotPump.LastStartTime)/1000/60);
       }
 
       // pH Regulation tasks
       if (storage.pHAutoMode)
       {
-        if (!PhPID.GetMode() && ((millis() - FiltrationPump.LastStartTime) / 1000 / 60 >= storage.DelayPIDs)) 
-            SetPhPID(true);
+        if ((PhPID.GetMode()==MANUAL) && ((millis() - FiltrationPump.LastStartTime) / 1000 / 60 >= storage.DelayPIDs)) {
+          SetPhPID(true);
+          Debug.print(DBG_INFO,"[LOGIC] Activate pH PID (delay %d)",(millis() - FiltrationPump.LastStartTime) / 1000 / 60 );
+        }
       }
 
       // Orp Regulation tasks
       if (storage.OrpAutoMode)
       {
-        // Standard Orp Injection
-        if (!OrpPID.GetMode() && ((millis() - FiltrationPump.LastStartTime) / 1000 / 60 >= storage.DelayPIDs))
+        if ((OrpPID.GetMode()==MANUAL) && ((millis() - FiltrationPump.LastStartTime) / 1000 / 60 >= storage.DelayPIDs)) {
           SetOrpPID(true);
-
-        // Electyrolyse is activated
-        if (storage.ElectrolyseMode)
-          if (!SWG.IsRunning()) //SWG NOT Running
-            if ((storage.OrpValue <= storage.Orp_SetPoint*0.9) && 
-                (storage.WaterTemp >= (double)storage.SecureElectro) && 
-                (millis() - FiltrationPump.LastStartTime)/ 1000 / 60 >= (unsigned long)storage.DelayElectro)
-              SWG.Start();
-          else  //SWG Running
-            if (storage.OrpValue >= storage.Orp_SetPoint*1.05)
-              SWG.Stop();
-
+          Debug.print(DBG_INFO,"[LOGIC] Activate Orp PID (delay %d)",(millis() - FiltrationPump.LastStartTime) / 1000 / 60 );
+        }
       }
+
+      // Electyrolyse Regulation Tasks
+      if (storage.ElectrolyseMode)
+        if (!SWG.IsRunning()) //SWG NOT Running
+          if ((storage.OrpValue <= storage.Orp_SetPoint*0.9) && 
+              (storage.WaterTemp >= (double)storage.SecureElectro) && 
+              (millis() - FiltrationPump.LastStartTime)/ 1000 / 60 >= (unsigned long)storage.DelayElectro) {
+            SWG.Start();
+            Debug.print(DBG_INFO,"[LOGIC] Start SWG  %3.0f <= %3.0f - (delay %d)",storage.OrpValue,(storage.Orp_SetPoint*0.9),(millis() - FiltrationPump.LastStartTime)/ 1000 / 60);   
+            }
+        else  //SWG Running
+          if (SWG.IsRunning() && (storage.OrpValue > storage.Orp_SetPoint)) {
+            SWG.Stop();
+            Debug.print(DBG_INFO,"[LOGIC] Stop SWG  %3.0f > %3.0f",storage.OrpValue,storage.Orp_SetPoint);   
+          }
     } else {// Winter Mode (nothing to do)
     }
 
     // Conditions to stop filtration pump
-    if (storage.AirTemp > 2.0)   // Do not stop if temp is below +2°C
-      if ((storage.AutoMode && (hour() >= storage.FiltrationStop || hour() < storage.FiltrationStart)) ||
-          (PSIError))
+    // Do not stop in any case if temp is below +2°C (unless PSIError)
+    if (((storage.AutoMode && (hour() >= storage.FiltrationStop || hour() < storage.FiltrationStart))&&(storage.AirTemp > 2.0)) ||
+        (PSIError)) {
         FiltrationPump.Stop();
+        Debug.print(DBG_INFO,"[LOGIC] Stop Filtration Pump %d [%d-%d]",storage.AutoMode,storage.FiltrationStart,storage.FiltrationStop);   
+        }
   } // End of Filtration Pimp IS Running
 
 /* ******************************************* 

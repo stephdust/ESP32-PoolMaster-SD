@@ -226,6 +226,8 @@ void ProcessCommand(void *pvParameters)
           if ((int)command[F("Electrolyse")] == 1)  // activate electrolyse
           {
             // start electrolyse if not below minimum temperature
+            // do not take care of minimum filtering time as it 
+            // was forced on.
             if (storage.WaterTemp >= (double)storage.SecureElectro)
               if (!SWG.Start())
                 Debug.print(DBG_WARNING,"Problem starting SWG");   
@@ -235,9 +237,9 @@ void ProcessCommand(void *pvParameters)
             if (!SWG.Stop())
               Debug.print(DBG_WARNING,"Problem stopping SWG");   
           }
-          // Direct action on Electrolyse will exit the automatic regulation mode
-          storage.AutoMode = 0;
-          saveParam("AutoMode",storage.AutoMode);
+          // Direct action on Electrolyse will exit the automatic Electro Regulation Mode
+          storage.ElectrolyseMode = 0;
+          saveParam("ElectrolyseMode",storage.ElectrolyseMode);
           PublishSettings();
         }
         else if (command.containsKey(F("ElectrolyseMode"))) 

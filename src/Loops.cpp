@@ -540,7 +540,7 @@ void getTemp(void *pvParameters)
     }  else storage.WaterTemp = temp;
     samples_WTemp.add(storage.WaterTemp);
     storage.WaterTemp = samples_WTemp.getAverage(5);
-    Debug.print(DBG_VERBOSE,"DS18B20_W: %6.2f°C",storage.WaterTemp);
+    Debug.print(DBG_VERBOSE,"DS18B20_W: %6.2f C",storage.WaterTemp);
 
     temp = sensors_A.getTempC(DS18B20_A);
     if (temp == NAN || temp == -127) {
@@ -548,7 +548,7 @@ void getTemp(void *pvParameters)
     }  else storage.AirTemp = temp;
     samples_ATemp.add(storage.AirTemp);
     storage.AirTemp = samples_ATemp.getAverage(5);
-    Debug.print(DBG_VERBOSE,"DS18B20_A: %6.2f°C",storage.AirTemp);
+    Debug.print(DBG_VERBOSE,"DS18B20_A: %6.2f C",storage.AirTemp);
 
     sensors_W.requestTemperatures();
     sensors_A.requestTemperatures();

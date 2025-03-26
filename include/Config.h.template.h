@@ -97,7 +97,7 @@
 #endif 
 
 // ElegantOTA Config
-#define ELEGANT_OTA
+//#define ELEGANT_OTA
 #ifdef ELEGANT_OTA
   #define ELEGANT_OTA_AUTH
   #define ELEGANT_OTA_USERNAME  "<ELEGANT_OTA_USERNAME>"

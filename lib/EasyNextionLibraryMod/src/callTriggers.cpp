@@ -237,12 +237,12 @@ void EasyNex::calltriggermenuFunction(){
   switch(_tempRead1){
     case 0x00:
       _tempRead2 = _serial->read();  // We read the next byte, menu ID
-      triggermainmenu(_tempRead2);
+      triggermainmenu(_tempRead2);  // MAIN MENU
       break;    
     
     case 0x01:
       _tempRead2 = _serial->read();  // We read the next byte, menu ID
-      triggersubmenu(_tempRead2);
+      triggersubmenu(_tempRead2); // SUB MENU
       break;
 
     case 0x02:

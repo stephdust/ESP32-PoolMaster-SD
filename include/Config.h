@@ -1,5 +1,5 @@
 // Firmware revisions
-#define FIRMW "ESP-4.6"
+#define FIRMW "ESP-4.62"
 #define TFT_FIRMW "TFT-4.0" // For compatibility
 
 // Choose Nextion version to Compile (only one choice possible)
@@ -8,11 +8,11 @@
 //#define NEXTION_V1
 #define NEXTION_V2
 
-#define DEBUG_LEVEL DBG_VERBOSE     // Possible levels : NONE/ERROR/WARNING/INFO/DEBUG/VERBOSE
+#define DEBUG_LEVEL DBG_DEBUG     // Possible levels : NONE/ERROR/WARNING/INFO/DEBUG/VERBOSE
 
 //Version of config stored in EEPROM
 //Random value. Change this value (to any other value) to revert the config to default values
-#define CONFIG_VERSION 61
+#define CONFIG_VERSION 64
 
 // Compile on development environment or production (if not defined)
 #define DEVT
@@ -98,10 +98,11 @@
 //interval (in millisec) between MQTT publishement of measurement data
 #define PUBLISHINTERVAL 30000
 
+// Default values if nothing better is recorded
 #define POOLTOPIC "Home/Pool/"
-
+#define MQTTID "PoolMaster"
 // ElegantOTA Config
-#define ELEGANT_OTA
+//#define ELEGANT_OTA
 
 #ifdef ELEGANT_OTA
   //#define ELEGANT_OTA_AUTH

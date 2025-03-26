@@ -36,6 +36,7 @@ void EasyNex::readCommand(){
       if(Nextion_Sleeping) {
         Nextion_Sleeping = false;
       }
+      Nextion_CanSleep = true;
       break;
       
       
@@ -72,7 +73,7 @@ void EasyNex::readCommand(){
     case 'M':   /* Or <case 0x4D:>  If 'M' matches, we have the command group "Menu". 
                  * The next byte is the trigger <Id> according to our protocol.
                  *
-                 * We have to write in a Touch Event on Nextion the following: < printh 23 02 4D xx >
+                 * We have to write in a Touch Event on Nextion the following: < printh 23 03 4D xx yy >
                  * (where xx is the trigger id in HEX, 01 for 1, 02 for 2, ... 0A for 10 etc).
                  * With the switch(){case}, we call a predefined void with prefixed names
                  * as we have declare them on trigger.cpp file. Starting from menu0()......up to menu50()
