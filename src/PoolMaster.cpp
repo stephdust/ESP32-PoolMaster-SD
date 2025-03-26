@@ -260,19 +260,26 @@ void PoolMaster(void *pvParameters)
       }
 
       // Electyrolyse Regulation Tasks
-      if (storage.ElectrolyseMode)
+      if (storage.ElectrolyseMode) 
+      {
         if (!SWG.IsRunning()) //SWG NOT Running
+        {
           if ((storage.OrpValue <= storage.Orp_SetPoint*0.9) && 
               (storage.WaterTemp >= (double)storage.SecureElectro) && 
-              (millis() - FiltrationPump.LastStartTime)/ 1000 / 60 >= (unsigned long)storage.DelayElectro) {
-            SWG.Start();
-            Debug.print(DBG_INFO,"[LOGIC] Start SWG  %3.0f <= %3.0f - (delay %d)",storage.OrpValue,(storage.Orp_SetPoint*0.9),(millis() - FiltrationPump.LastStartTime)/ 1000 / 60);   
+              (millis() - FiltrationPump.LastStartTime)/ 1000 / 60 >= (unsigned long)storage.DelayElectro) 
+            {
+              SWG.Start();
+              Debug.print(DBG_INFO,"[LOGIC] Start SWG  %3.0f <= %3.0f - (delay %d)",storage.OrpValue,(storage.Orp_SetPoint*0.9),(millis() - FiltrationPump.LastStartTime)/ 1000 / 60);   
             }
-        else  //SWG Running
-          if (SWG.IsRunning() && (storage.OrpValue > storage.Orp_SetPoint)) {
+        } else 
+        { //SWG Running
+          if (storage.OrpValue > storage.Orp_SetPoint) 
+          {
             SWG.Stop();
             Debug.print(DBG_INFO,"[LOGIC] Stop SWG  %3.0f > %3.0f",storage.OrpValue,storage.Orp_SetPoint);   
           }
+        }
+      }
     } else {// Winter Mode (nothing to do)
     }
 

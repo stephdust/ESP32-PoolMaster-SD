@@ -86,7 +86,9 @@ MAKE_WORD_TRANSLATION(NXT_RELAYS_SPARE, "Spare Dry Contact", "Relai Additionel",
 
 MAKE_WORD_TRANSLATION(NXT_LANG_TITLE, "Language Selection", "Sélection de la langue", "", "")
 
-MAKE_WORD_TRANSLATION(NXT_GRAPH_TITLE, "History Graph", "Graphique Historique", "", "")
+MAKE_WORD_TRANSLATION(NXT_PH_GRAPH_TITLE, "pH History Graph", "Graphique Historique pH", "", "")
+MAKE_WORD_TRANSLATION(NXT_ORP_GRAPH_TITLE, "Orp History Graph (mV)", "Graphique Historique Orp (mV)", "", "")
+MAKE_WORD_TRANSLATION(NXT_TEMP_GRAPH_TITLE, "Water Temp History Graph (°C)", "Graphique Historique Température (°C)", "", "")
 
 MAKE_WORD_TRANSLATION(NXT_PHORPTANKS_TITLE, "pH & Chlorine Tanks", "Bidons pH & Chlorine", "", "")
 MAKE_WORD_TRANSLATION(NXT_PHORPTANKS_PH, "pH Tank", "Bidon de pH-", "", "")

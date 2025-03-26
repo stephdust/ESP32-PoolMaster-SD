@@ -22,8 +22,9 @@
 #define GLOBAL  "globals" // Name of Nextion page to store global variables
 #define MAX_SHOWN_NETWORKS  15  // Maximum number of scanned networks to display
 #define constrain(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt)))
-#define GRAPH_PH_BASELINE  620
-#define GRAPH_ORP_BASELINE  600
+#define GRAPH_PH_BASELINE  620 // +200 graph size (pH from 6.20 to 8.20)
+#define GRAPH_ORP_BASELINE  600 // +200 graph size (Orp from 600 to 800)
+#define GRAPH_TEMP_BASELINE  120 // +200 graph size (Temp from 12.0 to 32.0)
 
 static char temp[32];
 static char temp_command[32];

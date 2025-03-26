@@ -203,7 +203,7 @@ void UpdateTFT(void *pvParameters)
 
       if(myNex.currentPageId == 3)     //Settings Menu
       {
-        period=PT10/5;
+        period=PT10/3;
         
         // Rebuild menu if language has changed
         if(storage.Lang_Locale != Current_Language)
@@ -352,7 +352,6 @@ void UpdateTFT(void *pvParameters)
       if(myNex.currentPageId == 13)      //Graph card
       {
         if(myNex.hasPageChanged()) {
-          myNex.writeStr(PSTR("tTitle.txt"),Helpers::translated_word(FL_(NXT_GRAPH_TITLE),storage.Lang_Locale));
         }           
       }
 
@@ -926,34 +925,35 @@ void easyNexReadCustomCommand()
       switch(graphIndex)
       {
         case 0x00:  // pH
-        Debug.print(DBG_INFO,"pH Graph Requested");
+          Debug.print(DBG_INFO,"pH Graph Requested");
+          //Change Title
+          myNex.writeStr(PSTR("tTitle.txt"),Helpers::translated_word(FL_(NXT_PH_GRAPH_TITLE),storage.Lang_Locale));
+          // Change scale values
+          snprintf_P(temp,sizeof(temp),PSTR("%4.2f"),((float(GRAPH_PH_BASELINE)+200)/100));
+          myNex.writeStr(F("tMax.txt"),temp);
+          snprintf_P(temp,sizeof(temp),PSTR("%4.2f"),float(GRAPH_PH_BASELINE)/100);
+          myNex.writeStr(F("tMin.txt"),temp);
+          snprintf_P(temp,sizeof(temp),PSTR("%4.2f"),(float(GRAPH_PH_BASELINE)+100)/100);
+          myNex.writeStr(F("tMed.txt"),temp);
 
-        // Change scale values
-        snprintf_P(temp,sizeof(temp),PSTR("%4.2f"),((float(GRAPH_PH_BASELINE)+200)/100));
-        Debug.print(DBG_INFO,"%s",temp);
-        myNex.writeStr(F("tMax.txt"),temp);
-        snprintf_P(temp,sizeof(temp),PSTR("%4.2f"),float(GRAPH_PH_BASELINE)/100);
-        myNex.writeStr(F("tMin.txt"),temp);
-        snprintf_P(temp,sizeof(temp),PSTR("%4.2f"),(float(GRAPH_PH_BASELINE)+100)/100);
-        myNex.writeStr(F("tMed.txt"),temp);
-
-        // Initialize table
-        for(int i=0;i<NUMBER_OF_HISTORY_SAMPLES;i++)
-        {
-        if(i<pH_Samples.size())
-          // Get the pH Sample with 640 as baseline reference
-          buf[i] = (char)(pH_Samples[i]-GRAPH_PH_BASELINE);
-        else
-          buf[i] = 0;
-        }
-        snprintf_P(temp_command,sizeof(temp_command),PSTR("addt %d,%d,%d"),2,0,pH_Samples.size());
-        myNex.writeStr(temp_command);
-        vTaskDelay(5 / portTICK_PERIOD_MS);
-        Serial2.write(buf,pH_Samples.size());
+          // Initialize table
+          for(int i=0;i<NUMBER_OF_HISTORY_SAMPLES;i++)
+          {
+          if(i<pH_Samples.size())
+            // Get the pH Sample with baseline reference
+            buf[i] = (char)(pH_Samples[i]-GRAPH_PH_BASELINE);
+          else
+            buf[i] = 0;
+          }
+          snprintf_P(temp_command,sizeof(temp_command),PSTR("addt %d,%d,%d"),2,0,pH_Samples.size());
+          myNex.writeStr(temp_command);
+          vTaskDelay(5 / portTICK_PERIOD_MS);
+          Serial2.write(buf,pH_Samples.size());
         break;
         case 0x01:  // Orp
           Debug.print(DBG_INFO,"Orp Graph Requested");
-
+          //Change Title
+          myNex.writeStr(PSTR("tTitle.txt"),Helpers::translated_word(FL_(NXT_ORP_GRAPH_TITLE),storage.Lang_Locale));
           // Change scale values
           snprintf_P(temp,sizeof(temp),PSTR("%d"),(GRAPH_ORP_BASELINE+200));
           myNex.writeStr(F("tMax.txt"),temp);
@@ -966,7 +966,7 @@ void easyNexReadCustomCommand()
           for(int i=0;i<NUMBER_OF_HISTORY_SAMPLES;i++)
           {
           if(i<Orp_Samples.size())
-            // Get the Orp Sample with 600 as baseline reference
+            // Get the Orp Sample with baseline reference
             buf[i] = (char)(Orp_Samples[i]-GRAPH_ORP_BASELINE);
           else
             buf[i] = 0;
@@ -976,8 +976,31 @@ void easyNexReadCustomCommand()
           vTaskDelay(5 / portTICK_PERIOD_MS);
           Serial2.write(buf,Orp_Samples.size());
         break;
-        case 0x02:  // Temperature
-          // Not implemented yet
+        case 0x02:  // pH
+          Debug.print(DBG_INFO,"Temp Graph Requested");
+          //Change Title
+          myNex.writeStr(PSTR("tTitle.txt"),Helpers::translated_word(FL_(NXT_TEMP_GRAPH_TITLE),storage.Lang_Locale));
+          // Change scale values
+          snprintf_P(temp,sizeof(temp),PSTR("%4.1f"),((float(GRAPH_TEMP_BASELINE)+200)/10));
+          myNex.writeStr(F("tMax.txt"),temp);
+          snprintf_P(temp,sizeof(temp),PSTR("%4.1f"),float(GRAPH_TEMP_BASELINE)/10);
+          myNex.writeStr(F("tMin.txt"),temp);
+          snprintf_P(temp,sizeof(temp),PSTR("%4.1f"),(float(GRAPH_TEMP_BASELINE)+100)/10);
+          myNex.writeStr(F("tMed.txt"),temp);
+
+          // Initialize table
+          for(int i=0;i<NUMBER_OF_HISTORY_SAMPLES;i++)
+          {
+          if(i<pH_Samples.size())
+            // Get the Water Temperature Sample with baseline reference
+            buf[i] = (char)(WTemp_Samples[i]-GRAPH_TEMP_BASELINE);
+          else
+            buf[i] = 0;
+          }
+          snprintf_P(temp_command,sizeof(temp_command),PSTR("addt %d,%d,%d"),2,0,WTemp_Samples.size());
+          myNex.writeStr(temp_command);
+          vTaskDelay(5 / portTICK_PERIOD_MS);
+          Serial2.write(buf,WTemp_Samples.size());
         break;
       }
     } // And of Case
