@@ -42,7 +42,7 @@ StoreStruct storage =
   15, 2,  //ajout
   0, 1, 0,
   0,
-  0, // IP
+  IPAddress(192,168,0,0), // IP
   1883,
   "","",MQTTID,POOLTOPIC
 };
@@ -60,7 +60,7 @@ StoreStruct storage =
   15, 2,  //ajout
   0, 1, 0,
   0,
-  0, // IP
+  IPAddress(192,168,0,0), // IP
   1883,
   "","",MQTTID,POOLTOPIC
 };
@@ -617,7 +617,7 @@ bool loadConfig()
   storage.pHAutoMode            = nvs.getBool("pHAutoMode",false);
   storage.OrpAutoMode           = nvs.getBool("OrpAutoMode",false); 
   storage.Lang_Locale           = nvs.getUChar("Lang_Locale",0);
-  storage.MQTT_IP               = nvs.getUInt("MQTT_IP",0);
+  storage.MQTT_IP               = nvs.getUInt("MQTT_IP",IPAddress(192,168,0,0));
   storage.MQTT_PORT             = nvs.getUInt("MQTT_PORT",1883);
   nvs.getString("MQTT_LOGIN",storage.MQTT_LOGIN,29); 
   nvs.getString("MQTT_PASS",storage.MQTT_PASS,29);
