@@ -107,6 +107,6 @@ extern void reconnectToWiFi(void);
 extern void mqttInit(void);
 extern void mqttDisconnect(void);
 void printLanguages(void);
-void SetValue(const char* , int , int = -1);
+void SetValue(const char* , int = -1, int = -1, int = -1);
 void ToggleValue(const char* , int );
 #endif

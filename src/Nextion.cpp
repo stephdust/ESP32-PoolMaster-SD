@@ -360,6 +360,8 @@ void UpdateTFT(void *pvParameters)
         // Date and Time
         sprintf(temp, PSTR("%02d/%02d/%04d %02d:%02d:%02d"), day(), month(), year(), hour(), minute(), second());
         myNex.writeStr(F("pageHomeSimple.tTimeDate.txt"),temp);
+        sprintf(temp, PSTR("%02d/%02d/%04d %02d:%02d:%02d"), day(), month(), year(), hour(), minute(), second());
+        myNex.writeStr(F("pageHomeSwtch.tTimeDate.txt"),temp);
 
         // PSI difference with Threshold
         if (storage.PSIValue <= storage.PSI_MedThreshold) {
@@ -817,15 +819,19 @@ void easyNexReadCustomCommand()
 
     case 'S': // Or <case 0x53:>  If 'S' matches Update Switches 
     {
-      // from Nextion printh 23 03 53 00 00
-      //                               |  |
-      //                               |  | ---> Value
-      //                               |----> Command Index
+      // from Nextion printh 23 03/02 53 00 00
+      //                           |     |  |
+      //                           |     |  | ---> Value (no value = toggle switch)
+      //    If no value, toggle <--|     |----> Switch/Command Index
       // read the next byte that determines the position on the table
       int SwitchIndex;
       SwitchIndex = myNex.readByte();
       // read the next byte that keeps the value for the position
-      value = myNex.readByte();
+      if(myNex.cmdLength==3) {
+        value = myNex.readByte();
+      } else if(myNex.cmdLength==2) {
+        value = -1; // Instruct SetValue to Toggle the switch
+      }
 
       Debug.print(DBG_VERBOSE,"Comma Sent 53 %d %d",SwitchIndex,value);
       switch(SwitchIndex)
@@ -906,7 +912,7 @@ void easyNexReadCustomCommand()
           SetValue("RobotPump",value);
         break;
         case 0x18:  // Lights
-          SetValue("Relay",value,0);
+          SetValue("Relay",value,0,RELAYR0.IsActive());
         break;
         case 0x19:  // Spare
           SetValue("Relay",value,1);
@@ -1177,8 +1183,13 @@ void ToggleValue(const char* _server_command, int _current_state)
   LastAction = millis();
 }
 
-void SetValue(const char* _server_command, int _force_state, int _state_table)
+void SetValue(const char* _server_command, int _force_state, int _state_table, int _current_state)
 {
+  // Do we need to toggle
+  if (_force_state == -1) {
+    _force_state = (_current_state)? false:true;
+  }
+  
   char Cmd[100];
   if(_state_table == -1) {
     sprintf(Cmd,"{\"%s\":%d}",_server_command,_force_state); // Build JSON Command
