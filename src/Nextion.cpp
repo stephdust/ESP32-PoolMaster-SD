@@ -355,8 +355,15 @@ void UpdateTFT(void *pvParameters)
         }           
       }
 
-      //if(myNex.currentPageId == 14)     //Page Home Minimalist always refresh
-      //{
+      if(myNex.currentPageId == 14)
+      {
+        if(myNex.hasPageChanged()) {
+          myNex.writeStr(PSTR("tLights.txt"),Helpers::translated_word(FL_(NXT_SWITCH_LIGHTS),storage.Lang_Locale));
+          myNex.writeStr(PSTR("tSpare.txt"),Helpers::translated_word(FL_(NXT_SWITCH_SPARE),storage.Lang_Locale));
+          myNex.writeStr(PSTR("tRobot.txt"),Helpers::translated_word(FL_(NXT_SWITCH_ROBOT),storage.Lang_Locale));
+        }
+      }
+      //Page Home Minimalist always refresh (variables are global)
         // Date and Time
         sprintf(temp, PSTR("%02d/%02d/%04d %02d:%02d:%02d"), day(), month(), year(), hour(), minute(), second());
         myNex.writeStr(F("pageHomeSimple.tTimeDate.txt"),temp);
@@ -404,7 +411,6 @@ void UpdateTFT(void *pvParameters)
         // Water Temperature
         snprintf_P(temp,sizeof(temp),PSTR("%4.1f°C"),storage.WaterTemp);
         myNex.writeStr(F("pageHomeSimple.tTemp.txt"),temp);
-      //}
 
       if(myNex.currentPageId == 15)     //Page Language Selection
       {
@@ -909,13 +915,13 @@ void easyNexReadCustomCommand()
           }
         break;
         case 0x17:  // Robot
-          SetValue("RobotPump",value);
+          SetValue("RobotPump",value,-1,RobotPump.IsRunning());
         break;
         case 0x18:  // Lights
           SetValue("Relay",value,0,RELAYR0.IsActive());
         break;
         case 0x19:  // Spare
-          SetValue("Relay",value,1);
+          SetValue("Relay",value,1,RELAYR1.IsActive());
         break;
       }
       break;

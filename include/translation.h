@@ -97,6 +97,10 @@ MAKE_WORD_TRANSLATION(NXT_PHORPTANKS_FILL, "Fill", "Remplissage", "", "")
 MAKE_WORD_TRANSLATION(NXT_PHORPTANKS_FILL_PH, "pH-", "pH-", "", "")
 MAKE_WORD_TRANSLATION(NXT_PHORPTANKS_FILL_CHL, "Chlorine", "Chlore", "", "")
 
+MAKE_WORD_TRANSLATION(NXT_SWITCH_LIGHTS, "Pool Lights", "Eclairage", "", "")
+MAKE_WORD_TRANSLATION(NXT_SWITCH_SPARE, "Spare Relay", "Relais Auxiliaire", "", "")
+MAKE_WORD_TRANSLATION(NXT_SWITCH_ROBOT, "Cleaning Robot", "Robot Nettoyage", "", "")
+
 // HELP MESSAGE
 MAKE_WORD_TRANSLATION(NXT_HELP_1_TITLE, "Probe Calibration", "Calibration des Sondes","","")
 MAKE_WORD_TRANSLATION(NXT_HELP_1_CONTENT, "Step1: place probe in the reference solutionStep2: enter reference solution nominal value in the field below\\rStep3: wait for the probe reading to stabilize then press OK\\rStep4: if available, press ADD button to add a measurement from another\\rref. solution and repeat steps 1-3 (up to 3 points)\\rStep5: press APPLY to complete calibration", "Etape1: Placer la sonde dans la solution de référence\\rEtape2: Entrer ci-dessous la valeur nominale de la solution de référence\\rEtape3: Attendre que la lecture de la sonde se stabilise et appuyer sur OK\\rEtape4: Si une autre solution de référence est disponible, appuyer sur\\rAJOUTER et répéter les étapes 1-3 (3 solutions max.)\\rEtape5: Appuyer sur VALIDER pour terminer la procédure", "Step1: place probe in the reference solution\\rStep2: enter reference solution nominal value in the field below\\rStep3: wait for the probe reading to stabilize then press OK\\rStep4: if available, press ADD button to add a measurement from another\\rref. solution and repeat steps 1-3 (up to 3 points)\\rStep5: press APPLY to complete calibration|Etape1: Placer la sonde dans la solution de référence\\rEtape2: Entrer ci-dessous la valeur nominale de la solution de référence\\rEtape3: Attendre que la lecture de la sonde se stabilise et appuyer sur OK\\rEtape4: Si une autre solution de référence est disponible, appuyer sur\\rAJOUTER et répéter les étapes 1-3 (3 solutions max.)\\rEtape5: Appuyer sur VALIDER pour terminer la procédure", "","")
