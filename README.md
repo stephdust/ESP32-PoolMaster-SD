@@ -16,6 +16,9 @@ System continuously monitors various metrics and periodically reports them over 
 
 pH and Orp are continuously adjusted thanks to two peristaltic pumps controlled by two PID regulation loops.
 
+[![DESCRIPTION VIDEO](https://youtu.be/WqgkL-VFOhA)](https://youtu.be/WqgkL-VFOhA)
+
+
 ### Support many maintenance methods
  - Liquid Chlore
  - SWG (Salt Water Chlorine Generator) through external command and control
