@@ -17,7 +17,8 @@ System continuously monitors various metrics and periodically reports them over 
 pH and Orp are continuously adjusted thanks to two peristaltic pumps controlled by two PID regulation loops.
 
 Below a short video presentation:
-[![DESCRIPTION VIDEO](https://img.youtube.com/vi/WqgkL-VFOhA/0.jpg)](https://www.youtube.com/watch?v=WqgkL-VFOhA) Description du projet (french)
+
+[![DESCRIPTION VIDEO](https://img.youtube.com/vi/WqgkL-VFOhA/0.jpg)](https://www.youtube.com/watch?v=WqgkL-VFOhA) "Description du projet (french)"
 
 ### Support many maintenance methods
  - Liquid Chlore
