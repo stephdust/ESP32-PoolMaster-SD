@@ -535,7 +535,7 @@ void ProcessCommand(void *pvParameters)
         }
         else if (command.containsKey(F("Reboot")))//"Reboot" command forces a reboot of the controller
         {
-          delay(10000); // wait 10s then restart. Other tasks continue.
+          delay(REBOOT_DELAY); // wait 10s then restart. Other tasks continue.
           esp_restart();
         }
         else if (command.containsKey(F("Clear"))) //"Clear" command which clears the UpTime and pressure errors of the Pumps

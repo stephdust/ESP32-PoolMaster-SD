@@ -44,13 +44,15 @@ void EasyNex::begin(unsigned long baud){
  *         | set the value of numeric n0 to 765 |      | set background color of n0 to 17531 (blue)|
  */
 void EasyNex::writeNum(String compName, uint32_t val){
-	_component = compName;
-	_numVal = val;
-  
-	_serial->print(_component);
-  _serial->print("=");
-  _serial->print(_numVal);
-	_serial->print("\xFF\xFF\xFF");
+  if(writeAllowed) {
+    _component = compName;
+    _numVal = val;
+    
+    _serial->print(_component);
+    _serial->print("=");
+    _serial->print(_numVal);
+    _serial->print("\xFF\xFF\xFF");
+  }
 }
 
 
@@ -62,19 +64,21 @@ void EasyNex::writeNum(String compName, uint32_t val){
  *         | set the value of textbox t0 to "Hello World" |      | set the text of button b0 to "Button0"  |
  */
 void EasyNex::writeStr(String command, String txt){ 
-	_component = command;
-	_strVal = txt;
-  
-  if(_strVal == "cmd"){
-    _serial->print(_component);
-    _serial->print("\xFF\xFF\xFF");
+  if(writeAllowed) {
+    _component = command;
+    _strVal = txt;
     
-  }else if(_strVal != "cmd"){
-    _serial->print(_component);
-    _serial->print("=\"");
-    _serial->print(_strVal);
-    _serial->print("\"");
-    _serial->print("\xFF\xFF\xFF");
+    if(_strVal == "cmd"){
+      _serial->print(_component);
+      _serial->print("\xFF\xFF\xFF");
+      
+    }else if(_strVal != "cmd"){
+      _serial->print(_component);
+      _serial->print("=\"");
+      _serial->print(_strVal);
+      _serial->print("\"");
+      _serial->print("\xFF\xFF\xFF");
+    }
   }
 }
 

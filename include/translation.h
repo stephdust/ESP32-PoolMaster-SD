@@ -60,6 +60,8 @@ MAKE_WORD_TRANSLATION(NXT_ELECTRO_DELAY, "Delay Before\\rStart", "Délai Avant\\
 MAKE_WORD_TRANSLATION(NXT_INFO_TITLE, "System Information", "Information Système", "", "")
 MAKE_WORD_TRANSLATION(NXT_INFO_ALARMS, "Alarms:", "Alarmes:", "", "")
 MAKE_WORD_TRANSLATION(NXT_INFO_COMPILE, "Compiled:", "Compilé:", "", "")
+MAKE_WORD_TRANSLATION(NXT_INFO_REBOOT, "Reboot", "Redémmarer", "", "")
+MAKE_WORD_TRANSLATION(NXT_INFO_DEBUG, "Debug", "Diagnostic", "", "")
 MAKE_WORD_TRANSLATION(NXT_DATE_TITLE, "Set Date/Time", "Réglage Horloge", "", "")
 
 MAKE_WORD_TRANSLATION(NXT_WIFI_TITLE, "Wifi Settings", "Réglages Wifi", "", "")

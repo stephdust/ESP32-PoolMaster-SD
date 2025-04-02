@@ -310,6 +310,9 @@ void UpdateTFT(void *pvParameters)
           myNex.writeStr(PSTR("tAlarms.txt"),Helpers::translated_word(FL_(NXT_INFO_ALARMS),storage.Lang_Locale));
           myNex.writeStr(PSTR("tCompiledTitle.txt"),Helpers::translated_word(FL_(NXT_INFO_COMPILE),storage.Lang_Locale));
           myNex.writeStr(PSTR("tCompiledValue.txt"), compile_date); //FIRMW
+          myNex.writeStr(PSTR("bReboot.txt"),Helpers::translated_word(FL_(NXT_INFO_REBOOT),storage.Lang_Locale));
+          myNex.writeStr(PSTR("bDebug.txt"),Helpers::translated_word(FL_(NXT_INFO_DEBUG),storage.Lang_Locale));
+          myNex.writeNum(PSTR("vaDelay.val"),REBOOT_DELAY);
           myNex.writeStr(F(GLOBAL".vaMCFW.txt"), FIRMW); 
         }
       }
@@ -959,8 +962,10 @@ void easyNexReadCustomCommand()
           }
           snprintf_P(temp_command,sizeof(temp_command),PSTR("addt %d,%d,%d"),2,0,pH_Samples.size());
           myNex.writeStr(temp_command);
+          myNex.writeAllowed=false;
           vTaskDelay(5 / portTICK_PERIOD_MS);
           Serial2.write(buf,pH_Samples.size());
+          myNex.writeAllowed=true;
         break;
         case 0x01:  // Orp
           Debug.print(DBG_INFO,"Orp Graph Requested");
@@ -985,7 +990,9 @@ void easyNexReadCustomCommand()
           }
           snprintf_P(temp_command,sizeof(temp_command),PSTR("addt %d,%d,%d"),2,0,Orp_Samples.size());
           myNex.writeStr(temp_command);
-          vTaskDelay(5 / portTICK_PERIOD_MS);
+          myNex.writeAllowed=false;
+          vTaskDelay(10 / portTICK_PERIOD_MS);
+          myNex.writeAllowed=true;
           Serial2.write(buf,Orp_Samples.size());
         break;
         case 0x02:  // pH
@@ -1011,7 +1018,7 @@ void easyNexReadCustomCommand()
           }
           snprintf_P(temp_command,sizeof(temp_command),PSTR("addt %d,%d,%d"),2,0,WTemp_Samples.size());
           myNex.writeStr(temp_command);
-          vTaskDelay(5 / portTICK_PERIOD_MS);
+          //vTaskDelay(5 / portTICK_PERIOD_MS);
           Serial2.write(buf,WTemp_Samples.size());
         break;
       }

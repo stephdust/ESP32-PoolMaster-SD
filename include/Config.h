@@ -15,7 +15,7 @@
 #define CONFIG_VERSION 64
 
 // Compile on development environment or production (if not defined)
-#define DEVT
+//#define DEVT // Value defined in platformio.ini
 
 // WiFi credentials
 #define WIFI_SCAN_INTERVAL  10000
@@ -79,6 +79,9 @@
 
 // Task TimeOut before reboot
 #define WDT_TIMEOUT     10
+
+// Delay when instructed to reboot
+#define REBOOT_DELAY  10000
 
 // Server port
 //#define SERVER_PORT 8060

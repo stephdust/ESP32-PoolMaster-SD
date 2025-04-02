@@ -112,6 +112,7 @@ class EasyNex {
      * cmdLength: ONLY for custom commands stores the length of the command
      */ 
     int currentPageId;
+    bool writeAllowed = true;   // Block all data sending (used when raw data must be sent like for waveform not to interphere)
     int lastCurrentPageId;
     bool pageChangedAction = true;   // Is true at page change before the first action is triggered
     bool Nextion_Sleeping;
