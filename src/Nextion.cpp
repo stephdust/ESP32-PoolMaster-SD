@@ -895,7 +895,7 @@ void easyNexReadCustomCommand()
           }
         break;
         case 0x14:  // Heat Regulation
-          if(value==1) {
+          if(value==BUTTON_AUTO) {
             // Not implemented
           } else {
             // Not implemented
@@ -909,10 +909,10 @@ void easyNexReadCustomCommand()
           }
         break;
         case 0x16:  // Tank Status
-          if(value==0) {  //pH
+          if(value==BUTTON_OFF) {  //pH
             myNex.writeStr(F("pageFillTank.vaTankBut.txt"),"pH");
             myNex.writeStr(F("page pageFillTank"));
-          } else if(value==2) { //Chl
+          } else if(value==BUTTON_ON) { //Chl
             myNex.writeStr(F("pageFillTank.vaTankBut.txt"),"Chl");
             myNex.writeStr(F("page pageFillTank"));
           }
