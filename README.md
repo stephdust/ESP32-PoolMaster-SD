@@ -183,8 +183,8 @@ IO
 |7|  FiltPump| current state of Filtration Pump (1=on, 0=off)
 |6|   PhPump| current state of Ph Pump (1=on, 0=off)
 |5|   ChlPump| current state of Chl Pump (1=on, 0=off)
-|4|   PhlLevel| current state of Acid tank level (0=empty, 1=ok)
-|3|   ChlLevel| current state of Chl tank level (0=empty, 1=ok)
+|4|   PhlLevel| current state of Acid tank level (0=ok, 1=low level)
+|3|   ChlLevel| current state of Chl tank level (0=ok, 1=low level)
 |2|   PSIError| over-pressure error
 |1|   pHErr| pH pump overtime error flag
 |0|   ChlErr| Chl pump overtime error flag
@@ -200,7 +200,7 @@ IO2
 |3|   RELAYR0| current state of spare Relay0 (1=on, 0=off)
 |2|   RELAYR1|current state of spare Relay1 (1=on, 0=off)
 |1|   Winter| current state of winter mode (0=summer, 1=winter)
-|0|   NA| Unused
+|0|   Water Level| Current state of pool level (0=ok, 1=low level)
 ```http
 IO3
 ```
@@ -208,8 +208,8 @@ IO3
 |-| :-------- |  :------------------------- |
 |7|  | Unused
 |6|   | Unused
-|5|   | Unused
-|4|   | Unused
+|5|   FillErr| Pool Filling pump overtime error flag
+|4|   Filling Pump| current state of Pool Filling Pump (1=on, 0=off)
 |3|   SWGMode| current mode of Salt Water Chlorine Generator (0=no SWG, 1=SWG active)
 |2|   SWGState|current state of Salt Water Chlorine Generator (0=off, 1=on)
 |1|   pHAutoMode| pH automation and regulation mode (0=manual, 1=automatic)
@@ -229,6 +229,8 @@ POOLTOPIC/Set1
 | `FSto` |  Computed filtration stop hour, equal to FSta + FDu (hour) |
 | `pHUTL` |  Max allowed daily run time for the pH pump (mins) |
 | `ChlUTL` |  Max allowed daily run time for the Chl pump (mins) |
+| `FilUTL` |  Max allowed daily run time for the Pool Filling pump (mins) |
+
 
 ```http
 POOLTOPIC/Set2
@@ -297,7 +299,7 @@ Below are the Payloads/commands to publish on the "PoolTopicAPI" topic in Json f
 |{"ElectrolyseMode":1} or {"ElectrolyseMode":0} | set auto mode for Chlorine production via Salt Water Chlorine Generation. In Auto mode the Orp regulates itself (when filtration pump on) with Salt Water Chlorine Generator.
 |{"Electrolyse":1} or {"Electrolyse":0} | start/stop the Salt Water Chlorine Generator device (if exists)
 |{"ElectroConfig":[15, 2]} | set the minimum temperature for Salt Water Chlorine Generation system to operate and the delay between filtration pump start and Salt Water Chlorine Generation system start.
-|{"PhCalib":[4.02,3.8,9.0,9.11]} | multi-point linear regression calibration (minimum 1 point-couple, 6 max.) in the form [ProbeReading_0, BufferRating_0, xx, xx, ProbeReading_n, BufferRating_n]
+|{"pHCalib":[4.02,3.8,9.0,9.11]} | multi-point linear regression calibration (minimum 1 point-couple, 6 max.) in the form [ProbeReading_0, BufferRating_0, xx, xx, ProbeReading_n, BufferRating_n]
 |{"OrpCalib":[450,465,750,784]} | multi-point linear regression calibration (minimum 1 point-couple, 6 max.) in the form [ProbeReading_0, BufferRating_0, xx, xx, ProbeReading_n, BufferRating_n]
 |{"PhSetPoint":7.4} | set the Ph setpoint, 7.4 in this example
 |{"OrpSetPoint":750.0} | set the Orp setpoint, 750mV in this example
