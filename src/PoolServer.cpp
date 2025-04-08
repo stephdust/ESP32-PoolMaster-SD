@@ -28,8 +28,8 @@ extern void mqttDisconnect(void);
 void ProcessCommand(void *pvParameters)
 {
   //Json Document
-  StaticJsonDocument<200> command;
-  char JSONCommand[150] = "";                         // JSON command to process  
+  StaticJsonDocument<250> command;
+  char JSONCommand[200] = "";                         // JSON command to process  
 
   while (!startTasks) ;
   vTaskDelay(DT2);                                // Scheduling offset   
@@ -53,7 +53,6 @@ void ProcessCommand(void *pvParameters)
     if (uxQueueMessagesWaiting(queueIn) != 0)
     {  
       xQueueReceive(queueIn,&JSONCommand,0);
-
       //Parse Json object and find which command it is
       DeserializationError error = deserializeJson(command,JSONCommand);
 
@@ -72,13 +71,13 @@ void ProcessCommand(void *pvParameters)
           storage.AirTemp = command["TempExt"].as<float>();
           Debug.print(DBG_DEBUG,"External Temperature: %4.1f°C",storage.AirTemp);
         }
-        //"PhCalib" command which computes and sets the calibration coefficients of the pH sensor response based on a multi-point linear regression
-        //{"PhCalib":[4.02,3.8,9.0,9.11]}  -> multi-point linear regression calibration (minimum 1 point-couple, 6 max.) in the form [ProbeReading_0, BufferRating_0, xx, xx, ProbeReading_n, BufferRating_n]
+        //"pHCalib" command which computes and sets the calibration coefficients of the pH sensor response based on a multi-point linear regression
+        //{"pHCalib":[4.02,3.8,9.0,9.11]}  -> multi-point linear regression calibration (minimum 1 point-couple, 6 max.) in the form [ProbeReading_0, BufferRating_0, xx, xx, ProbeReading_n, BufferRating_n]
         else if (command.containsKey(F("pHCalib")))
         {
           float CalibPoints[12]; //Max six calibration point-couples! Should be plenty enough
-          int NbPoints = (int)copyArray(command[F("PhCalib")].as<JsonArray>(),CalibPoints);        
-          Debug.print(DBG_DEBUG,"PhCalib command - %d points received",NbPoints);
+          int NbPoints = (int)copyArray(command[F("pHCalib")].as<JsonArray>(),CalibPoints);        
+          Debug.print(DBG_DEBUG,"pHCalib command - %d points received",NbPoints);
           for (int i = 0; i < NbPoints; i += 2)
             Debug.print(DBG_DEBUG,"%10.2f - %10.2f",CalibPoints[i],CalibPoints[i + 1]);
 
@@ -229,12 +228,12 @@ void ProcessCommand(void *pvParameters)
             // do not take care of minimum filtering time as it 
             // was forced on.
             if (storage.WaterTemp >= (double)storage.SecureElectro)
-              if (!SWG.Start())
+              if (!SWGPump.Start())
                 Debug.print(DBG_WARNING,"Problem starting SWG");   
           }
           else
           {
-            if (!SWG.Stop())
+            if (!SWGPump.Stop())
               Debug.print(DBG_WARNING,"Problem stopping SWG");   
           }
           // Direct action on Electrolyse will exit the automatic Electro Regulation Mode
@@ -313,6 +312,19 @@ void ProcessCommand(void *pvParameters)
           ChlPump.SetMaxUpTime(storage.ChlPumpUpTimeLimit * 1000);
           saveParam("PhPumpUTL",storage.PhPumpUpTimeLimit);
           saveParam("ChlPumpUTL",storage.ChlPumpUpTimeLimit);                    
+          PublishSettings();
+        }
+        else if (command.containsKey(F("FillMinUpTime"))) //"FillMinUpTime" command which sets the Min UpTime for filling pump
+        {
+          storage.FillingPumpMinTime = (unsigned int)command[F("FillMinUpTime")] * 60; 
+          saveParam("FillingPumpMinTime",storage.FillingPumpMinTime);
+          PublishSettings();
+        }
+        else if (command.containsKey(F("FillMaxUpTime"))) //"FillMaxUpTime" command which sets the Max UpTime for filling pump
+        {
+          storage.FillingPumpMaxTime = (unsigned int)command[F("FillMaxUpTime")] * 60;
+          FillingPump.SetMaxUpTime(storage.FillingPumpMaxTime * 1000);
+          saveParam("FillingPumpMaxTime",storage.FillingPumpMaxTime);
           PublishSettings();
         }
         else if (command.containsKey(F("OrpPIDParams"))) //"OrpPIDParams" command which sets the Kp, Ki and Kd values for Orp PID loop
@@ -479,6 +491,15 @@ void ProcessCommand(void *pvParameters)
           
           PublishSettings();
         }
+        else if (command.containsKey(F("FillPump"))) //"FillPump" command which starts or stops the swimming pool filling pump
+        {
+          if ((int)command[F("FillPump")] == 0)
+            FillingPump.Stop();       //stop swimming pool filling pump
+          else
+            FillingPump.Start();      //start swimming pool filling pump
+          
+          PublishSettings();
+        }
         else if (command.containsKey(F("ChlPump"))) //"ChlPump" command which starts or stops the Acid pump
         {
           storage.OrpAutoMode = 0;
@@ -542,12 +563,16 @@ void ProcessCommand(void *pvParameters)
         {
           if (PSIError)
             PSIError = false;
-
+          
           if (PhPump.UpTimeError)
             PhPump.ClearErrors();
 
           if (ChlPump.UpTimeError)
             ChlPump.ClearErrors();
+
+          if (FillingPump.UpTimeError)
+            FillingPump.ClearErrors();
+
 
           mqttErrorPublish(""); // publish clearing of error(s)
 
@@ -614,7 +639,7 @@ void ProcessCommand(void *pvParameters)
           strcpy(storage.MQTT_PASS,command[F("MQTTConfig")][3]);
           strcpy(storage.MQTT_ID,command[F("MQTTConfig")][4]);
           strcpy(storage.MQTT_TOPIC,command[F("MQTTConfig")][5]);
-          Debug.print(DBG_WARNING,"Configure MQTT %s, %d, %s, %s, %s, %s",storage.MQTT_IP.toString().c_str(),storage.MQTT_PORT,storage.MQTT_LOGIN,storage.MQTT_PASS,storage.MQTT_ID,storage.MQTT_TOPIC);
+          Debug.print(DBG_WARNING,"Configure MQTT %s, %d, %s, %s, %s",storage.MQTT_IP.toString().c_str(),storage.MQTT_PORT,storage.MQTT_LOGIN,storage.MQTT_ID,storage.MQTT_TOPIC);
           saveParam("MQTT_IP",storage.MQTT_IP);
           saveParam("MQTT_PORT",storage.MQTT_PORT);
           saveParam("MQTT_LOGIN",storage.MQTT_LOGIN);
@@ -627,15 +652,44 @@ void ProcessCommand(void *pvParameters)
           mqttInit();
           // It automatically tries to reconnect using a timer
         }
+        //"SMTP Config" command which sends all SMTP Details
+        else if (command.containsKey(F("SMTPConfig")))
+        {
+          strcpy(storage.SMTP_SERVER,command[F("SMTPConfig")][0]);
+          storage.MQTT_PORT = (uint)command[F("SMTPConfig")][1];
+          strcpy(storage.SMTP_LOGIN,command[F("SMTPConfig")][2]);
+          strcpy(storage.SMTP_PASS,command[F("SMTPConfig")][3]);
+          strcpy(storage.SMTP_SENDER,command[F("SMTPConfig")][4]);
+          strcpy(storage.SMTP_RECIPIENT,command[F("SMTPConfig")][5]);
+          Debug.print(DBG_WARNING,"Configure SMTP %s, %d, %s, %s, %s",storage.SMTP_SERVER,storage.SMTP_PORT,storage.SMTP_LOGIN,storage.SMTP_SENDER,storage.SMTP_RECIPIENT);
+          saveParam("SMTP_SERVER",storage.SMTP_SERVER);
+          saveParam("SMTP_PORT",storage.SMTP_PORT);
+          saveParam("SMTP_LOGIN",storage.SMTP_LOGIN);
+          saveParam("SMTP_PASS",storage.SMTP_PASS);
+          saveParam("SMTP_SENDER",storage.SMTP_SENDER);
+          saveParam("SMTP_RECIPIENT",storage.SMTP_RECIPIENT);
 
-        // Sound configuration applied
-        digitalWrite(BUZZER,HIGH);
-        delay(30);
-        digitalWrite(BUZZER,LOW);
-        delay(40);
-        digitalWrite(BUZZER,HIGH);
-        delay(30);
-        digitalWrite(BUZZER,LOW);
+        } else if (command.containsKey(F("Buzzer"))) //"OrpPID" command which starts or stops the Orp PID loop
+        {
+          if ((int)command[F("Buzzer")] == 1)
+            storage.BuzzerOn = true;
+          else
+            storage.BuzzerOn = false;
+          
+          saveParam("BuzzerOn",storage.BuzzerOn);
+        }
+
+        if(storage.BuzzerOn)
+        {
+          // Sound configuration applied
+          digitalWrite(BUZZER,HIGH);
+          delay(30);
+          digitalWrite(BUZZER,LOW);
+          delay(40);
+          digitalWrite(BUZZER,HIGH);
+          delay(30);
+          digitalWrite(BUZZER,LOW);
+        }
         // Publish Update on the MQTT broker the status of our variables
         PublishMeasures();
       }

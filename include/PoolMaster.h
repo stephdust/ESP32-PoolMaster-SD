@@ -44,7 +44,12 @@ struct StoreStruct
   uint8_t Lang_Locale;
   IPAddress MQTT_IP;
   uint MQTT_PORT;
-  char MQTT_LOGIN[30], MQTT_PASS[30], MQTT_ID[30], MQTT_TOPIC[30];
+  char MQTT_LOGIN[63], MQTT_PASS[63], MQTT_ID[30], MQTT_TOPIC[50];
+  char SMTP_SERVER[50];
+  uint SMTP_PORT;
+  char SMTP_LOGIN[63], SMTP_PASS[63], SMTP_SENDER[150], SMTP_RECIPIENT[50];
+  uint  FillingPumpMinTime,FillingPumpMaxTime;
+  bool BuzzerOn;
 } ;
 
 // Global status of the board
@@ -62,7 +67,7 @@ extern void syncRTC2ESP(void);
 
 //Queue object to store incoming JSON commands (up to 10)
 #define QUEUE_ITEMS_NBR 10
-#define QUEUE_ITEM_SIZE 100
+#define QUEUE_ITEM_SIZE 200
 extern QueueHandle_t queueIn;
 
 //The four pumps of the system (instanciate the Pump class)
@@ -71,7 +76,8 @@ extern Pump FiltrationPump;
 extern Pump PhPump;
 extern Pump ChlPump;
 extern Pump RobotPump;
-extern Pump SWG;    // Pump class which control the Salt Water Chlorine Generator (switch it on and off)
+extern Pump FillingPump;
+extern Pump SWGPump;    // Pump class which control the Salt Water Chlorine Generator (switch it on and off)
 
 // The Relay to activate and deactivate Orp production
 extern Relay RELAYR0;
@@ -100,6 +106,5 @@ extern volatile bool startTasks;                       // flag to start loop tas
 extern bool MQTTConnection;                            // MQTT connected flag
 //extern bool EmergencyStopFiltPump;                     // Filtering pump stopped manually; needs to be cleared to restart
 extern bool AntiFreezeFiltering;                       // Filtration anti freeze mode
-extern bool PSIError;								   // Water pressure alarm
 extern bool cleaning_done;      					   // Robot clean-up done   
 

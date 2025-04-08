@@ -50,16 +50,16 @@ void PoolMaster(void *pvParameters)
     smtp.debug(1);
   #endif
   smtp.callback(smtpCallback);
-  config.server.host_name = SMTP_HOST;
-  config.server.port = SMTP_PORT;
-  config.login.email = AUTHOR_LOGIN;
-  config.login.password = AUTHOR_PASSWORD;
+  config.server.host_name = storage.SMTP_SERVER;
+  config.server.port = storage.SMTP_PORT;
+  config.login.email = storage.SMTP_LOGIN;
+  config.login.password = storage.SMTP_PASS;
   config.login.user_domain = "127.0.0.1";
 
   message.sender.name = F("PoolMaster");
-  message.sender.email = AUTHOR_EMAIL;
+  message.sender.email = storage.SMTP_SENDER;
   message.subject = F("PoolMaster Event");
-  message.addRecipient(F("Home"), RECIPIENT_EMAIL);
+  message.addRecipient(F("Home"), storage.SMTP_RECIPIENT);
   message.text.charSet = "us-ascii";
   message.text.transfer_encoding = Content_Transfer_Encoding::enc_7bit;
   message.priority = esp_mail_smtp_priority_low;
@@ -101,7 +101,8 @@ void PoolMaster(void *pvParameters)
     PhPump.loop();
     ChlPump.loop();
     RobotPump.loop(); 
-    SWG.loop();
+    FillingPump.loop(); 
+    SWGPump.loop();
 
     //reset time counters at midnight and send sync request to time server
     if (hour() == 0 && !DoneForTheDay)
@@ -118,7 +119,8 @@ void PoolMaster(void *pvParameters)
         ChlPump.ResetUpTime();
         ChlPump.SetTankFill(storage.ChlFill);
         RobotPump.ResetUpTime();
-        SWG.ResetUpTime();
+        FillingPump.ResetUpTime();
+        SWGPump.ResetUpTime();
 
         //EmergencyStopFiltPump = false;
         d_calc = false;
@@ -262,20 +264,20 @@ void PoolMaster(void *pvParameters)
       // Electyrolyse Regulation Tasks
       if (storage.ElectrolyseMode) 
       {
-        if (!SWG.IsRunning()) //SWG NOT Running
+        if (!SWGPump.IsRunning()) //SWG NOT Running
         {
           if ((storage.OrpValue <= storage.Orp_SetPoint*0.9) && 
               (storage.WaterTemp >= (double)storage.SecureElectro) && 
               (millis() - FiltrationPump.LastStartTime)/ 1000 / 60 >= (unsigned long)storage.DelayElectro) 
             {
-              SWG.Start();
+              SWGPump.Start();
               Debug.print(DBG_INFO,"[LOGIC] Start SWG  %3.0f <= %3.0f - (delay %d)",storage.OrpValue,(storage.Orp_SetPoint*0.9),(millis() - FiltrationPump.LastStartTime)/ 1000 / 60);   
             }
         } else 
         { //SWG Running
           if (storage.OrpValue > storage.Orp_SetPoint) 
           {
-            SWG.Stop();
+            SWGPump.Stop();
             Debug.print(DBG_INFO,"[LOGIC] Stop SWG  %3.0f > %3.0f",storage.OrpValue,storage.Orp_SetPoint);   
           }
         }
@@ -291,6 +293,16 @@ void PoolMaster(void *pvParameters)
         Debug.print(DBG_INFO,"[LOGIC] Stop Filtration Pump %d [%d-%d]",storage.AutoMode,storage.FiltrationStart,storage.FiltrationStop);   
         }
   } // End of Filtration Pimp IS Running
+
+// Check water level (HIGH means that jumper is opened)
+if((digitalRead(POOL_LEVEL) == HIGH) && (!FillingPump.IsRunning())) {
+  FillingPump.Start();
+} 
+
+// Stop Pump if level back to normal and minimum runtime reached
+if(FillingPump.IsRunning() && (digitalRead(POOL_LEVEL) == LOW) && (FillingPump.UpTime > (storage.FillingPumpMinTime*1000))) {
+  FillingPump.Stop();
+}
 
 /* ******************************************* 
     END OF MAIN POOLMASTER AUTOMATION LOGIC

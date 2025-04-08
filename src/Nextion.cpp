@@ -32,31 +32,32 @@ void WriteSwitches()
 
   switches_bitmap |= (PoolMaster_FullyLoaded & 1)   << 31;     //2 147 483 648
   switches_bitmap |= (PoolMaster_BoardReady & 1)    << 30;     //1 073 741 824
-  switches_bitmap |= (PoolMaster_WifiReady & 1)     << 29;     //536 870 912
-  switches_bitmap |= (PoolMaster_MQTTReady & 1)     << 28;     //268 435 456
-  switches_bitmap |= (PoolMaster_FullyLoaded & 1)   << 27;     //134 217 728
-  switches_bitmap |= (MQTTConnection & 1)           << 26;     //67 108 864
+  switches_bitmap |= (PoolMaster_WifiReady & 1)     << 29;     //  536 870 912
+  switches_bitmap |= (PoolMaster_MQTTReady & 1)     << 28;     //  268 435 456
+  switches_bitmap |= (PoolMaster_FullyLoaded & 1)   << 27;     //  134 217 728
+  switches_bitmap |= (MQTTConnection & 1)           << 26;     //   67 108 864
+  switches_bitmap |= (!PhPump.TankLevel() & 1)      << 25;     //   33 554 432
+  switches_bitmap |= (!ChlPump.TankLevel() & 1)     << 24;     //   16 777 216
+  switches_bitmap |= (PSIError & 1)                 << 23;     //    8 388 608
+  switches_bitmap |= (PhPump.UpTimeError & 1)       << 22;     //    4 194 304
+  switches_bitmap |= (ChlPump.UpTimeError & 1)      << 21;     //    2 097 152
+  switches_bitmap |= ((digitalRead(POOL_LEVEL)==HIGH) & 1) << 20; // 1 048 576
 
-  switches_bitmap |= (!PhPump.TankLevel() & 1)      << 25;     //33 554 432
-  switches_bitmap |= (!ChlPump.TankLevel() & 1)     << 24;     //16 777 216
-  switches_bitmap |= (PSIError & 1)                 << 23;     //8 388 608
-  switches_bitmap |= (PhPump.UpTimeError & 1)       << 22;     //4 194 304
-  switches_bitmap |= (ChlPump.UpTimeError & 1)      << 21;     //2 097 152
-//  switches_bitmap |= (PhPump.IsRunning() & 1)       << 20;   //1 048 576
-  switches_bitmap |= (PhPID.GetMode() & 1)          << 13;     //8192
-  switches_bitmap |= (OrpPID.GetMode() & 1)         << 12;     //4096
-  switches_bitmap |= (PhPump.IsRunning() & 1)       << 11;     //2048
-  switches_bitmap |= (ChlPump.IsRunning() & 1)      << 10;     //1024
-  switches_bitmap |= (storage.AutoMode & 1)         << 9;      //512
-  switches_bitmap |= (FiltrationPump.IsRunning() & 1) << 8;    //256
-  switches_bitmap |= (RobotPump.IsRunning() & 1)    << 7;      //128
-  switches_bitmap |= (RELAYR0.IsActive() & 1)       << 6;      //64
-  switches_bitmap |= (RELAYR1.IsActive() & 1)       << 5;      //32
-  switches_bitmap |= (storage.WinterMode & 1)       << 4;      //16
-  switches_bitmap |= (SWG.IsRunning() & 1)          << 3;      //8
-  switches_bitmap |= (storage.ElectrolyseMode & 1)  << 2;      //4
-  switches_bitmap |= (storage.pHAutoMode & 1)       << 1;      //2
-  switches_bitmap |= (storage.OrpAutoMode & 1)      << 0;      //1
+  switches_bitmap |= (FillingPump.IsRunning() & 1)  << 14;     //       16 384
+  switches_bitmap |= (PhPID.GetMode() & 1)          << 13;     //        8 192
+  switches_bitmap |= (OrpPID.GetMode() & 1)         << 12;     //        4 096
+  switches_bitmap |= (PhPump.IsRunning() & 1)       << 11;     //        2 048
+  switches_bitmap |= (ChlPump.IsRunning() & 1)      << 10;     //        1 024
+  switches_bitmap |= (storage.AutoMode & 1)         << 9;      //          512
+  switches_bitmap |= (FiltrationPump.IsRunning() & 1) << 8;    //          256
+  switches_bitmap |= (RobotPump.IsRunning() & 1)    << 7;      //          128
+  switches_bitmap |= (RELAYR0.IsActive() & 1)       << 6;      //           64
+  switches_bitmap |= (RELAYR1.IsActive() & 1)       << 5;      //           32
+  switches_bitmap |= (storage.WinterMode & 1)       << 4;      //           16
+  switches_bitmap |= (SWGPump.IsRunning() & 1)          << 3;      //            8
+  switches_bitmap |= (storage.ElectrolyseMode & 1)  << 2;      //            4
+  switches_bitmap |= (storage.pHAutoMode & 1)       << 1;      //            2
+  switches_bitmap |= (storage.OrpAutoMode & 1)      << 0;      //            1
 
   myNex.writeNum(F(GLOBAL".vaSwitches.val"),switches_bitmap);
 }
@@ -203,7 +204,7 @@ void UpdateTFT(void *pvParameters)
 
       if(myNex.currentPageId == 3)     //Settings Menu
       {
-        period=PT10/3;
+        //period=PT10/3;
         
         // Rebuild menu if language has changed
         if(storage.Lang_Locale != Current_Language)
@@ -306,12 +307,20 @@ void UpdateTFT(void *pvParameters)
       {
         // Translations for page
         if(myNex.hasPageChanged()) {
+          uptime::calculateUptime();
+
           myNex.writeStr(PSTR("tInfoTitle.txt"),Helpers::translated_word(FL_(NXT_INFO_TITLE),storage.Lang_Locale));
           myNex.writeStr(PSTR("tAlarms.txt"),Helpers::translated_word(FL_(NXT_INFO_ALARMS),storage.Lang_Locale));
           myNex.writeStr(PSTR("tCompiledTitle.txt"),Helpers::translated_word(FL_(NXT_INFO_COMPILE),storage.Lang_Locale));
           myNex.writeStr(PSTR("tCompiledValue.txt"), compile_date); //FIRMW
+          myNex.writeStr(PSTR("tUpTime.txt"),Helpers::translated_word(FL_(NXT_INFO_UPTIME),storage.Lang_Locale));
+          snprintf_P(temp,sizeof(temp),PSTR("%d%s %dh %dmn"),uptime::getDays(),
+                                                             Helpers::translated_word(FL_(NXT_INFO_UPTIME_DAYS),storage.Lang_Locale),
+                                                             uptime::getHours(),
+                                                             uptime::getMinutes());
+          myNex.writeStr(PSTR("tUpTimeValue.txt"),temp);
           myNex.writeStr(PSTR("bReboot.txt"),Helpers::translated_word(FL_(NXT_INFO_REBOOT),storage.Lang_Locale));
-          myNex.writeStr(PSTR("bDebug.txt"),Helpers::translated_word(FL_(NXT_INFO_DEBUG),storage.Lang_Locale));
+          myNex.writeStr(PSTR("bReboot.txt"),Helpers::translated_word(FL_(NXT_INFO_REBOOT),storage.Lang_Locale));
           myNex.writeNum(PSTR("vaDelay.val"),REBOOT_DELAY);
           myNex.writeStr(F(GLOBAL".vaMCFW.txt"), FIRMW); 
         }
@@ -449,6 +458,42 @@ void UpdateTFT(void *pvParameters)
           myNex.writeStr(F("vaMQTTSRVID.txt"),temp);   
           snprintf_P(temp,sizeof(temp),PSTR("%s"),storage.MQTT_TOPIC);
           myNex.writeStr(F("vaMQTTTopic.txt"),temp);   
+        }
+      }
+      
+      if(myNex.currentPageId == 50)     //Alerts
+      {
+        if(myNex.hasPageChanged()) {
+          myNex.writeStr(PSTR("tTitle.txt"),Helpers::translated_word(FL_(NXT_ALERTS_TITLE),storage.Lang_Locale));
+          myNex.writeStr(PSTR("bClear.txt"),Helpers::translated_word(FL_(NXT_ALERTS_ACK),storage.Lang_Locale));
+          myNex.writeStr(PSTR("tWater.txt"),Helpers::translated_word(FL_(NXT_ALERTS_WATER),storage.Lang_Locale));
+        }
+      }
+
+      if(myNex.currentPageId == 51)     // SMTP Config
+      {
+        if(myNex.hasPageChanged()) {
+          myNex.writeStr(PSTR("tTitle.txt"),Helpers::translated_word(FL_(NXT_SMTP_TITLE),storage.Lang_Locale));
+          myNex.writeStr(PSTR("tServer.txt"),Helpers::translated_word(FL_(NXT_SMTP_SERVER),storage.Lang_Locale));
+          myNex.writeStr(PSTR("tLogin.txt"),Helpers::translated_word(FL_(NXT_SMTP_LOGIN),storage.Lang_Locale));
+          myNex.writeStr(PSTR("tPassword.txt"),Helpers::translated_word(FL_(NXT_SMTP_PASSWORD),storage.Lang_Locale));
+          myNex.writeStr(PSTR("tSrcEmail.txt"),Helpers::translated_word(FL_(NXT_SMTP_SENDER),storage.Lang_Locale));
+          myNex.writeStr(PSTR("tReciEmail.txt"),Helpers::translated_word(FL_(NXT_SMTP_RECIPIENT),storage.Lang_Locale));
+          myNex.writeStr(PSTR("bSave.txt"),Helpers::translated_word(FL_(NXT_SMTP_SAVE),storage.Lang_Locale));
+
+          // Update SMTP parameters
+          snprintf_P(temp,sizeof(temp),PSTR("%s"),storage.SMTP_SERVER);
+          myNex.writeStr(F("vaSMTPServer.txt"),temp);
+          snprintf_P(temp,sizeof(temp),PSTR("%d"),storage.SMTP_PORT);
+          myNex.writeStr(F("vaSMTPPORT.txt"),temp);
+          snprintf_P(temp,sizeof(temp),PSTR("%s"),storage.SMTP_LOGIN);
+          myNex.writeStr(F("vaSMTPLOGIN.txt"),temp);   
+          snprintf_P(temp,sizeof(temp),PSTR("%s"),storage.SMTP_PASS);
+          myNex.writeStr(F("vaSMTPPASSWORD.txt"),temp);   
+          snprintf_P(temp,sizeof(temp),PSTR("%s"),storage.SMTP_SENDER);
+          myNex.writeStr(F("vaSMTPEmail.txt"),temp);   
+          snprintf_P(temp,sizeof(temp),PSTR("%s"),storage.SMTP_RECIPIENT);
+          myNex.writeStr(F("vaSMTPRcvEmail.txt"),temp);   
         }
       }
 
@@ -623,8 +668,8 @@ void UpdateTFT(void *pvParameters)
         if (myNex.readNumber(F("vaUpdAuth.val"))==1) {
           //Update Button when authorized
           myNex.writeNum(F("btAUTO_0.val"),storage.ElectrolyseMode);
-          myNex.writeNum(F("btON_0.val"),(SWG.IsRunning()&&!storage.ElectrolyseMode));
-          myNex.writeNum(F("btOFF_0.val"),(!SWG.IsRunning()&&!storage.ElectrolyseMode));
+          myNex.writeNum(F("btON_0.val"),(SWGPump.IsRunning()&&!storage.ElectrolyseMode));
+          myNex.writeNum(F("btOFF_0.val"),(!SWGPump.IsRunning()&&!storage.ElectrolyseMode));
         }
 
         snprintf_P(temp,sizeof(temp),PSTR("%d"),storage.SecureElectro);
@@ -692,6 +737,30 @@ void UpdateTFT(void *pvParameters)
           myNex.writeNum(F("btOFF_2.val"),!RELAYR1.IsActive());
         }
       }
+
+      if(myNex.currentPageId == 26)     // Water Level Regulation
+      {
+        if(myNex.hasPageChanged()) {
+          myNex.writeStr(PSTR("tTitle.txt"),Helpers::translated_word(FL_(NXT_WATERLEVEL_TITLE),storage.Lang_Locale));
+          myNex.writeStr(PSTR("tItem_0.txt"),Helpers::translated_word(FL_(NXT_WATERLEVEL_MIN_UPTIME),storage.Lang_Locale));
+          myNex.writeStr(PSTR("tIcon_0.txt"),"╃");
+          myNex.writeStr(PSTR("tItem_1.txt"),Helpers::translated_word(FL_(NXT_WATERLEVEL_MAX_UPTIME),storage.Lang_Locale));
+          myNex.writeStr(PSTR("tIcon_1.txt"),"╹");
+          myNex.writeStr(PSTR("vaDecimal_0.txt"),"2|0|1|mn");
+          myNex.writeStr(PSTR("vaCommand_0.txt"),"FillMinUpTime");
+          myNex.writeStr(PSTR("vaDecimal_1.txt"),"2|0|1|mn");
+          myNex.writeStr(PSTR("vaCommand_1.txt"),"FillMaxUpTime");
+          myNex.writeStr(F("tsw 255,1"));
+        }
+
+        //Update Values
+        snprintf_P(temp,sizeof(temp),PSTR("%d"),storage.FillingPumpMinTime / 60);
+        myNex.writeStr(F("vaValueSrc_0.txt"),temp);
+        Debug.print(DBG_ERROR,"Writing Value Src_0  %s", temp);
+        snprintf_P(temp,sizeof(temp),PSTR("%d"),storage.FillingPumpMaxTime / 60);
+        myNex.writeStr(F("vaValueSrc_1.txt"),temp);
+        Debug.print(DBG_ERROR,"Writing Value Src_1  %s", temp);
+      }
       // vaControl Main Configuration
       // Menu Type
       // -1: Hide Control
@@ -729,7 +798,7 @@ void UpdateTFT(void *pvParameters)
               myNex.writeStr(F("click btInitialize,1"));
             break;
           case 21: // Heat Regulation
-            myNex.writeStr(PSTR("vaControl_0.txt"),"2|14");
+            myNex.writeStr(PSTR("vaControl_0.txt"),"-1|14");
             myNex.writeStr(PSTR("vaControl_1.txt"),"0|0|1|64");
             myNex.writeStr(PSTR("vaControl_2.txt"),"0|0|1|64");
             myNex.writeStr(F("click btInitialize,1"));
@@ -756,6 +825,12 @@ void UpdateTFT(void *pvParameters)
             myNex.writeStr(PSTR("vaControl_0.txt"),"1|17");  // Robot
             myNex.writeStr(PSTR("vaControl_1.txt"),"1|18");  // Lights
             myNex.writeStr(PSTR("vaControl_2.txt"),"1|19");  // Spare
+            myNex.writeStr(F("click btInitialize,1"));
+          break;
+          case 26: // Water Level Regulation
+            myNex.writeStr(PSTR("vaControl_0.txt"),"0|0|1|60");  // Filling Pump Min Uptime
+            myNex.writeStr(PSTR("vaControl_1.txt"),"0|0|1|60");  // Filling Pump Max Uptime
+            myNex.writeStr(PSTR("vaControl_2.txt"),"-1|0");  // Spare
             myNex.writeStr(F("click btInitialize,1"));
           break;
           }
@@ -819,7 +894,7 @@ void easyNexReadCustomCommand()
     case 'C': // Or <case 0x43:>  If 'C' matches Direct Command 
     {
       // from Nextion printh 23 01 43
-      char Cmd[100] = "";
+      char Cmd[200] = "";
       strcpy(Cmd,myNex.readStr(F(GLOBAL".vaCommand.txt")).c_str());
       xQueueSendToBack(queueIn,&Cmd,0);
       Debug.print(DBG_INFO,"Nextion direct command: %s",Cmd);
@@ -842,7 +917,7 @@ void easyNexReadCustomCommand()
         value = -1; // Instruct SetValue to Toggle the switch
       }
 
-      Debug.print(DBG_VERBOSE,"Comma Sent 53 %d %d",SwitchIndex,value);
+      Debug.print(DBG_VERBOSE,"Command Sent 53 %d %d",SwitchIndex,value);
       switch(SwitchIndex)
       {
         case 0x00:  // Filtration Mode
@@ -925,6 +1000,12 @@ void easyNexReadCustomCommand()
         break;
         case 0x19:  // Spare
           SetValue("Relay",value,1,RELAYR1.IsActive());
+        break;
+        case 0x20:  // Clear Alarms
+          SetValue("Clear",1);
+        break;
+        case 0x21:  // Filling Pump
+        SetValue("FillingPump",value,-1,FillingPump.IsRunning());
         break;
       }
       break;
@@ -1115,6 +1196,7 @@ void InitMenu()
   // 144: Date/Time
   // 145: Wifi Settings
   // 146: MQTT Settings
+  // 147: Alerts Settings
 
   //Delete all previously defined menu
   MainMenu.Reinitialize();
@@ -1141,13 +1223,15 @@ void InitMenu()
   SubMenu2.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU11),storage.Lang_Locale),"▓",nullptr,ENM_ACTION,1,24); // Tank Status
   SubMenu2.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU12),storage.Lang_Locale),"▭",nullptr,ENM_ACTION,1,23);// SWG Options
   SubMenu2.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU13),storage.Lang_Locale),"▮",nullptr,ENM_ACTION,1,21); // Heat Options
+  SubMenu2.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU14),storage.Lang_Locale),"╒",nullptr,ENM_ACTION,1,26); // Water Level Options
 
   SubMenu3.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU17),storage.Lang_Locale),"╂",nullptr,ENM_ACTION,1,25); // Control Relays
 
   SubMenu4.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU22),storage.Lang_Locale),"╴",nullptr,ENM_ACTION,141); // Language
-  SubMenu4.AddItem([]() {ToggleValue("Clear",false);},nullptr,Helpers::translated_word(FL_(NXT_SUBMENU23),storage.Lang_Locale),"△","△",ENM_BISTABLE, []() {return (false);}); // Ackowledge Alerts
+  SubMenu4.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU23),storage.Lang_Locale),"▘",nullptr,ENM_ACTION,147); // Alerts Settings
   SubMenu4.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU26),storage.Lang_Locale),"┮",nullptr,ENM_ACTION,145); // Wifi Settings
   SubMenu4.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU27),storage.Lang_Locale),"▪",nullptr,ENM_ACTION,146); // MQTT Settings
+  SubMenu4.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU28),storage.Lang_Locale),"◁",nullptr,ENM_ACTION,148); // SMTP Settings
   SubMenu4.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU25),storage.Lang_Locale),"╃",nullptr,ENM_ACTION,144); // Set Date/Time
   SubMenu4.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU24),storage.Lang_Locale),"▴",nullptr,ENM_ACTION,143); // System Info
 }

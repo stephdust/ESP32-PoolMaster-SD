@@ -51,16 +51,16 @@ void EncodeBitMap()
   BitMap2 |= (RELAYR0.IsActive() & 1) << 3;
   BitMap2 |= (RELAYR1.IsActive() & 1) << 2;
   BitMap2 |= (storage.WinterMode & 1) << 1;
-  BitMap2 |= (digitalRead(POOL_LEVEL) & 1) << 0;     
+  BitMap2 |= ((digitalRead(POOL_LEVEL) == HIGH) & 1) << 0;
 
-  BitMap3 |= (0 & 1U) << 7;
-  BitMap3 |= (0 & 1U) << 6;
-  BitMap3 |= (0 & 1U) << 5;
-  BitMap3 |= (0 & 1U) << 4;
-  BitMap3 |= (storage.ElectrolyseMode & 1) << 3;
-  BitMap3 |= (SWG.IsRunning() & 1) << 2;
-  BitMap3 |= (storage.pHAutoMode & 1) << 1;
-  BitMap3 |= (storage.OrpAutoMode & 1) << 0;
+  BitMap3 |= (0 & 1U) << 7;                         // 128
+  BitMap3 |= (storage.BuzzerOn & 1) << 6;           // 64
+  BitMap3 |= (FillingPump.UpTimeError & 1)  << 5;   // 32
+  BitMap3 |= (FillingPump.IsRunning() & 1) << 4;    // 16
+  BitMap3 |= (storage.ElectrolyseMode & 1) << 3;    // 8
+  BitMap3 |= (SWGPump.IsRunning() & 1) << 2;        // 4
+  BitMap3 |= (storage.pHAutoMode & 1) << 1;         // 2
+  BitMap3 |= (storage.OrpAutoMode & 1) << 0;        // 1
    
 }
 
@@ -110,7 +110,7 @@ void SettingsPublish(void *pvParameters)
     if (mqttClient.connected())
     {
         //send a JSON to MQTT broker. /!\ Split JSON if longer than 192 bytes
-        const int capacity = JSON_OBJECT_SIZE(9) + 10; // value recommended by ArduinoJson Assistant with slack for the Firmw string
+        const int capacity = JSON_OBJECT_SIZE(10) + 10; // value recommended by ArduinoJson Assistant with slack for the Firmw string
         StaticJsonDocument<capacity> root;
 
         root["FW"]     = Firmw;                            //firmware revision
@@ -121,6 +121,8 @@ void SettingsPublish(void *pvParameters)
         root["FSto"]   = storage.FiltrationStop;           //Computed filtration stop hour, equal to FSta + FDu (hour)
         root["pHUTL"]  = storage.PhPumpUpTimeLimit / 60;   //Max allowed daily run time for the pH pump (/!\ mins)
         root["ChlUTL"] = storage.ChlPumpUpTimeLimit / 60;  //Max allowed daily run time for the Chl pump (/!\ mins)
+        root["FMaUT"]  = storage.FillingPumpMaxTime / 60;  //Max allowed daily run time for the Pool Filling pump (/!\ mins)
+        root["FMiUT"]  = storage.FillingPumpMinTime / 60;  //Min allowed run time for the Pool Filling pump (/!\ mins)
 
         PublishTopic(PoolTopicSet1, root);
     }

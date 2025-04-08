@@ -273,7 +273,8 @@ void StatusLights(void *pvParameters)
     {
         line = 1;
         status |= (storage.AutoMode & 1) << 2;
-        status |= (AntiFreezeFiltering & 1) << 3;
+        status |= (AntiFreezeFiltering & 1) << 3;        
+        status |= ((digitalRead(POOL_LEVEL)==HIGH)  & 1) << 6;
         status |= (PSIError & 1) << 7;
     } else
     {
@@ -285,7 +286,10 @@ void StatusLights(void *pvParameters)
         status |= (PhPump.UpTimeError & 1) << 6;
         status |= (ChlPump.UpTimeError & 1) << 7;  
     }
-    (status & 0xF0) ? digitalWrite(BUZZER,HIGH) : digitalWrite(BUZZER,LOW) ;
+    if(storage.BuzzerOn)
+    {
+      (status & 0xF0) ? digitalWrite(BUZZER,HIGH) : digitalWrite(BUZZER,LOW) ;
+    }
     if(WiFi.status() == WL_CONNECTED) status |= 0x01;
         else status &= 0xFE;
     Debug.print(DBG_VERBOSE,"Status LED : 0x%02x",status);

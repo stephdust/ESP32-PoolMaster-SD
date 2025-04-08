@@ -28,6 +28,7 @@ String Firmw = FIRMW;
 //Settings structure and its default values
 // si pH+ : Kp=2250000.
 // si pH- : Kp=2700000.
+// Saved 7.3, 720.0, 1.8, 0.3, 16.0, 27.0, 3.0, -2.49, 6.87, 431.03, 0, 0.377923399, -0.17634473,
 #ifdef EXT_ADS1115
 StoreStruct storage =
 { 
@@ -36,7 +37,7 @@ StoreStruct storage =
   8, 11, 19, 8, 22, 20,
   2700, 2700, 30000,
   1800000, 1800000, 0, 0,
-  7.3, 720.0, 1.8, 0.3, 16.0, 27.0, 3.0, -2.49, 6.87, 431.03, 0, 0.377923399, -0.17634473,
+  7.3, 720.0, 1.8, 0.3, 16.0, 27.0, 3.0, 1.15, 6.97, 244.42, -18.15, 1.11, 0.00,
   2700000.0, 0.0, 0.0, 18000.0, 0.0, 0.0, 0.0, 0.0, 28.0, 7.3, 720., 1.3,
   100.0, 100.0, 20.0, 20.0, 1.5, 1.5,
   15, 2,  //ajout
@@ -44,7 +45,12 @@ StoreStruct storage =
   0,
   IPAddress(192,168,0,0), // IP
   1883,
-  "","",MQTTID,POOLTOPIC
+  "","",MQTTID,POOLTOPIC,
+  "",
+  587,
+  "", "","","",  
+  0,0,
+  0
 };
 #else
 StoreStruct storage =
@@ -62,7 +68,12 @@ StoreStruct storage =
   0,
   IPAddress(192,168,0,0), // IP
   1883,
-  "","",MQTTID,POOLTOPIC
+  "","",MQTTID,POOLTOPIC,
+  "",
+  587,
+  "", "","","",  
+  0,0,
+  0
 };
 #endif
 tm timeinfo;
@@ -126,11 +137,13 @@ Pump ChlPump(CHL_PUMP, CHL_PUMP, CHL_LEVEL, FiltrationPump.GetRelayReference(), 
 Pump RobotPump(ROBOT, ROBOT, NO_TANK, FiltrationPump.GetRelayReference());
 // SWG: This Pump is associated with a Salt Water Chlorine Generator. It turns on and off the equipment to produce chlorine.
 // It has no tank associated. It is interlocked with the relay of the FilrationPump
-Pump SWG(SPARE, SPARE, NO_TANK, FiltrationPump.GetRelayReference()); // SWG is interlocked with the Pump Relay
+Pump SWGPump(SWG_PUMP, SWG_PUMP, NO_TANK, FiltrationPump.GetRelayReference()); // SWG is interlocked with the Pump Relay
+// Filling Pump: This pump is autonomous, not interlocked with filtering pump.
+Pump FillingPump(FILL_PUMP,FILL_PUMP,(uint8_t)NO_LEVEL, (uint8_t)NO_INTERLOCK);
 
 // The Relays class to activate and deactivate digital pins
 Relay RELAYR0(PROJ);
-Relay RELAYR1(RELAY_R1);
+Relay RELAYR1(SPARE);
 
 // PIDs instances
 //Specify the direction and initial tuning parameters
@@ -328,13 +341,17 @@ void setup()
   ChlPump.SetTankFill(storage.ChlFill);
   ChlPump.SetMaxUpTime(storage.ChlPumpUpTimeLimit * 1000);
 
+  FillingPump.SetMaxUpTime(storage.FillingPumpMaxTime * 1000);
+
   // Configure SWG relay as bistable (simulate a button press to turn on and off the Salt Water Chlorine generator)
   // default relay type for class Pump
-  SWG.SetRelayType(RELAY_BISTABLE); 
-  //SWG.GetRelayReference()->SetBistableDelay(500); // Default delay between up and down for bistable relay is 500ms. Can be changed here.
-
+  SWGPump.SetRelayType(RELAY_BISTABLE); 
+  
   // Robot pump off at start
   RobotPump.Stop();
+  
+  // Pool Filling pump off at start
+  FillingPump.Stop();
 
   // Create queue for external commands
   queueIn = xQueueCreate((UBaseType_t)QUEUE_ITEMS_NBR,(UBaseType_t)QUEUE_ITEM_SIZE);
@@ -619,21 +636,34 @@ bool loadConfig()
   storage.Lang_Locale           = nvs.getUChar("Lang_Locale",0);
   storage.MQTT_IP               = nvs.getUInt("MQTT_IP",IPAddress(192,168,0,0));
   storage.MQTT_PORT             = nvs.getUInt("MQTT_PORT",1883);
-  nvs.getString("MQTT_LOGIN",storage.MQTT_LOGIN,29); 
-  nvs.getString("MQTT_PASS",storage.MQTT_PASS,29);
+  storage.FillingPumpMaxTime    = nvs.getUInt("FillingPumpMaxTime",2280);
+  storage.FillingPumpMinTime    = nvs.getUInt("FillingPumpMinTime",FILLING_PUMP_MINI_DURATION*60);
+  storage.SMTP_PORT             = nvs.getUInt("SMTP_PORT",587);
+  
+  nvs.getString("SMTP_SERVER",storage.SMTP_SERVER,49); 
+  nvs.getString("SMTP_LOGIN",storage.SMTP_LOGIN,62); 
+  nvs.getString("SMTP_PASS",storage.SMTP_PASS,62); 
+  nvs.getString("SMTP_SENDER",storage.SMTP_SENDER,149); 
+  nvs.getString("SMTP_RECIPIENT",storage.SMTP_RECIPIENT,149); 
+
+  nvs.getString("MQTT_LOGIN",storage.MQTT_LOGIN,62); 
+  nvs.getString("MQTT_PASS",storage.MQTT_PASS,62);
   if(nvs.getString("MQTT_ID",storage.MQTT_ID,29) == 0) {
     snprintf(storage.MQTT_ID,sizeof(storage.MQTT_ID),"%s",MQTTID);
   }
-  if(nvs.getString("MQTT_TOPIC",storage.MQTT_TOPIC,29) == 0) {
+  if(nvs.getString("MQTT_TOPIC",storage.MQTT_TOPIC,49) == 0) {
     snprintf(storage.MQTT_TOPIC,sizeof(storage.MQTT_TOPIC),"%s",POOLTOPIC);
   }
   
+  storage.BuzzerOn              = nvs.getBool("BuzzerOn",true);
+
   nvs.end();
 
   Debug.print(DBG_INFO,"%d",storage.ConfigVersion);
   Debug.print(DBG_INFO,"%d, %d, %d, %d",storage.Ph_RegulationOnOff,storage.Orp_RegulationOnOff,storage.AutoMode,storage.WinterMode);
   Debug.print(DBG_INFO,"%d, %d, %d, %d, %d, %d",storage.FiltrationDuration,storage.FiltrationStart,storage.FiltrationStop,
               storage.FiltrationStartMin,storage.FiltrationStopMax,storage.DelayPIDs);
+  delay(100);
   Debug.print(DBG_INFO,"%d, %d, %d",storage.PhPumpUpTimeLimit,storage.ChlPumpUpTimeLimit,storage.PublishPeriod);
   Debug.print(DBG_INFO,"%d, %d, %d, %d",storage.PhPIDWindowSize,storage.OrpPIDWindowSize,storage.PhPIDwindowStartTime,storage.OrpPIDwindowStartTime);
   Debug.print(DBG_INFO,"%3.1f, %4.0f, %3.1f, %3.1f, %3.0f, %3.0f, %4.1f, %8.6f, %9.6f, %11.6f, %11.6f, %3.1f, %3.1f",
@@ -641,6 +671,7 @@ bool loadConfig()
               storage.PSI_MedThreshold,storage.WaterTempLowThreshold,storage.WaterTemp_SetPoint,storage.AirTemp,
               storage.pHCalibCoeffs0,storage.pHCalibCoeffs1,storage.OrpCalibCoeffs0,storage.OrpCalibCoeffs1,
               storage.PSICalibCoeffs0,storage.PSICalibCoeffs1);
+  delay(100);
   Debug.print(DBG_INFO,"%8.0f, %3.0f, %3.0f, %6.0f, %3.0f, %3.0f, %7.0f, %7.0f, %4.2f, %4.2f, %4.0f, %4.2f",
               storage.Ph_Kp,storage.Ph_Ki,storage.Ph_Kd,storage.Orp_Kp,storage.Orp_Ki,storage.Orp_Kd,
               storage.PhPIDOutput,storage.OrpPIDOutput,storage.WaterTemp,storage.PhValue,storage.OrpValue,storage.PSIValue);
@@ -648,9 +679,14 @@ bool loadConfig()
               storage.pHPumpFR,storage.ChlPumpFR);
   Debug.print(DBG_INFO,"%d, %d, %d, %d, %d %d",storage.SecureElectro,storage.DelayElectro,storage.ElectrolyseMode,storage.pHAutoMode,
               storage.OrpAutoMode,storage.Lang_Locale);
+  delay(100);
   Debug.print(DBG_INFO,"%s, %d, %s, %s, %s %s",storage.MQTT_IP.toString().c_str(),storage.MQTT_PORT,storage.MQTT_LOGIN,storage.MQTT_PASS,
     storage.MQTT_ID,storage.MQTT_TOPIC);
+  delay(100);
+  Debug.print(DBG_INFO,"%s, %s, %s, %s, %d",storage.SMTP_SERVER,storage.SMTP_LOGIN,storage.SMTP_SENDER,storage.SMTP_RECIPIENT,
+    storage.SMTP_PORT);
   
+  Debug.print(DBG_INFO,"%d, %d",storage.FillingPumpMinTime,storage.FillingPumpMaxTime);
   return (storage.ConfigVersion == CONFIG_VERSION);
 }
 
@@ -719,6 +755,16 @@ bool saveConfig()
   i += nvs.putString("MQTT_PASS",storage.MQTT_PASS); 
   i += nvs.putString("MQTT_ID",storage.MQTT_ID); 
   i += nvs.putString("MQTT_TOPIC",storage.MQTT_TOPIC);
+  i += nvs.putString("SMTP_SERVER",storage.SMTP_SERVER); 
+  i += nvs.putUInt("SMTP_PORT",storage.SMTP_PORT); 
+  i += nvs.putString("SMTP_LOGIN",storage.SMTP_LOGIN); 
+  i += nvs.putString("SMTP_PASS",storage.SMTP_PASS); 
+  i += nvs.putString("SMTP_SENDER",storage.SMTP_SENDER); 
+  i += nvs.putString("SMTP_RECIPIENT",storage.SMTP_RECIPIENT); 
+  i += nvs.putUInt("FillingPumpMaxTime",storage.FillingPumpMaxTime);
+  i += nvs.putUInt("FillingPumpMinTime",storage.FillingPumpMinTime);
+  i += nvs.putBool("BuzzerOn",storage.BuzzerOn);
+
   nvs.end();
 
   Debug.print(DBG_INFO,"Bytes saved: %d / %d\n",i,sizeof(storage));

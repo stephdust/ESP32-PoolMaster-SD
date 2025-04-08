@@ -13,7 +13,6 @@ const char * const languages[] = {POOLMASTER_LOCALE_EN,
 
 static constexpr uint8_t NUM_LANGUAGES = sizeof(languages) / sizeof(const char *);
 
-
 // STRINGS USED IN NEXTION SCREENS (value passed in Nextion main loop when page changed)
 MAKE_WORD_TRANSLATION(NXT_ADD, "Add", "Ajout", "", "")
 MAKE_WORD_TRANSLATION(NXT_APPLY, "Apply", "Valider", "", "")
@@ -57,11 +56,15 @@ MAKE_WORD_TRANSLATION(NXT_NEWTANK_FILL, "Tank Fill (%)", "Remplissage \\r     (e
 MAKE_WORD_TRANSLATION(NXT_ELECTRO_TITLE, "SWG Configuration", "Configuration Electrolyseur", "", "")
 MAKE_WORD_TRANSLATION(NXT_ELECTRO_TEMP, "Minimum\\rTemperature", "Température\\rMinimum", "", "")
 MAKE_WORD_TRANSLATION(NXT_ELECTRO_DELAY, "Delay Before\\rStart", "Délai Avant\\rDémarrage (min)", "", "")
+
 MAKE_WORD_TRANSLATION(NXT_INFO_TITLE, "System Information", "Information Système", "", "")
 MAKE_WORD_TRANSLATION(NXT_INFO_ALARMS, "Alarms:", "Alarmes:", "", "")
 MAKE_WORD_TRANSLATION(NXT_INFO_COMPILE, "Compiled:", "Compilé:", "", "")
+MAKE_WORD_TRANSLATION(NXT_INFO_UPTIME, "UpTime:", "UpTime:", "", "")
+MAKE_WORD_TRANSLATION(NXT_INFO_UPTIME_DAYS, "d", "j", "", "")
 MAKE_WORD_TRANSLATION(NXT_INFO_REBOOT, "Reboot", "Redémmarer", "", "")
-MAKE_WORD_TRANSLATION(NXT_INFO_DEBUG, "Debug", "Diagnostic", "", "")
+MAKE_WORD_TRANSLATION(NXT_INFO_REBOOT_IN, "Reboot in...", "Redémarrage dans...", "", "")
+
 MAKE_WORD_TRANSLATION(NXT_DATE_TITLE, "Set Date/Time", "Réglage Horloge", "", "")
 
 MAKE_WORD_TRANSLATION(NXT_WIFI_TITLE, "Wifi Settings", "Réglages Wifi", "", "")
@@ -81,10 +84,18 @@ MAKE_WORD_TRANSLATION(NXT_MQTT_TOPIC, "Topic:", "Topic:", "", "")
 MAKE_WORD_TRANSLATION(NXT_MQTT_AUTHENT, "Authentication:", "Authentification:", "", "")
 MAKE_WORD_TRANSLATION(NXT_MQTT_STATUS, "Status:", "Etat:", "", "")
 
+MAKE_WORD_TRANSLATION(NXT_SMTP_TITLE, "SMTP Settings", "Configuration SMTP", "", "")
+MAKE_WORD_TRANSLATION(NXT_SMTP_SERVER, "Server:", "Serveur:", "", "")
+MAKE_WORD_TRANSLATION(NXT_SMTP_LOGIN, "Login:", "Utilisateur:", "", "")
+MAKE_WORD_TRANSLATION(NXT_SMTP_PASSWORD, "Password:", "Mot de Passe:", "", "")
+MAKE_WORD_TRANSLATION(NXT_SMTP_SENDER, "Sender:", "Emetteur:", "", "")
+MAKE_WORD_TRANSLATION(NXT_SMTP_RECIPIENT, "Recipient:", "Destinataire:", "", "")
+MAKE_WORD_TRANSLATION(NXT_SMTP_SAVE, "Save", "Enregistrer", "", "")
+
 MAKE_WORD_TRANSLATION(NXT_RELAYS_TITLE, "Relays", "Relais", "", "")
 MAKE_WORD_TRANSLATION(NXT_RELAYS_ROBOT, "Cleaning Robot", "Robot de Nettoyage", "", "")
 MAKE_WORD_TRANSLATION(NXT_RELAYS_LIGHTS, "Pool Lights", "Eclairage Piscine", "", "")
-MAKE_WORD_TRANSLATION(NXT_RELAYS_SPARE, "Spare Dry Contact", "Relai Additionel", "", "")
+MAKE_WORD_TRANSLATION(NXT_RELAYS_SPARE, "Spare Dry Contact", "Relais Additionel", "", "")
 
 MAKE_WORD_TRANSLATION(NXT_LANG_TITLE, "Language Selection", "Sélection de la langue", "", "")
 
@@ -102,6 +113,14 @@ MAKE_WORD_TRANSLATION(NXT_PHORPTANKS_FILL_CHL, "Chlorine", "Chlore", "", "")
 MAKE_WORD_TRANSLATION(NXT_SWITCH_LIGHTS, "Pool Lights", "Eclairage", "", "")
 MAKE_WORD_TRANSLATION(NXT_SWITCH_SPARE, "Spare Relay", "Relais Auxiliaire", "", "")
 MAKE_WORD_TRANSLATION(NXT_SWITCH_ROBOT, "Cleaning Robot", "Robot Nettoyage", "", "")
+
+MAKE_WORD_TRANSLATION(NXT_ALERTS_TITLE, "System Alarms", "Alertes Système", "", "")
+MAKE_WORD_TRANSLATION(NXT_ALERTS_ACK, "Achnowledge", "Acquitter", "", "")
+MAKE_WORD_TRANSLATION(NXT_ALERTS_WATER, "Level", "Niveau", "", "")
+
+MAKE_WORD_TRANSLATION(NXT_WATERLEVEL_TITLE, "Water Level Regulation", "Régulation Niveau d'Eau", "", "")
+MAKE_WORD_TRANSLATION(NXT_WATERLEVEL_MIN_UPTIME, "Min Running Time", "Durée Minimum", "", "")
+MAKE_WORD_TRANSLATION(NXT_WATERLEVEL_MAX_UPTIME, "Max Running Time", "Durée Maximum", "", "")
 
 // HELP MESSAGE
 MAKE_WORD_TRANSLATION(NXT_HELP_1_TITLE, "Probe Calibration", "Calibration des Sondes","","")
@@ -135,7 +154,7 @@ MAKE_WORD_TRANSLATION(NXT_SUBMENU10, "Orp Regulation", "Régulation Orp", "", ""
 MAKE_WORD_TRANSLATION(NXT_SUBMENU11, "Tank Status", "Etat des Bidons", "", "")
 MAKE_WORD_TRANSLATION(NXT_SUBMENU12, "SWG Regulation", "Régulation Electrolyse", "", "")
 MAKE_WORD_TRANSLATION(NXT_SUBMENU13, "Heat Regulation", "Régulation Température", "", "")
-MAKE_WORD_TRANSLATION(NXT_SUBMENU14, "", "", "", "")
+MAKE_WORD_TRANSLATION(NXT_SUBMENU14, "Water Level Regulation", "Régulation Niveau d'Eau", "", "")
 MAKE_WORD_TRANSLATION(NXT_SUBMENU15, "", "", "", "")
 MAKE_WORD_TRANSLATION(NXT_SUBMENU16, "", "", "", "")
 MAKE_WORD_TRANSLATION(NXT_SUBMENU17, "Relays", "Relais", "", "")
@@ -144,12 +163,12 @@ MAKE_WORD_TRANSLATION(NXT_SUBMENU19, "", "", "", "")
 MAKE_WORD_TRANSLATION(NXT_SUBMENU20, "", "", "", "")
 MAKE_WORD_TRANSLATION(NXT_SUBMENU21, "", "", "", "")
 MAKE_WORD_TRANSLATION(NXT_SUBMENU22, "Language", "Langue", "", "")
-MAKE_WORD_TRANSLATION(NXT_SUBMENU23, "Acknowledge Alerts", "Effacer les Alertes", "", "")
+MAKE_WORD_TRANSLATION(NXT_SUBMENU23, "Alerts", "Alertes", "", "")
 MAKE_WORD_TRANSLATION(NXT_SUBMENU24, "System Info", "Info Système", "", "")
 MAKE_WORD_TRANSLATION(NXT_SUBMENU25, "Set Date/Time", "Réglage Horloge", "", "")
 MAKE_WORD_TRANSLATION(NXT_SUBMENU26, "Wifi Settings", "Réglages Wifi", "", "")
 MAKE_WORD_TRANSLATION(NXT_SUBMENU27, "MQTT Settings", "Réglages MQTT", "", "")
-MAKE_WORD_TRANSLATION(NXT_SUBMENU28, "", "", "", "")
+MAKE_WORD_TRANSLATION(NXT_SUBMENU28, "SMTP Settings", "Réglages SMTP", "", "")
 MAKE_WORD_TRANSLATION(NXT_SUBMENU29, "", "", "", "")
 MAKE_WORD_TRANSLATION(NXT_SUBMENU30, "", "", "", "")
 MAKE_WORD_TRANSLATION(NXT_SUBMENU31, "", "", "", "")

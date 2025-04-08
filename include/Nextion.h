@@ -18,6 +18,7 @@
 #include "EasyNextionMenus.h"
 #include "translation.h"           // Include all translated strings into flash
 #include "HistoryStats.h"
+#include "uptime.h"
 
 #define GLOBAL  "globals" // Name of Nextion page to store global variables
 #define MAX_SHOWN_NETWORKS  15  // Maximum number of scanned networks to display

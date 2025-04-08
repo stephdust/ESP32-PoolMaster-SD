@@ -50,7 +50,7 @@ class Pump{
     void SetTankFill(double);
     double GetTankFill();
     void SetTankVolume(double Volume);
-    double GetTankUsage();    
+    double GetTankUsage();
     void SetFlowRate(double FlowRate);
     void SetMaxUpTime(unsigned long Max);
     void ResetUpTime();

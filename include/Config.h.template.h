@@ -50,8 +50,9 @@
 #define PH_PUMP         25
 #define CHL_PUMP        26
 #define PROJ            27    // Projecteur
-#define RELAY_R1        13   // Spare, not connected
-#define SPARE           4
+#define SPARE           4   // Should be 23
+#define SWG             13
+#define FILL_PUMP       23  // Should be 4
 
 //Digital input pins connected to Acid and Chl tank level reed switches
 #define CHL_LEVEL       39   // If chlorine tank empty switch used (contact open if low level)
