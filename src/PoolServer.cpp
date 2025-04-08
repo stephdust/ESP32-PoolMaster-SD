@@ -656,7 +656,7 @@ void ProcessCommand(void *pvParameters)
         else if (command.containsKey(F("SMTPConfig")))
         {
           strcpy(storage.SMTP_SERVER,command[F("SMTPConfig")][0]);
-          storage.MQTT_PORT = (uint)command[F("SMTPConfig")][1];
+          storage.SMTP_PORT = (uint)command[F("SMTPConfig")][1];
           strcpy(storage.SMTP_LOGIN,command[F("SMTPConfig")][2]);
           strcpy(storage.SMTP_PASS,command[F("SMTPConfig")][3]);
           strcpy(storage.SMTP_SENDER,command[F("SMTPConfig")][4]);
