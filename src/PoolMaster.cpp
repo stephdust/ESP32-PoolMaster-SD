@@ -297,12 +297,10 @@ void PoolMaster(void *pvParameters)
 if((digitalRead(POOL_LEVEL) == HIGH) && (!FillingPump.IsRunning())) {
   FillingPump.ResetUpTime();  // We are interested in computing uptime from now
   FillingPump.Start();
-  Debug.print(DBG_INFO,"[LOGIC] Start Filling Pump %d",FillingPump.UpTime);  
 } 
 
 // Stop Pump if level back to normal and minimum runtime reached
 if(FillingPump.IsRunning() && (digitalRead(POOL_LEVEL) == LOW) && (FillingPump.UpTime > (storage.FillingPumpMinTime*1000))) {
-  Debug.print(DBG_INFO,"[LOGIC] Stop Filling Pump %d > %d",FillingPump.UpTime,(storage.FillingPumpMinTime*1000));  
   FillingPump.Stop();
 }
 

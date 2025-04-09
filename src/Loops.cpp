@@ -274,7 +274,7 @@ void StatusLights(void *pvParameters)
         line = 1;
         status |= (storage.AutoMode & 1) << 2;
         status |= (AntiFreezeFiltering & 1) << 3;        
-        status |= ((digitalRead(POOL_LEVEL)==HIGH)  & 1) << 6;
+        status |= (FillingPump.UpTimeError  & 1) << 6;
         status |= (PSIError & 1) << 7;
     } else
     {

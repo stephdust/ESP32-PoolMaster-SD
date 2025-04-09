@@ -317,14 +317,14 @@ void ProcessCommand(void *pvParameters)
         else if (command.containsKey(F("FillMinUpTime"))) //"FillMinUpTime" command which sets the Min UpTime for filling pump
         {
           storage.FillingPumpMinTime = (unsigned int)command[F("FillMinUpTime")] * 60; 
-          saveParam("FillingPumpMinTime",storage.FillingPumpMinTime);
+          saveParam("FillPumpMinTime",storage.FillingPumpMinTime);
           PublishSettings();
         }
         else if (command.containsKey(F("FillMaxUpTime"))) //"FillMaxUpTime" command which sets the Max UpTime for filling pump
         {
           storage.FillingPumpMaxTime = (unsigned int)command[F("FillMaxUpTime")] * 60;
           FillingPump.SetMaxUpTime(storage.FillingPumpMaxTime * 1000);
-          saveParam("FillingPumpMaxTime",storage.FillingPumpMaxTime);
+          saveParam("FillPumpMaxTime",storage.FillingPumpMaxTime);
           PublishSettings();
         }
         else if (command.containsKey(F("OrpPIDParams"))) //"OrpPIDParams" command which sets the Kp, Ki and Kd values for Orp PID loop

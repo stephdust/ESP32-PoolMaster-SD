@@ -616,8 +616,8 @@ bool loadConfig()
   storage.Lang_Locale           = nvs.getUChar("Lang_Locale",0);
   storage.MQTT_IP               = nvs.getUInt("MQTT_IP",IPAddress(192,168,0,0));
   storage.MQTT_PORT             = nvs.getUInt("MQTT_PORT",1883);
-  storage.FillingPumpMaxTime    = nvs.getUInt("FillingPumpMaxTime",2280);
-  storage.FillingPumpMinTime    = nvs.getUInt("FillingPumpMinTime",FILLING_PUMP_MINI_DURATION*60);
+  storage.FillingPumpMaxTime    = nvs.getUInt("FillPumpMaxTime",2280);
+  storage.FillingPumpMinTime    = nvs.getUInt("FillPumpMinTime",FILLING_PUMP_MINI_DURATION*60);
   storage.SMTP_PORT             = nvs.getUInt("SMTP_PORT",587);
   
   nvs.getString("SMTP_SERVER",storage.SMTP_SERVER,49); 
@@ -740,8 +740,8 @@ bool saveConfig()
   i += nvs.putString("SMTP_PASS",storage.SMTP_PASS); 
   i += nvs.putString("SMTP_SENDER",storage.SMTP_SENDER); 
   i += nvs.putString("SMTP_RECIPIENT",storage.SMTP_RECIPIENT); 
-  i += nvs.putUInt("FillingPumpMaxTime",storage.FillingPumpMaxTime);
-  i += nvs.putUInt("FillingPumpMinTime",storage.FillingPumpMinTime);
+  i += nvs.putUInt("FillPumpMaxTime",storage.FillingPumpMaxTime);
+  i += nvs.putUInt("FillPumpMinTime",storage.FillingPumpMinTime);
   i += nvs.putBool("BuzzerOn",storage.BuzzerOn);
 
   nvs.end();
@@ -757,6 +757,8 @@ bool saveParam(const char* key, uint8_t val)
 {
   nvs.begin("PoolMaster",false);
   size_t i = nvs.putUChar(key,val);
+  size_t whatsLeft = nvs.freeEntries();
+  Debug.print(DBG_DEBUG,"Bytes saved: %d / %s = %d (freeentries %d)\n",i,key, val,whatsLeft);
   return(i == sizeof(val));
 }
 
@@ -764,6 +766,8 @@ bool saveParam(const char* key, bool val)
 {
   nvs.begin("PoolMaster",false);
   size_t i = nvs.putBool(key,val);
+  size_t whatsLeft = nvs.freeEntries();
+  Debug.print(DBG_DEBUG,"Bytes saved: %d / %s = %d (freeentries %d)\n",i,key, val,whatsLeft);
   return(i == sizeof(val));
 }
 
@@ -771,6 +775,9 @@ bool saveParam(const char* key, unsigned long val)
 {
   nvs.begin("PoolMaster",false);
   size_t i = nvs.putULong(key,val);
+  size_t whatsLeft = nvs.freeEntries();
+  Debug.print(DBG_DEBUG,"Bytes saved: %d / %s = %lu (freeentries %d)\n",i,key, val,whatsLeft);
+
   return(i == sizeof(val));
 }
 
@@ -778,6 +785,8 @@ bool saveParam(const char* key, double val)
 {
   nvs.begin("PoolMaster",false);
   size_t i = nvs.putDouble(key,val);
+  size_t whatsLeft = nvs.freeEntries();
+  Debug.print(DBG_DEBUG,"Bytes saved: %d / %s = %e (freeentries %d)\n",i,key, val,whatsLeft);
   return(i == sizeof(val));
 }
 
@@ -785,6 +794,8 @@ bool saveParam(const char* key, u_int val)
 {
   nvs.begin("PoolMaster",false);
   size_t i = nvs.putUInt(key,val);
+  size_t whatsLeft = nvs.freeEntries();
+  Debug.print(DBG_DEBUG,"Bytes saved: %d / %s = %d (freeentries %d)\n",i,key, val,whatsLeft);
   return(i == sizeof(val));
 }
 
@@ -792,6 +803,8 @@ bool saveParam(const char* key,char* val)
 {
   nvs.begin("PoolMaster",false);
   size_t i = nvs.putString(key,val);
+  size_t whatsLeft = nvs.freeEntries();
+  Debug.print(DBG_DEBUG,"Bytes saved: %d / %s = %s (freeentries %d)\n",i,key, val,whatsLeft);
   return(i == sizeof(val));
 }
 
@@ -799,6 +812,8 @@ bool saveParam(const char* key,IPAddress val)
 {
   nvs.begin("PoolMaster",false);
   size_t i = nvs.putUInt(key,val);
+  size_t whatsLeft = nvs.freeEntries();
+  Debug.print(DBG_DEBUG,"Bytes saved: %d / %s = %s (freeentries %d)\n",i,key, val.toString().c_str(),whatsLeft);
   return(i == sizeof(val));
 }
 
