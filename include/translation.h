@@ -62,7 +62,7 @@ MAKE_WORD_TRANSLATION(NXT_INFO_ALARMS, "Alarms:", "Alarmes:", "", "")
 MAKE_WORD_TRANSLATION(NXT_INFO_COMPILE, "Compiled:", "Compilé:", "", "")
 MAKE_WORD_TRANSLATION(NXT_INFO_UPTIME, "UpTime:", "UpTime:", "", "")
 MAKE_WORD_TRANSLATION(NXT_INFO_UPTIME_DAYS, "d", "j", "", "")
-MAKE_WORD_TRANSLATION(NXT_INFO_REBOOT, "Reboot", "Redémmarer", "", "")
+MAKE_WORD_TRANSLATION(NXT_INFO_REBOOT, "Reboot", "Redémarrer", "", "")
 MAKE_WORD_TRANSLATION(NXT_INFO_REBOOT_IN, "Reboot in...", "Redémarrage dans...", "", "")
 
 MAKE_WORD_TRANSLATION(NXT_DATE_TITLE, "Set Date/Time", "Réglage Horloge", "", "")
