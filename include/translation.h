@@ -95,7 +95,7 @@ MAKE_WORD_TRANSLATION(NXT_SMTP_SAVE, "Save", "Enregistrer", "", "")
 MAKE_WORD_TRANSLATION(NXT_RELAYS_TITLE, "Relays", "Relais", "", "")
 MAKE_WORD_TRANSLATION(NXT_RELAYS_ROBOT, "Cleaning Robot", "Robot de Nettoyage", "", "")
 MAKE_WORD_TRANSLATION(NXT_RELAYS_LIGHTS, "Pool Lights", "Eclairage Piscine", "", "")
-MAKE_WORD_TRANSLATION(NXT_RELAYS_SPARE, "Spare Dry Contact", "Relais Additionel", "", "")
+MAKE_WORD_TRANSLATION(NXT_RELAYS_SPARE, "Spare Dry Contact", "Relais Additionnel", "", "")
 
 MAKE_WORD_TRANSLATION(NXT_LANG_TITLE, "Language Selection", "Sélection de la langue", "", "")
 

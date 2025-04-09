@@ -43,6 +43,7 @@ void WriteSwitches()
   switches_bitmap |= (ChlPump.UpTimeError & 1)      << 21;     //    2 097 152
   switches_bitmap |= ((digitalRead(POOL_LEVEL)==HIGH) & 1) << 20; // 1 048 576
 
+  switches_bitmap |= (FillingPump.UpTimeError & 1)  << 15;     //       16 384
   switches_bitmap |= (FillingPump.IsRunning() & 1)  << 14;     //       16 384
   switches_bitmap |= (PhPID.GetMode() & 1)          << 13;     //        8 192
   switches_bitmap |= (OrpPID.GetMode() & 1)         << 12;     //        4 096
@@ -756,10 +757,8 @@ void UpdateTFT(void *pvParameters)
         //Update Values
         snprintf_P(temp,sizeof(temp),PSTR("%d"),storage.FillingPumpMinTime / 60);
         myNex.writeStr(F("vaValueSrc_0.txt"),temp);
-        Debug.print(DBG_ERROR,"Writing Value Src_0  %s", temp);
         snprintf_P(temp,sizeof(temp),PSTR("%d"),storage.FillingPumpMaxTime / 60);
         myNex.writeStr(F("vaValueSrc_1.txt"),temp);
-        Debug.print(DBG_ERROR,"Writing Value Src_1  %s", temp);
       }
       // vaControl Main Configuration
       // Menu Type
@@ -1231,7 +1230,9 @@ void InitMenu()
   SubMenu4.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU23),storage.Lang_Locale),"▘",nullptr,ENM_ACTION,147); // Alerts Settings
   SubMenu4.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU26),storage.Lang_Locale),"┮",nullptr,ENM_ACTION,145); // Wifi Settings
   SubMenu4.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU27),storage.Lang_Locale),"▪",nullptr,ENM_ACTION,146); // MQTT Settings
+  #ifdef SMTP
   SubMenu4.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU28),storage.Lang_Locale),"◁",nullptr,ENM_ACTION,148); // SMTP Settings
+  #endif
   SubMenu4.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU25),storage.Lang_Locale),"╃",nullptr,ENM_ACTION,144); // Set Date/Time
   SubMenu4.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU24),storage.Lang_Locale),"▴",nullptr,ENM_ACTION,143); // System Info
 }

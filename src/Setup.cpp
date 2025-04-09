@@ -274,26 +274,6 @@ void setup()
     Serial.print(".");
   }
   
-/*  if(WiFi.status() == WL_CONNECTED) {
-    SetWifiReady(true); // Inform Nextion screen
-  } else {
-    SetWifiReady(false); // Inform Nextion screen
-    Serial.print("Ignored Wifi Connection (timeout)");
-  }*/
-
-  // Initialize the mDNS library.
-  /*ConnectionTimeout = millis();
-  while (!MDNSStatus&&((unsigned long)(millis() - ConnectionTimeout) < WIFI_TIMEOUT)) {
-    MDNSStatus = MDNS.begin("PoolMaster");
-    Debug.print(DBG_ERROR,"Error setting up MDNS responder!");
-    delay(1000);
-  }
-  if(MDNSStatus) {
-    MDNS.addService("http", "tcp", SERVER_PORT);
-  } else {
-    Serial.print("Ignored MDNS (timeout)");
-  }*/
-
   // Start I2C for ADS1115 and status lights through PCF8574A
   Wire.begin(I2C_SDA,I2C_SCL);
 
@@ -683,8 +663,7 @@ bool loadConfig()
   Debug.print(DBG_INFO,"%s, %d, %s, %s, %s %s",storage.MQTT_IP.toString().c_str(),storage.MQTT_PORT,storage.MQTT_LOGIN,storage.MQTT_PASS,
     storage.MQTT_ID,storage.MQTT_TOPIC);
   delay(100);
-  Debug.print(DBG_INFO,"%s, %s, %s, %s, %d",storage.SMTP_SERVER,storage.SMTP_LOGIN,storage.SMTP_SENDER,storage.SMTP_RECIPIENT,
-    storage.SMTP_PORT);
+  Debug.print(DBG_INFO,"%s, %d, %s, %s, %s",storage.SMTP_SERVER,storage.SMTP_PORT, storage.SMTP_LOGIN,storage.SMTP_SENDER,storage.SMTP_RECIPIENT);
   
   Debug.print(DBG_INFO,"%d, %d",storage.FillingPumpMinTime,storage.FillingPumpMaxTime);
   return (storage.ConfigVersion == CONFIG_VERSION);

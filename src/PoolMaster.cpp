@@ -119,7 +119,6 @@ void PoolMaster(void *pvParameters)
         ChlPump.ResetUpTime();
         ChlPump.SetTankFill(storage.ChlFill);
         RobotPump.ResetUpTime();
-        FillingPump.ResetUpTime();
         SWGPump.ResetUpTime();
 
         //EmergencyStopFiltPump = false;
@@ -234,7 +233,7 @@ void PoolMaster(void *pvParameters)
           !cleaning_done)
       {
           RobotPump.Start();
-          Debug.print(DBG_INFO,"[LOGIC] Robot Start %d mn after Filtration",0);   
+          Debug.print(DBG_INFO,"[LOGIC] Robot Start %d mn after Filtration",ROBOT_DELAY);   
       }
       if(RobotPump.IsRunning() && storage.AutoMode && ((millis() - RobotPump.LastStartTime) / 1000 / 60) >= ROBOT_DURATION)
       {
@@ -296,11 +295,14 @@ void PoolMaster(void *pvParameters)
 
 // Check water level (HIGH means that jumper is opened)
 if((digitalRead(POOL_LEVEL) == HIGH) && (!FillingPump.IsRunning())) {
+  FillingPump.ResetUpTime();  // We are interested in computing uptime from now
   FillingPump.Start();
+  Debug.print(DBG_INFO,"[LOGIC] Start Filling Pump %d",FillingPump.UpTime);  
 } 
 
 // Stop Pump if level back to normal and minimum runtime reached
 if(FillingPump.IsRunning() && (digitalRead(POOL_LEVEL) == LOW) && (FillingPump.UpTime > (storage.FillingPumpMinTime*1000))) {
+  Debug.print(DBG_INFO,"[LOGIC] Stop Filling Pump %d > %d",FillingPump.UpTime,(storage.FillingPumpMinTime*1000));  
   FillingPump.Stop();
 }
 

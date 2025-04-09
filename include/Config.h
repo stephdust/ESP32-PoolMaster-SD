@@ -28,16 +28,7 @@
 #endif 
 
 // Mail parameters and credentials
-#define SMTP  // define to activate SMTP email notifications
-#ifdef SMTP
-// Commented out because now configurable
-//  #define SMTP_HOST "your smtp server"
-//  #define SMTP_PORT 587  // check the port number
-//  #define AUTHOR_EMAIL "your email address"
-//  #define AUTHOR_LOGIN "your user name"
-//  #define AUTHOR_PASSWORD "your password"
-//  #define RECIPIENT_EMAIL "your recipient email address"
-#endif
+//#define SMTP  // define to activate SMTP email notifications
 
 // PID Directions (either DIRECT or REVERSE depending on Ph/Orp correction vs water properties)
 #define PhPID_DIRECTION REVERSE
