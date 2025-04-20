@@ -471,7 +471,6 @@ void setup()
     app_cpu
   );
 
-  
   // Personal Addons
   xTaskCreatePinnedToCore(
     AddonsAction,
