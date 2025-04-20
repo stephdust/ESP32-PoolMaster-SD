@@ -1,20 +1,50 @@
 #include <Arduino.h>                // Arduino framework
 #include "Config.h"
 #include "PoolMaster.h"
+
+// Addons Headers
+#define MaxAddons 3
 #include "BCM68X.h"
 //#include "RF433T.h"
 
 void stack_mon(UBaseType_t&);
+static int _NbAddons = 0;
+
+struct AddonsFunctionsStruct {
+    char  name[7];  // MAX 6 chars for the name
+    void *init(void);
+    void *action(void*);
+    void *SettingsJSON(void*);
+    void *MeasuresJSON(void*);
+};
+static AddonsFunctionsStruct AddonsFunctions[MaxAddons];
+
+void AddAddons(char* name, void* init, void* action, void *SettingsJSON, void *MeasuresJSON)
+{
+    if (_NbAddons == MaxAddons) return;
+    AddonsFunctions[_NbAddons].name = name;
+    AddonsFunctions[_NbAddons].init = init;
+    AddonsFunctions[_NbAddons].action = action;
+    AddonsFunctions[_NbAddons].SettingsJSON = SettingsJSON;
+    AddonsFunctions[_NbAddons].MeasuresJSON = MeasuresJSON;
+    _NbAddons++;
+}
 
 //Init All Addons
 void AddonsInit()
 {
 #ifdef BME68X
-    BCM68XInit();
+    AddAddons("BME68x", BCM68XInit, BCM68XAction, BCM68XSettingsJSON, BCM68XMeasureJSON);
 #endif
 #ifdef RF433T
-    RF433TInit();
+    AddAddons("RF433T", RF433TInit, RF433TAction, RF433TSettingsJSON, RT433TMeasureJSON);
 #endif
+    for (int i=_NbAddons-1; i<MaxAddons; i++) AddonsFunctions[i] = {"", 0, 0, 0, 0};
+}
+
+int NbAddons()
+{
+    return NbAddons;
 }
 
 void AddonsAction(void *pvParameters)
@@ -41,12 +71,7 @@ void AddonsAction(void *pvParameters)
     td = millis();
     #endif 
 
-#ifdef BME68X
-    BCM68XAction(pvParameters);
-#endif
-#ifdef RF433T
-    RF433TAction(pvParameters);
-#endif
+    for (int i=0; i<_NbAddons; i++) *AddonsFunctions[i].action(pvParameters);
 
     #ifdef CHRONO
     t_act = millis() - td;
