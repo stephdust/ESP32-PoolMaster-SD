@@ -35,6 +35,8 @@ static uint8_t Current_Language = 0;
 const char compile_date[] = __DATE__ " " __TIME__;
 
 static unsigned long LastWifiScan = 0; // Last Wifi Networks Scan
+static unsigned long LastUpdatedHome = 0; // Last Time Home Page Updated
+
 
 // Sample Data For Graphing
 extern CircularBuffer<int,NUMBER_OF_HISTORY_SAMPLES> pH_Samples;
