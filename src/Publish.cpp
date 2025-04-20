@@ -17,13 +17,16 @@ static uint8_t BitMap1 = 0;
 static uint8_t BitMap2 = 0;
 static uint8_t BitMap3 = 0;
 
-static const char* PoolTopicMeas1 = POOLTOPIC"Meas1";
-static const char* PoolTopicMeas2 = POOLTOPIC"Meas2";
-static const char* PoolTopicSet1  = POOLTOPIC"Set1";
-static const char* PoolTopicSet2  = POOLTOPIC"Set2";
-static const char* PoolTopicSet3  = POOLTOPIC"Set3";
-static const char* PoolTopicSet4  = POOLTOPIC"Set4";
-static const char* PoolTopicSet5  = POOLTOPIC"Set5";
+static const char* PoolTopicMeas1 = "Meas1";
+static const char* PoolTopicMeas2 = "Meas2";
+static const char* PoolTopicSet1  = "Set1";
+static const char* PoolTopicSet2  = "Set2";
+static const char* PoolTopicSet3  = "Set3";
+static const char* PoolTopicSet4  = "Set4";
+static const char* PoolTopicSet5  = "Set5";
+
+static char tempTopicSet[100];
+static char tempTopicMeas[100];
 
 int freeRam(void);
 void stack_mon(UBaseType_t&);
@@ -119,12 +122,14 @@ void SettingsPublish(void *pvParameters)
         root["FDu"]    = storage.FiltrationDuration;       //Computed filtration duration based on water temperature (hours)
         root["FStoM"]  = storage.FiltrationStopMax;        //Latest hour for the filtration to run. Whatever happens, filtration won't run later than this hour
         root["FSto"]   = storage.FiltrationStop;           //Computed filtration stop hour, equal to FSta + FDu (hour)
-        root["pHUTL"]  = storage.PhPumpUpTimeLimit / 60;   //Max allowed daily run time for the pH pump (/!\ mins)
-        root["ChlUTL"] = storage.ChlPumpUpTimeLimit / 60;  //Max allowed daily run time for the Chl pump (/!\ mins)
-        root["FMaUT"]  = storage.FillingPumpMaxTime / 60;  //Max allowed daily run time for the Pool Filling pump (/!\ mins)
-        root["FMiUT"]  = storage.FillingPumpMinTime / 60;  //Min allowed run time for the Pool Filling pump (/!\ mins)
+        root["pHUTL"]  = storage.PumpsConfig[PUMP_PH].pump_max_uptime / 60;   //Max allowed daily run time for the pH pump (/!\ mins)
+        root["ChlUTL"] = storage.PumpsConfig[PUMP_CHL].pump_max_uptime / 60;  //Max allowed daily run time for the Chl pump (/!\ mins)
+        root["FMaUT"]  = storage.PumpsConfig[PUMP_FILL].pump_max_uptime / 60;  //Max allowed daily run time for the Pool Filling pump (/!\ mins)
+        root["FMiUT"]  = storage.PumpsConfig[PUMP_FILL].pump_min_uptime / 60;  //Min allowed run time for the Pool Filling pump (/!\ mins)
 
-        PublishTopic(PoolTopicSet1, root);
+        snprintf(tempTopicSet,sizeof(tempTopicSet),"%s/%s",storage.MQTT_TOPIC,PoolTopicSet1);
+        remove_duplicates_slash(tempTopicSet);
+        PublishTopic(tempTopicSet, root);
     }
     else
         Debug.print(DBG_ERROR,"Failed to connect to the MQTT broker");
@@ -144,7 +149,9 @@ void SettingsPublish(void *pvParameters)
         root["PSIHT"] = storage.PSI_HighThreshold * 100;            //Water pressure high threshold to trigger error (/!\ x100)
         root["PSIMT"] = storage.PSI_MedThreshold * 100;             //Water pressure medium threshold (unused yet) (/!\ x100)
 
-        PublishTopic(PoolTopicSet2, root);
+        snprintf(tempTopicSet,sizeof(tempTopicSet),"%s/%s",storage.MQTT_TOPIC,PoolTopicSet2);
+        remove_duplicates_slash(tempTopicSet);
+        PublishTopic(tempTopicSet, root);
     }
     else
         Debug.print(DBG_ERROR,"Failed to connect to the MQTT broker");
@@ -162,7 +169,9 @@ void SettingsPublish(void *pvParameters)
         root["PSIC0"] = storage.PSICalibCoeffs0;           //Pressure sensor calibration coefficient C0
         root["PSIC1"] = storage.PSICalibCoeffs1;           //Pressure sensor calibration coefficient C1
 
-        PublishTopic(PoolTopicSet3, root);
+        snprintf(tempTopicSet,sizeof(tempTopicSet),"%s/%s",storage.MQTT_TOPIC,PoolTopicSet3);
+        remove_duplicates_slash(tempTopicSet);
+        PublishTopic(tempTopicSet, root);
     }
     else
         Debug.print(DBG_ERROR,"Failed to connect to the MQTT broker");
@@ -184,7 +193,9 @@ void SettingsPublish(void *pvParameters)
         root["Dpid"]   = storage.DelayPIDs;     //Delay from FSta for the water regulation/PIDs to start (mins) 
         root["PubP"]   = storage.PublishPeriod/1000; // Settings publish period in sec
 
-        PublishTopic(PoolTopicSet4, root);
+        snprintf(tempTopicSet,sizeof(tempTopicSet),"%s/%s",storage.MQTT_TOPIC,PoolTopicSet4);
+        remove_duplicates_slash(tempTopicSet);
+        PublishTopic(tempTopicSet, root);
     }
     else
         Debug.print(DBG_ERROR,"Failed to connect to the MQTT broker");
@@ -195,14 +206,16 @@ void SettingsPublish(void *pvParameters)
         const int capacity = JSON_OBJECT_SIZE(6);
         StaticJsonDocument<capacity> root;
 
-        root["pHTV"]  = storage.pHTankVol;           //Acid tank nominal volume (Liters)
-        root["ChlTV"] = storage.ChlTankVol;          //Chl tank nominal volume (Liters)
-        root["pHFR"]  = storage.pHPumpFR;            //Acid pump flow rate (L/hour)
-        root["OrpFR"] = storage.ChlPumpFR;           //Chl pump flow rate (L/hour)
+        root["pHTV"]  = storage.PumpsConfig[PUMP_PH].tank_vol;        //Acid tank nominal volume (Liters)
+        root["ChlTV"] = storage.PumpsConfig[PUMP_CHL].tank_vol;       //Chl tank nominal volume (Liters)
+        root["pHFR"]  = storage.PumpsConfig[PUMP_PH].pump_flow_rate;  //Acid pump flow rate (L/hour)
+        root["OrpFR"] = storage.PumpsConfig[PUMP_CHL].pump_flow_rate;  //Chl pump flow rate (L/hour)
         root["SWGSec"] = storage.SecureElectro;           //SWG Chlorine Generator Secure Temperature (°C)
         root["SWGDel"] = storage.DelayElectro;           //SWG Chlorine Generator Delay before start after pump (mn)
-        
-        PublishTopic(PoolTopicSet5, root);
+
+        snprintf(tempTopicSet,sizeof(tempTopicSet),"%s/%s",storage.MQTT_TOPIC,PoolTopicSet5);
+        remove_duplicates_slash(tempTopicSet);
+        PublishTopic(tempTopicSet, root);
     }
     else
         Debug.print(DBG_ERROR,"Failed to connect to the MQTT broker");
@@ -299,7 +312,9 @@ void MeasuresPublish(void *pvParameters)
         root["PhUpT"]   = PhPump.UpTime / 1000;
         root["ChlUpT"]  = ChlPump.UpTime / 1000;
 
-        PublishTopic(PoolTopicMeas1, root);
+        snprintf(tempTopicMeas,sizeof(tempTopicMeas),"%s/%s",storage.MQTT_TOPIC,PoolTopicMeas1);
+        remove_duplicates_slash(tempTopicMeas);
+        PublishTopic(tempTopicMeas, root);
     }
     else
         Debug.print(DBG_ERROR,"Failed to connect to the MQTT broker");
@@ -318,7 +333,9 @@ void MeasuresPublish(void *pvParameters)
         root["IO2"]   = BitMap2;
         root["IO3"]   = BitMap3;
 
-        PublishTopic(PoolTopicMeas2, root);
+        snprintf(tempTopicMeas,sizeof(tempTopicMeas),"%s/%s",storage.MQTT_TOPIC,PoolTopicMeas2);
+        remove_duplicates_slash(tempTopicMeas);
+        PublishTopic(tempTopicMeas, root);
     }
     else
         Debug.print(DBG_ERROR,"Failed to connect to the MQTT broker");
@@ -346,3 +363,4 @@ void MeasuresPublish(void *pvParameters)
     WaitTimeOut = (TickType_t)storage.PublishPeriod/portTICK_PERIOD_MS - DeltaTime;   
   }  
 }
+

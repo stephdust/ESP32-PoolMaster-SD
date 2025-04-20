@@ -7,6 +7,7 @@
 #include "PoolMaster.h"
 
 // Functions prototypes
+bool savePumpsConf(void);
 bool saveParam(const char*,uint8_t );
 bool saveParam(const char*,bool );
 bool saveParam(const char*,unsigned long );
@@ -276,26 +277,42 @@ void ProcessCommand(void *pvParameters)
         //First parameter is volume of tank in Liters, second parameter is percentage Fill of the tank (typically 100% when new)
         else if (command.containsKey(F("pHTank")))
         {
-          storage.pHTankVol = (double)command[F("pHTank")][0];
+          /*storage.pHTankVol = (double)command[F("pHTank")][0];
           PhPump.SetTankVolume(storage.pHTankVol);
           storage.AcidFill = (double)command[F("pHTank")][1];
           PhPump.SetTankFill(storage.AcidFill);
         //  PhPump.ResetUpTime();
           saveParam("pHTankVol",storage.pHTankVol);
           saveParam("AcidFill",storage.AcidFill);               
+          PublishSettings();*/
+
+          // New Version 
+          storage.PumpsConfig[PUMP_PH].tank_vol = (double)command[F("pHTank")][0];
+          storage.PumpsConfig[PUMP_PH].tank_fill = (double)command[F("pHTank")][1];
+          PhPump.SetTankVolume(storage.PumpsConfig[PUMP_PH].tank_vol);
+          PhPump.SetTankFill(storage.PumpsConfig[PUMP_PH].tank_fill);
+          savePumpsConf();
           PublishSettings();
         }
         //"ChlTank" command which is called when the Chl tank is changed or refilled
         //First parameter is volume of tank in Liters, second parameter is percentage Fill of the tank (typically 100% when new)
         else if (command.containsKey(F("ChlTank")))
         {
-          storage.ChlTankVol = (double)command[F("ChlTank")][0];
+          /*storage.ChlTankVol = (double)command[F("ChlTank")][0];
           ChlPump.SetTankVolume(storage.ChlTankVol);
           storage.ChlFill = (double)command[F("ChlTank")][1];
           ChlPump.SetTankFill(storage.ChlFill);
         //  ChlPump.ResetUpTime();
           saveParam("ChlTankVol",storage.ChlTankVol);
           saveParam("ChlFill",storage.ChlFill);
+          PublishSettings();*/
+
+          // New Version 
+          storage.PumpsConfig[PUMP_CHL].tank_vol = (double)command[F("ChlTank")][0];
+          storage.PumpsConfig[PUMP_CHL].tank_fill = (double)command[F("ChlTank")][1];
+          PhPump.SetTankVolume(storage.PumpsConfig[PUMP_CHL].tank_vol);
+          PhPump.SetTankFill(storage.PumpsConfig[PUMP_CHL].tank_fill);
+          savePumpsConf();
           PublishSettings();
         }
         else if (command.containsKey(F("WTempLow"))) //"WTempLow" command which sets the setpoint for Water temp low threshold
@@ -306,25 +323,43 @@ void ProcessCommand(void *pvParameters)
         }
         else if (command.containsKey(F("PumpsMaxUp"))) //"PumpsMaxUp" command which sets the Max UpTime for pumps
         {
-          storage.PhPumpUpTimeLimit = (unsigned int)command[F("PumpsMaxUp")];
-          PhPump.SetMaxUpTime(storage.PhPumpUpTimeLimit * 1000);
-          storage.ChlPumpUpTimeLimit = (unsigned int)command[F("PumpsMaxUp")];
-          ChlPump.SetMaxUpTime(storage.ChlPumpUpTimeLimit * 1000);
-          saveParam("PhPumpUTL",storage.PhPumpUpTimeLimit);
-          saveParam("ChlPumpUTL",storage.ChlPumpUpTimeLimit);                    
+          //storage.PhPumpUpTimeLimit = (unsigned int)command[F("PumpsMaxUp")];
+          //storage.ChlPumpUpTimeLimit = (unsigned int)command[F("PumpsMaxUp")];
+          //saveParam("PhPumpUTL",storage.PhPumpUpTimeLimit);
+          //saveParam("ChlPumpUTL",storage.ChlPumpUpTimeLimit);
+          
+          //New way of storing pumps info
+          storage.PumpsConfig[PUMP_PH].pump_max_uptime = (unsigned int)command[F("PumpsMaxUp")];
+          storage.PumpsConfig[PUMP_CHL].pump_max_uptime = (unsigned int)command[F("PumpsMaxUp")];
+          savePumpsConf();
+
+          // Apply changes
+          PhPump.SetMaxUpTime(storage.PumpsConfig[PUMP_PH].pump_max_uptime * 1000);
+          ChlPump.SetMaxUpTime(storage.PumpsConfig[PUMP_CHL].pump_max_uptime * 1000);
           PublishSettings();
         }
         else if (command.containsKey(F("FillMinUpTime"))) //"FillMinUpTime" command which sets the Min UpTime for filling pump
         {
-          storage.FillingPumpMinTime = (unsigned int)command[F("FillMinUpTime")] * 60; 
+          /*storage.FillingPumpMinTime = (unsigned int)command[F("FillMinUpTime")] * 60; 
           saveParam("FillPumpMinTime",storage.FillingPumpMinTime);
+          PublishSettings();*/
+
+          // New way of storing
+          storage.PumpsConfig[PUMP_FILL].pump_min_uptime = (unsigned int)command[F("FillMinUpTime")] * 60; 
+          savePumpsConf();
           PublishSettings();
         }
         else if (command.containsKey(F("FillMaxUpTime"))) //"FillMaxUpTime" command which sets the Max UpTime for filling pump
         {
-          storage.FillingPumpMaxTime = (unsigned int)command[F("FillMaxUpTime")] * 60;
+          /*storage.FillingPumpMaxTime = (unsigned int)command[F("FillMaxUpTime")] * 60;
           FillingPump.SetMaxUpTime(storage.FillingPumpMaxTime * 1000);
           saveParam("FillPumpMaxTime",storage.FillingPumpMaxTime);
+          PublishSettings();*/
+
+          // New way of storing
+          storage.PumpsConfig[PUMP_FILL].pump_max_uptime = (unsigned int)command[F("FillMaxUpTime")] * 60; 
+          FillingPump.SetMaxUpTime(storage.PumpsConfig[PUMP_FILL].pump_max_uptime * 1000);
+          savePumpsConf();
           PublishSettings();
         }
         else if (command.containsKey(F("OrpPIDParams"))) //"OrpPIDParams" command which sets the Kp, Ki and Kd values for Orp PID loop
@@ -407,16 +442,32 @@ void ProcessCommand(void *pvParameters)
         }         
         else if (command.containsKey(F("pHPumpFR")))//"PhPumpFR" set flow rate of Ph pump
         {
-          storage.pHPumpFR = (double)command[F("pHPumpFR")];
+          /*storage.pHPumpFR = (double)command[F("pHPumpFR")];
           PhPump.SetFlowRate((double)command[F("pHPumpFR")]);
           saveParam("pHPumpFR",storage.pHPumpFR);
+          PublishSettings();*/
+
+          // New version
+          storage.PumpsConfig[PUMP_PH].pump_flow_rate = (double)command[F("pHPumpFR")];
+          savePumpsConf();
+
+          // Apply changes
+          PhPump.SetFlowRate(storage.PumpsConfig[PUMP_PH].pump_flow_rate * 1000);
           PublishSettings();
         }
         else if (command.containsKey(F("ChlPumpFR")))//"ChlPumpFR" set flow rate of Chl pump
         {
-          storage.ChlPumpFR = (double)command[F("ChlPumpFR")];
+          /*storage.ChlPumpFR = (double)command[F("ChlPumpFR")];
           ChlPump.SetFlowRate((double)command[F("ChlpumpFR")]);
           saveParam("ChlPumpFR",storage.ChlPumpFR);
+          PublishSettings();*/
+
+          // New version
+          storage.PumpsConfig[PUMP_CHL].pump_flow_rate = (double)command[F("ChlPumpFR")];
+          savePumpsConf();
+
+          // Apply changes
+          PhPump.SetFlowRate(storage.PumpsConfig[PUMP_CHL].pump_flow_rate * 1000);
           PublishSettings();
         }
         else if (command.containsKey(F("RstpHCal")))//"RstpHCal" reset the calibration coefficients of the pH probe
@@ -497,8 +548,6 @@ void ProcessCommand(void *pvParameters)
             FillingPump.Stop();       //stop swimming pool filling pump
           else
             FillingPump.Start();      //start swimming pool filling pump
-          
-          PublishSettings();
         }
         else if (command.containsKey(F("ChlPump"))) //"ChlPump" command which starts or stops the Acid pump
         {
@@ -547,10 +596,10 @@ void ProcessCommand(void *pvParameters)
           switch ((int)command[F("Relay")][0])
           {
             case 0:
-              (bool)command[F("Relay")][1] ? RELAYR0.Start() : RELAYR0.Stop();
+              (bool)command[F("Relay")][1] ? RELAYR0.Enable() : RELAYR0.Disable();
               break;
             case 1:
-              (bool)command[F("Relay")][1] ? RELAYR1.Start()  : RELAYR1.Stop();
+              (bool)command[F("Relay")][1] ? RELAYR1.Enable()  : RELAYR1.Disable();
               break;
           }
         }
@@ -677,6 +726,40 @@ void ProcessCommand(void *pvParameters)
             storage.BuzzerOn = false;
           
           saveParam("BuzzerOn",storage.BuzzerOn);
+        } else if (command.containsKey(F("PINConfig"))) //"OrpPID" command which starts or stops the Orp PID loop
+        {
+          uint8_t temp_index = (uint8_t)command[F("PINConfig")][0];
+
+          // Save changes
+          storage.PumpsConfig[temp_index].pin_number = (uint8_t)command[F("PINConfig")][1]; // PIN Number
+          storage.PumpsConfig[temp_index].pin_active_level = (bool)command[F("PINConfig")][2]; // LEVEL HIGH or LOW
+          storage.PumpsConfig[temp_index].relay_operation_mode = (bool)command[F("PINConfig")][3]; // LATCH or MOMENTARY
+          uint8_t lock_id = (uint8_t)command[F("PINConfig")][4];
+          lock_id = ((lock_id == 255)?255:lock_id-1); // Nextion counts from 1 to 8 but GetInterlockId return from 0 to 7 (except NO_INTERLOCK which does not move)
+          storage.PumpsConfig[temp_index].pin_interlock = lock_id ; // INTERLOCK PIN INDEX (Nextion counts 1 to 8 so substract 1)
+          savePumpsConf();
+
+          // Apply changes
+          Pool_Equipment[temp_index]->SetPinNumber((uint8_t)command[F("PINConfig")][1]);
+          Pool_Equipment[temp_index]->SetActiveLevel((bool)command[F("PINConfig")][2]);
+          Debug.print(DBG_INFO,"Configure Operation Mode %d",(bool)command[F("PINConfig")][3]);
+          Pool_Equipment[temp_index]->SetOperationMode((bool)command[F("PINConfig")][3]);
+
+          // If an interlock is requested, loop through the equipment list to find its reference and assign the pointer
+          if(storage.PumpsConfig[temp_index].pin_interlock != NO_INTERLOCK)
+          {
+            for(auto equi_lock: Pool_Equipment)
+            {
+              if(equi_lock->GetPinId() == storage.PumpsConfig[temp_index].pin_interlock)
+              {
+                Pool_Equipment[temp_index]->SetInterlock(equi_lock);
+              }
+            }
+          }else
+          {
+            Pool_Equipment[temp_index]->SetInterlock(nullptr);
+          }
+          Pool_Equipment[temp_index]->Begin();
         }
 
         if(storage.BuzzerOn)
