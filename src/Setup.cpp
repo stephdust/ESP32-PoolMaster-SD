@@ -182,6 +182,7 @@ bool saveParam(const char*,uint8_t );
 unsigned stack_hwm();
 void stack_mon(UBaseType_t&);
 void info();
+void AddonsInit(void);
 
 // Functions used as Tasks
 void PoolMaster(void*);
@@ -195,6 +196,7 @@ void MeasuresPublish(void*);
 void StatusLights(void*);
 void UpdateTFT(void*);
 void HistoryStats(void *);
+void AddonsAction(void*);
 
 // For ElegantOTA
 void onOTAStart(void);
@@ -283,6 +285,9 @@ void setup()
   // Init Water and Air temperatures measurements
   TempInit();
 
+  // Init Personal Addons
+  AddonsInit();
+  
   // Clear status LEDs
   Wire.beginTransmission(PCF8574ADDRESS);
   Wire.write((uint8_t)0xFF);
@@ -459,6 +464,18 @@ void setup()
   xTaskCreatePinnedToCore(
     HistoryStats,
     "HistoryStats",
+    2048,
+    NULL,
+    1,
+    nullptr,
+    app_cpu
+  );
+
+  
+  // Personal Addons
+  xTaskCreatePinnedToCore(
+    AddonsAction,
+    "AddonsAction",
     2048,
     NULL,
     1,
