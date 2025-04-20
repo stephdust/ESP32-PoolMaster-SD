@@ -4,8 +4,8 @@
 
 // Addons Headers
 #define MaxAddons 4
-#include "BCM68X.h"
-//#include "RF433T.h"
+#include "BME68X.h"
+#include "RF433T.h"
 //#include "Dehumidifier.h"
 //#include "PoolCover.h"
 
@@ -16,7 +16,7 @@ typedef void (*function) (void);
 typedef void (*function2) (void *pvParameters);
 
 struct AddonFunctionsStruct {
-    char  *name;
+    const char *name;
     function init;
     function2 action;
     function SettingsJSON;
@@ -24,7 +24,7 @@ struct AddonFunctionsStruct {
 };
 static AddonFunctionsStruct AddonFunctions[MaxAddons];
 
-void InitAddon(char* name, function init, function2 action, function SettingsJSON, function MeasuresJSON)
+void InitAddon(const char* name, function init, function2 action, function SettingsJSON, function MeasuresJSON)
 {
     if (_NbAddons == MaxAddons) return;
     AddonFunctions[_NbAddons].name = name;
@@ -39,11 +39,11 @@ void InitAddon(char* name, function init, function2 action, function SettingsJSO
 //Init All Addons
 void AddonsInit()
 {
-#ifdef BME68X
-    InitAddon(BME68XName, BCM68XInit, BCM68XAction, BCM68XSettingsJSON, BCM68XMeasureJSON);
+#ifdef _BME68X_
+    InitAddon(BME68XName, BME68XInit, BME68XAction, BME68XSettingsJSON, BME68XMeasureJSON);
 #endif
-#ifdef RF433T
-    InitAddon(RF4433TName, RF433TInit, RF433TAction, RF433TSettingsJSON, RT433TMeasureJSON);
+#ifdef _RF433T_
+    InitAddon(RF433TName, RF433TInit, RF433TAction, RF433TSettingsJSON, RF433TMeasureJSON);
 #endif
     for (int i=_NbAddons-1; i<MaxAddons; i++) AddonFunctions[i] = {0, 0, 0, 0, 0};
 }

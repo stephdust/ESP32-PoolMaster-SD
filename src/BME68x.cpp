@@ -1,4 +1,4 @@
-// Plant Room : Air Temp., Pressure, Humidity BASED ON BCM68X - i2c
+// Plant Room : Air Temp., Pressure, Humidity BASED ON BME68X - i2c
 // from https://github.com/m5stack/M5Unit-ENV/blob/master/examples/ENV_PRO/ENV_PRO.ino
 // BME68x Sensor library: https://github.com/boschsensortec/Bosch-BME68x-Library
 // BSEC2 Software Library: https://github.com/boschsensortec/Bosch-BSEC2-Library
@@ -6,25 +6,25 @@
 #include <Arduino.h>                // Arduino framework
 #include "Config.h"
 #include "PoolMaster.h"
-#include "BCM68X.h"                     
+#include "BME68X.h"                     
 #include <bsec2.h>
 
-// BCM68X data structure
+// BME68X data structure
 
-static const char *BCM68XName = "BCM688";
+const char *BME68XName = "BME688";
 static double PlantTemp, PlantHumidity, PlantPressure;
 static Bsec2 PR_envSensorBME688;
 static bool PR_BME688 = false; // no BME688 sensor by default
 void PR_BME688newDataCallback(const bme68xData data, const bsecOutputs outputs, Bsec2 bsec);
 
-extern void PublishTopic(char*, JsonDocument&);
+extern void PublishTopic(const char*, JsonDocument&);
 static char PoolTopicMeas[25] = POOLTOPIC"Meas_";
 static char PoolTopicSet[25]  = POOLTOPIC"Set_";
 
 void lockI2C();
 void unlockI2C();
 
-void BCM68XInit(void)
+void BME68XInit(void)
 {
 /* Desired subscription list of BSEC2 outputs */
 bsecSensor sensorList[] = {
@@ -57,11 +57,11 @@ Debug.print(DBG_INFO,"BSEC library version %d.%d.%d.%d",
             PR_envSensorBME688.version.major, PR_envSensorBME688.version.minor,
             PR_envSensorBME688.version.major_bugfix, PR_envSensorBME688.version.minor_bugfix);
 
-strcat(PoolTopicMeas, BCM68XName);
-strcat(PoolTopicSet,  BCM68XName);
+strcat(PoolTopicMeas,BME68XName);
+strcat(PoolTopicSet, BME68XName);
 }
 
-void BCM68XAction(void *pvParameters)
+void BME68XAction(void *pvParameters)
 {
     if (PR_BME688) {
         lockI2C();
@@ -108,8 +108,8 @@ void PR_BME688newDataCallback(const bme68xData data, const bsecOutputs outputs, 
       }
 }
 
-//  Publish BCM688 -> MQTT
-void BCM68XMeasureJSON (void *pvParameters)
+//  Publish BME688 -> MQTT
+void BME68XMeasureJSON (void)
 {
     //send a JSON to MQTT broker. /!\ Split JSON if longer than 100 bytes
     const int capacity = JSON_OBJECT_SIZE(3); // only 3 values to publish
@@ -122,7 +122,7 @@ void BCM68XMeasureJSON (void *pvParameters)
     PublishTopic(PoolTopicMeas, root);
 }
 
-void BCM68XSettingsJSON(void *pvParameters)
+void BME68XSettingsJSON(void)
 {
     return;  // No settings to store in MQTT
 }
