@@ -122,6 +122,17 @@ MAKE_WORD_TRANSLATION(NXT_WATERLEVEL_TITLE, "Water Level Regulation", "Régulati
 MAKE_WORD_TRANSLATION(NXT_WATERLEVEL_MIN_UPTIME, "Min Running Time", "Durée Minimum", "", "")
 MAKE_WORD_TRANSLATION(NXT_WATERLEVEL_MAX_UPTIME, "Max Running Time", "Durée Maximum", "", "")
 
+MAKE_WORD_TRANSLATION(NXT_PIN_NAME0, "Filtration", "Filtration", "", "")
+MAKE_WORD_TRANSLATION(NXT_PIN_NAME1, "pH- Pump", "Pompe pH-", "", "")
+MAKE_WORD_TRANSLATION(NXT_PIN_NAME2, "Chlorine Pump", "Pompe Chlore", "", "")
+MAKE_WORD_TRANSLATION(NXT_PIN_NAME3, "Robot", "Robot", "", "")
+MAKE_WORD_TRANSLATION(NXT_PIN_NAME4, "SWG", "Electrolyseur", "", "")
+MAKE_WORD_TRANSLATION(NXT_PIN_NAME5, "Filling Valve", "Robinet Niveau", "", "")
+MAKE_WORD_TRANSLATION(NXT_PIN_NAME6, "Lights", "Eclairage", "", "")
+MAKE_WORD_TRANSLATION(NXT_PIN_NAME7, "Spare Relay", "Relais Spare", "", "")
+MAKE_WORD_TRANSLATION(NXT_PIN_SAVE, "Save", "Enregistrer", "", "")
+MAKE_WORD_TRANSLATION(NXT_PIN_CLEAR, "Clear", "Suppr", "", "")
+
 // HELP MESSAGE
 MAKE_WORD_TRANSLATION(NXT_HELP_1_TITLE, "Probe Calibration", "Calibration des Sondes","","")
 MAKE_WORD_TRANSLATION(NXT_HELP_1_CONTENT, "Step1: place probe in the reference solutionStep2: enter reference solution nominal value in the field below\\rStep3: wait for the probe reading to stabilize then press OK\\rStep4: if available, press ADD button to add a measurement from another\\rref. solution and repeat steps 1-3 (up to 3 points)\\rStep5: press APPLY to complete calibration", "Etape1: Placer la sonde dans la solution de référence\\rEtape2: Entrer ci-dessous la valeur nominale de la solution de référence\\rEtape3: Attendre que la lecture de la sonde se stabilise et appuyer sur OK\\rEtape4: Si une autre solution de référence est disponible, appuyer sur\\rAJOUTER et répéter les étapes 1-3 (3 solutions max.)\\rEtape5: Appuyer sur VALIDER pour terminer la procédure", "Step1: place probe in the reference solution\\rStep2: enter reference solution nominal value in the field below\\rStep3: wait for the probe reading to stabilize then press OK\\rStep4: if available, press ADD button to add a measurement from another\\rref. solution and repeat steps 1-3 (up to 3 points)\\rStep5: press APPLY to complete calibration|Etape1: Placer la sonde dans la solution de référence\\rEtape2: Entrer ci-dessous la valeur nominale de la solution de référence\\rEtape3: Attendre que la lecture de la sonde se stabilise et appuyer sur OK\\rEtape4: Si une autre solution de référence est disponible, appuyer sur\\rAJOUTER et répéter les étapes 1-3 (3 solutions max.)\\rEtape5: Appuyer sur VALIDER pour terminer la procédure", "","")
@@ -158,7 +169,7 @@ MAKE_WORD_TRANSLATION(NXT_SUBMENU14, "Water Level Regulation", "Régulation Nive
 MAKE_WORD_TRANSLATION(NXT_SUBMENU15, "", "", "", "")
 MAKE_WORD_TRANSLATION(NXT_SUBMENU16, "", "", "", "")
 MAKE_WORD_TRANSLATION(NXT_SUBMENU17, "Relays", "Relais", "", "")
-MAKE_WORD_TRANSLATION(NXT_SUBMENU18, "", "", "", "")
+MAKE_WORD_TRANSLATION(NXT_SUBMENU18, "Assign ports", "Assignation des ports", "", "")
 MAKE_WORD_TRANSLATION(NXT_SUBMENU19, "", "", "", "")
 MAKE_WORD_TRANSLATION(NXT_SUBMENU20, "", "", "", "")
 MAKE_WORD_TRANSLATION(NXT_SUBMENU21, "", "", "", "")

@@ -9,6 +9,7 @@
 #include "OneWire.h"              // Onewire communication
 #include <Wire.h>                 // Two wires / I2C library
 #include <stdlib.h>               // Definitions  for common types, variables, and functions
+#include <vector>                 // List vectors
 #include <ArduinoJson.h>          // JSON library
 #include <Pump.h>                 // Simple library to handle home-pool filtration and peristaltic pumps
 #include <Relay.h>                 // Simple library to handle home-pool filtration and peristaltic pumps
@@ -28,19 +29,30 @@
 #include <ElegantOTA.h>
 #endif
 
+#define NO_INTERLOCK 255
+struct StorePumpConfig
+{
+  uint8_t pin_number, pin_direction, pin_interlock;
+  bool pin_active_level, relay_operation_mode;
+  double pump_flow_rate, tank_vol, tank_fill;
+  uint8_t tank_level_pin;
+  unsigned long pump_min_uptime, pump_max_uptime; 
+} ;
+
 // General shared data structure
 struct StoreStruct
 {
   uint8_t ConfigVersion;   // This is for testing if first time using eeprom or not
   bool Ph_RegulationOnOff, Orp_RegulationOnOff, AutoMode, WinterMode;
   uint8_t FiltrationDuration, FiltrationStart, FiltrationStop, FiltrationStartMin, FiltrationStopMax, DelayPIDs;
-  unsigned long PhPumpUpTimeLimit, ChlPumpUpTimeLimit,PublishPeriod;
+  //unsigned long PhPumpUpTimeLimit, ChlPumpUpTimeLimit;
+  unsigned long PublishPeriod;
   unsigned long PhPIDWindowSize, OrpPIDWindowSize, PhPIDwindowStartTime, OrpPIDwindowStartTime;
   double Ph_SetPoint, Orp_SetPoint, PSI_HighThreshold, PSI_MedThreshold, WaterTempLowThreshold, WaterTemp_SetPoint, AirTemp, pHCalibCoeffs0, pHCalibCoeffs1, OrpCalibCoeffs0, OrpCalibCoeffs1, PSICalibCoeffs0, PSICalibCoeffs1;
   double Ph_Kp, Ph_Ki, Ph_Kd, Orp_Kp, Orp_Ki, Orp_Kd, PhPIDOutput, OrpPIDOutput, WaterTemp, PhValue, OrpValue, PSIValue;
-  double AcidFill, ChlFill, pHTankVol, ChlTankVol, pHPumpFR, ChlPumpFR;
+  //double AcidFill, ChlFill, pHTankVol, ChlTankVol, pHPumpFR, ChlPumpFR;
   uint8_t SecureElectro, DelayElectro; //ajout
-  bool ElectrolyseMode,pHAutoMode,OrpAutoMode;
+  bool ElectrolyseMode,pHAutoMode,OrpAutoMode, FillAutoMode;
   uint8_t Lang_Locale;
   IPAddress MQTT_IP;
   uint MQTT_PORT;
@@ -48,8 +60,9 @@ struct StoreStruct
   char SMTP_SERVER[50];
   uint SMTP_PORT;
   char SMTP_LOGIN[63], SMTP_PASS[63], SMTP_SENDER[150], SMTP_RECIPIENT[50];
-  uint  FillingPumpMinTime,FillingPumpMaxTime;
+  //uint  FillingPumpMinTime,FillingPumpMaxTime;
   bool BuzzerOn;
+  StorePumpConfig PumpsConfig[8]; // Table representing the configuration for Pumps
 } ;
 
 // Global status of the board
@@ -78,6 +91,8 @@ extern Pump ChlPump;
 extern Pump RobotPump;
 extern Pump FillingPump;
 extern Pump SWGPump;    // Pump class which control the Salt Water Chlorine Generator (switch it on and off)
+
+extern std::vector<PIN*> Pool_Equipment;
 
 // The Relay to activate and deactivate Orp production
 extern Relay RELAYR0;
