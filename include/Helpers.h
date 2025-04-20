@@ -3,6 +3,8 @@
 
 #include "PoolMaster.h"
 
+void remove_duplicates_slash(char*);
+
 class Helpers {
   public:
     static uint8_t count_items(const char * const ** list);
