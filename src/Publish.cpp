@@ -27,6 +27,8 @@ static const char* PoolTopicSet5  = POOLTOPIC"Set5";
 
 int freeRam(void);
 void stack_mon(UBaseType_t&);
+void AddonsPublishSettings();
+void AddonsPublishMeasures();
 
 //Encode digital inputs states into one Byte (more efficient to send over MQTT)
 void EncodeBitMap()
@@ -207,6 +209,14 @@ void SettingsPublish(void *pvParameters)
     else
         Debug.print(DBG_ERROR,"Failed to connect to the MQTT broker");
 
+    // Publish Settings for Addons
+    if (mqttClient.connected())
+    {
+        AddonsPublishSettings();
+    }
+    else
+        Debug.print(DBG_ERROR,"Failed to connect to the MQTT broker");
+
     //display remaining RAM space. For debug
     Debug.print(DBG_DEBUG,"[memCheck]: %db",freeRam());
 
@@ -319,6 +329,14 @@ void MeasuresPublish(void *pvParameters)
         root["IO3"]   = BitMap3;
 
         PublishTopic(PoolTopicMeas2, root);
+    }
+    else
+        Debug.print(DBG_ERROR,"Failed to connect to the MQTT broker");
+
+    // Publish Measures for Addons
+    if (mqttClient.connected())
+    {
+        AddonsPublishMeasures();
     }
     else
         Debug.print(DBG_ERROR,"Failed to connect to the MQTT broker");
