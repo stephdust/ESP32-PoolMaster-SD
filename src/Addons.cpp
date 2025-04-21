@@ -4,8 +4,8 @@
 
 // Addons Headers
 #define MaxAddons 4
-#include "BME68X.h"
-#include "RF433T.h"
+#include "TR_BME68X.h"
+#include "TFA_RF433T.h"
 //#include "Dehumidifier.h"
 //#include "PoolCover.h"
 
@@ -39,13 +39,14 @@ void InitAddon(const char* name, function init, function2 action, function Setti
 //Init All Addons
 void AddonsInit()
 {
-#ifdef _BME68X_
-    InitAddon(BME68XName, BME68XInit, BME68XAction, BME68XSettingsJSON, BME68XMeasureJSON);
+    for (int i=0; i<MaxAddons; i++) AddonFunctions[i] = {0, 0, 0, 0, 0};
+#ifdef _TR_BME68X_
+    InitAddon(TR_BME68XName, TR_BME68XInit, TR_BME68XAction, TR_BME68XSettingsJSON, TR_BME68XMeasureJSON);
 #endif
-#ifdef _RF433T_
-    InitAddon(RF433TName, RF433TInit, RF433TAction, RF433TSettingsJSON, RF433TMeasureJSON);
+#ifdef _TFA_RF433T_
+    InitAddon(RF433TName, RF433TInit, RF433TAction, 0, 0);
 #endif
-    for (int i=_NbAddons-1; i<MaxAddons; i++) AddonFunctions[i] = {0, 0, 0, 0, 0};
+ 
 }
 
 int NbAddons()
@@ -78,8 +79,10 @@ void AddonsAction(void *pvParameters)
     #endif 
 
     for (int i=0; i<_NbAddons; i++) {
-        AddonFunctions[i].action(pvParameters);
-        delay(50);
+        if (AddonFunctions[i].action) {
+            AddonFunctions[i].action(pvParameters);
+            delay(50);
+        }
     }
     #ifdef CHRONO
     t_act = millis() - td;
@@ -98,8 +101,10 @@ void AddonsAction(void *pvParameters)
 void AddonsPublishSettings(void)
 {
     for (int i=0; i<_NbAddons; i++) {
-        AddonFunctions[i].SettingsJSON();
-        delay(50);
+        if (AddonFunctions[i].SettingsJSON) {
+            AddonFunctions[i].SettingsJSON();
+            delay(50);
+        }
     }
 }
 
@@ -107,8 +112,10 @@ void AddonsPublishSettings(void)
 void AddonsPublishMeasures(void)
 {
     for (int i=0; i<_NbAddons; i++) {
-        AddonFunctions[i].MeasuresJSON();
-        delay(50);
+        if (AddonFunctions[i].MeasuresJSON) {
+            AddonFunctions[i].MeasuresJSON();
+            delay(50);
+        }
     }
 }
 

@@ -129,7 +129,7 @@
 // T9: PublishSettings 
 // T10: Nextion Screen Refresh On (/2 when screen on, /4 if menu page for faster refresh)
 // T11: Every 2 minutes, statistics recording, MQTT and NTP reconnects
-// T12: Addons GPIO+I2C, every minute
+// T12: Addons GPIO+I2C, every 1 minute
 
 
 //Periods 
@@ -169,3 +169,6 @@
                                     // the sensor value is computed from the output of the PID 
                                     // loop to reach linearly the theorical value produced by this
                                     // output after one hour
+
+#define _TR_BME68X_   // Include BME68X addon in Tech Room
+#define _TFA_RF433T_  // Include Water Temperature -> TFA 433Mhz Broadcast adddon

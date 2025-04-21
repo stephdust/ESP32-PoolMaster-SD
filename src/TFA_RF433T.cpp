@@ -2,16 +2,18 @@
 // Credits :
 //      https://github.com/m5stack/M5Stack/blob/master/examples/Unit/RF433/RF433.ino
 //      https://github.com/d10i/TFA433/blob/main/src/tfa433.cpp
+//      https://github.com/zopieux/rtl_433_f007th/blob/master/src/main.cpp
+
 
 #include <Arduino.h>
 #include "Config.h"
 #include "PoolMaster.h"
 
-#include "RF433T.h"
+#ifdef _TFA_RF433T_
+#include "TFA_RF433T.h"
 #include <driver/rmt.h>
 
-
-const char *RF433TName = "RF433T";
+const char *RF433TName = "TFA_RF433T";
 static bool RF433T = false; // no RF433T transmitter by default
 #define GPIO 9              // GPIO009 (SD2)
 
@@ -90,8 +92,8 @@ void RF433TAction(void *pvParameters)
    return;
 }
 
-
 //  Publish RF433T -> MQTT
+/*
 void RF433TMeasureJSON (void)
 {
     return;  // No settings to store in MQTT
@@ -101,3 +103,6 @@ void RF433TSettingsJSON(void)
 {
     return;  // No settings to store in MQTT
 }
+*/
+
+#endif
