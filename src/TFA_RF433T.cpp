@@ -3,7 +3,18 @@
 //      https://github.com/m5stack/M5Stack/blob/master/examples/Unit/RF433/RF433.ino
 //      https://github.com/d10i/TFA433/blob/main/src/tfa433.cpp
 //      https://github.com/zopieux/rtl_433_f007th/blob/master/src/main.cpp
-
+//      https://github.com/merbanan/rtl_433/blob/master/src/devices/ambient_weather.c
+//
+// Usage in Indoor Pool, to get and display Water Temp on nice receiver.
+// Temperature and Humidity of Indoor Pool measured directly by the device
+// Receiver :   TFA Dostmann Venise 30.3056.10 (without the sensor/transmiter)
+//              https://www.amazon.fr/dp/B010NSG4V2
+//              https://www.tfa-dostmann.de/en/product/wireless-pool-thermometer-venice-30-3056/
+//             
+// Transmiter : We simulate the Ambiant Weather F007TH
+//              https://docs.m5stack.com/en/unit/rf433_t
+//              5V - GPIO 9
+//
 
 #include <Arduino.h>
 #include "Config.h"
@@ -13,8 +24,8 @@
 #include "TFA_RF433T.h"
 #include <driver/rmt.h>
 
-const char *RF433TName = "TFA_RF433T";
-static bool RF433T = false; // no RF433T transmitter by default
+const char *TFA_RF433TName = "TFA_RF433T";
+static bool TFA_RF433T = false; // no TFA_RF433T transmitter by default
 #define GPIO 9              // GPIO009 (SD2)
 
 #define RMT_TX_CHANNEL  (RMT_CHANNEL_0)
@@ -38,8 +49,9 @@ rmt_item32_t rmtbuff[2048];
 #define RMT_START_CODE0 {4868, 1, 2469, 0}
 #define RMT_START_CODE1 {1647, 1, 315, 0}
 
+static byte data[6];
 
-void RF433TInit(void)
+void TFA_RF433TInit(void)
 {
     rmt_config_t txconfig;
     txconfig.rmt_mode                 = RMT_MODE_TX;
@@ -52,13 +64,13 @@ void RF433TInit(void)
     txconfig.tx_config.idle_level     = rmt_idle_level_t(0);
     txconfig.clk_div                  = RMT_CLK_DIV;
 
-    if (rmt_config(&txconfig) == ESP_OK) RF433T = false;
+    if (rmt_config(&txconfig) == ESP_OK) TFA_RF433T = false;
 
-    if ((RF433T) && (rmt_driver_install(txconfig.channel, 0, 0) != ESP_OK))
-        RF433T = false;
+    if ((TFA_RF433T) && (rmt_driver_install(txconfig.channel, 0, 0) != ESP_OK))
+        TFA_RF433T = false;
 
-    if (!RF433T) {
-        Debug.print(DBG_INFO,"no RF433T");
+    if (!TFA_RF433T) {
+        Debug.print(DBG_INFO,"no TFA_RF433T");
         return;
     }
 }
@@ -80,26 +92,77 @@ static void send(uint8_t* buff, size_t size)
     }
 }
 
-void RF433TAction(void *pvParameters)
-{
-    // Read Water Temp.
 
-    // Format TFA Dostmann payload
-    
-    // send info to TFA receiver at 433Mhz, Channel #1
-    uint8_t data[6] = {0xAA, 0x55, 0x01, 0x02, 0x03, 0x04};
+/*
+Byte 0   Byte 1   Byte 2   Byte 3   Byte 4   Byte 5
+xxxxMMMM IIIIIIII BCCCTTTT TTTTTTTT HHHHHHHH MMMMMMMM
+
+- x: Unknown 0x04 on F007TH/F012TH
+- M: Model Number?, 0x05 on F007TH/F012TH/SwitchDocLabs F016TH
+- I: ID byte (8 bits), volatie, changes at power up,
+- B: Battery Low
+- C: Channel (3 bits 1-8) - F007TH set by Dip switch, F012TH soft setting
+- T: Temperature 12 bits - Fahrenheit * 10 + 400
+- H: Humidity (8 bits)
+- M: Message integrity check LFSR Digest-8, gen 0x98, key 0x3e, init 0x64
+
+*/
+
+uint8_t lfsr_digest8(uint8_t const message[], unsigned bytes, uint8_t gen, uint8_t key)
+{
+    uint8_t sum = 0;
+    for (unsigned k = 0; k < bytes; ++k) {
+        uint8_t data = message[k];
+        for (int i = 7; i >= 0; --i) {
+            // fprintf(stderr, "key is %02x\n", key);
+            // XOR key into sum if data bit is set
+            if ((data >> i) & 1)
+                sum ^= key;
+
+            // roll the key right (actually the lsb is dropped here)
+            // and apply the gen (needs to include the dropped lsb as msb)
+            if (key & 1)
+                key = (key >> 1) ^ gen;
+            else
+                key = (key >> 1);
+        }
+    }
+    return sum;
+}
+
+
+static void TFA_Data(double WTemp)
+{
+    int temp_raw;
+    double TempF;
+    TempF = (WTemp * 9.0f / 5.0f) + 32.0f;
+    temp_raw = (TempF * 10 ) + 400;
+
+    data[0] = 0x05;            // F007TH 
+    data[1] = 0x01;            // random id
+    data[2] = 0x00;            // all 0 so Battery=0 (OK), Channel=0 (Channel 1)
+    data[2] = data[2] | ((temp_raw & 0xF00) >> 8);
+    data[3] = temp_raw & 0xFF;
+    data[4] = (byte)0x32;      // 50% humidity, not used 
+    data[5] = lfsr_digest8(data, 5, 0x98, 0x3e) ^ 0x64;
+}
+
+void TFA_RF433TAction(void *pvParameters)
+{
+    // Read Water Temp, Format TFA Dostmann payload and send
+    TFA_Data(storage.WaterTemp * 100);
     send(data, 6);
    return;
 }
 
-//  Publish RF433T -> MQTT
+//  Publish TFA_RF433T -> MQTT
 /*
-void RF433TMeasureJSON (void)
+void TFA_RF433TMeasureJSON (void)
 {
     return;  // No settings to store in MQTT
 }
 
-void RF433TSettingsJSON(void)
+void TFA_RF433TSettingsJSON(void)
 {
     return;  // No settings to store in MQTT
 }

@@ -44,7 +44,7 @@ void AddonsInit()
     InitAddon(TR_BME68XName, TR_BME68XInit, TR_BME68XAction, TR_BME68XSettingsJSON, TR_BME68XMeasureJSON);
 #endif
 #ifdef _TFA_RF433T_
-    InitAddon(RF433TName, RF433TInit, RF433TAction, 0, 0);
+    InitAddon(TFA_RF433TName, TFA_RF433TInit, TFA_RF433TAction, 0, 0);
 #endif
  
 }

@@ -5,7 +5,8 @@
         "thread": "cpp",
         "random": "cpp",
         "*.tcc": "cpp",
-        "map": "cpp"
+        "map": "cpp",
+        "cstddef": "cpp"
     },
     "C_Cpp.dimInactiveRegions": false
 }
