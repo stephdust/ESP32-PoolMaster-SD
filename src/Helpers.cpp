@@ -1,5 +1,33 @@
-#include "helpers.h"
+#include "Helpers.h"
 
+
+// Removes the duplicates "/" from the string provided as an argument
+void remove_duplicates_slash(char *str)
+{
+  int i,j,len,len1;
+
+  /*calculating length*/
+  for(len=0; str[len]!='\0'; len++);
+
+  /*assign 0 to len1 - length of removed characters*/
+  len1=0;
+
+  /*Removing consecutive repeated characters from string*/
+  for(i=0; i<(len-len1);)
+  {
+      if((str[i]==str[i+1]) && (str[i] == '/'))
+      {
+          /*shift all characters*/
+          for(j=i;j<(len-len1);j++)
+              str[j]=str[j+1];
+          len1++;
+      }
+      else
+      {
+          i++;
+      }
+  }
+}
 
 // count number of items in a list
 // the end of a list has a nullptr

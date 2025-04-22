@@ -4,8 +4,8 @@
 Features: 
 
 - handle high level and low level active relays
-- handle bistable relay operation or standard relay operation
-  In case of bistable relays, please note that there is no possibility to know the real underlying state of the relay
+- handle momentary relay operation or standard relay operation
+  In case of momentary relays, please note that there is no possibility to know the real underlying state of the relay
   more specifically in case of system restart. This must be dealt with at higher level in your code.
 
 NB: all timings are in milliseconds
@@ -13,44 +13,66 @@ NB: all timings are in milliseconds
 
 #ifndef RELAY_h
 #define RELAY_h
+#include "Pin.h"
 
 #define RELAY_VERSION "1.0.1"
 
 //Class constants
-#define RELAY_ACTIVE_HIGH  1
-#define RELAY_ACTIVE_LOW  0
-#define RELAY_MONOSTABLE  1    // Underlying relay turns ON and OFF equipment by switching between LOW/HIGH states (depending on level parameters)
-#define RELAY_BISTABLE  2      // Underlying relay turns ON and OFF equipment by simulating a button press 
+#define MODE_LATCHING    0    // Underlying relay turns ON and OFF equipment by switching between LOW/HIGH states (depending on level parameters)
+#define MODE_MOMENTARY   1    // Underlying relay turns ON and OFF equipment by simulating a button press 
                                // switch to HIGH then LOW after a short period of time to switch ON and switch to HIGH then LOW again to switch OFF)
-#define RELAY_BISTABLE_SWITCH_SHORT_CLICK_DELAY  500 // In Milliseconds
+#define MOMENTARY_SHORT_DELAY  500 // In Milliseconds
+#define NO_INTERLOCK 255  
 
-class Relay{
+class Relay : public PIN {
   public:
-    Relay(uint8_t);
-    Relay(uint8_t, uint8_t, uint8_t = RELAY_ACTIVE_LOW, uint8_t = RELAY_MONOSTABLE);
+    Relay(uint8_t _pin_number, uint8_t _pin_id, uint8_t _pin_direction = OUTPUT_DIGITAL, bool _active_level = ACTIVE_LOW, bool _operation_mode = MODE_LATCHING) 
+      : PIN(_pin_number, _pin_id, _pin_direction, _active_level) 
+    {
+      Initialize(_operation_mode);    // Initialize before changing the class variable because
+                                      // function needs to know what operation mode we change from
+      operation_mode = _operation_mode; 
+    };
 
-    bool Start();
-    bool Stop();
+    bool Enable();
+    bool Disable();
     void Toggle();
 
-    int GetActiveLevel();
-    int GetInactiveLevel();
-    void SetActiveLevel(uint8_t);
-    bool SetBistableDelay(int);
+    void loop();
 
-    uint8_t GetRelayPin();
-    void SetRelayPin(uint8_t);
-    void SetRelayType(uint8_t); // Set Standard or bistable
-    bool IsActive();
+    bool IsEnabled();
+    bool SetMomentaryDelay(uint64_t);
+    void SetOperationMode(bool); // MODE_LATCHING or MODE_MOMENTARY
+    bool GetOperationMode(void);
+
+    // Functions which does nothing for Relays
+    // but needs to define it for derived class
+    void SetTankLevelPIN(uint8_t);
+    void SetTankFill(double);
+    void SetTankVolume(double);
+    void SetFlowRate(double);
+    void SetMaxUpTime(unsigned long);
+    double GetTankFill();
+    void ResetUpTime();
+    void SetInterlock(PIN*);
+    uint8_t GetInterlockId(void);
+    bool IsRelay(void);
 
   private:
-    TimerHandle_t tmr; // Used for bistable relay callback function timer
-    uint8_t relaypin; 
-    uint8_t isonsensorpin;
-    uint8_t relaytype;  // Standard or bistable
-    int bistable_relay_delay;
-    int relay_on_level;
-    int relay_off_level;
-    bool RelayVirtualStatus; // Retain status in case of bistable relay
+    void Initialize(bool = MODE_LATCHING);
+
+    TimerHandle_t tmr = nullptr; // Used for MODE_MOMENTARY pin callback function timer
+
+    bool operation_mode = MODE_LATCHING;  // MODE_LATCHING or MODE_MOMENTARY
+    uint64_t  momentary_delay = MOMENTARY_SHORT_DELAY;
+    bool virtual_status = 0; // Retain status in case of momentary relay
+};
+
+// Timer Callback function for momentary relay operations
+auto CallBackTimer = []( TimerHandle_t xTimer )
+{
+    Relay* rr = static_cast<Relay*>(pvTimerGetTimerID(xTimer));      // Get the relay related to this timer
+    assert(rr); // Sanity check
+    rr->PIN::Disable();
 };
 #endif

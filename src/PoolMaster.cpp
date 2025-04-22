@@ -23,6 +23,7 @@ bool saveParam(const char*,uint8_t );
 bool saveParam(const char*,bool );
 bool saveParam(const char*,unsigned long );
 bool saveParam(const char*,double );
+bool savePumpsConf();
 void SetPhPID(bool);
 void SetOrpPID(bool);
 void mqttErrorPublish(const char*);
@@ -96,30 +97,43 @@ void PoolMaster(void *pvParameters)
     ElegantOTA.loop();
 #endif
 
-    //update pumps & relays
-    FiltrationPump.loop();
-    PhPump.loop();
-    ChlPump.loop();
-    RobotPump.loop(); 
-    FillingPump.loop(); 
-    SWGPump.loop();
+    // Call pumps and relays loop function
+    for(auto equi: Pool_Equipment)
+    {
+      equi->loop();
+    }
 
     //reset time counters at midnight and send sync request to time server
     if (hour() == 0 && !DoneForTheDay)
     {
-        //First store current Chl and Acid consumptions of the day in Eeprom
-        storage.AcidFill = PhPump.GetTankFill();
-        storage.ChlFill = ChlPump.GetTankFill();
-        saveParam("AcidFill", storage.AcidFill);
-        saveParam("ChlFill", storage.ChlFill);
+      // Reset all pumps uptime
+      int i=0;
+      for(auto equi: Pool_Equipment)
+      {
+        storage.PumpsConfig[i].tank_fill = equi->GetTankFill();
+        equi->ResetUpTime();
+        equi->SetTankFill(storage.PumpsConfig[i].tank_fill);
+        i++;
+      }
+      // Save 
+      savePumpsConf();
 
-        FiltrationPump.ResetUpTime();
+        //First store current Chl and Acid consumptions of the day in Eeprom
+        //storage.AcidFill = PhPump.GetTankFill();
+        //storage.ChlFill = ChlPump.GetTankFill();
+        //saveParam("AcidFill", storage.AcidFill);
+        //saveParam("ChlFill", storage.ChlFill);
+
+        // New way of doing
+
+
+       /* FiltrationPump.ResetUpTime();
         PhPump.ResetUpTime();
         PhPump.SetTankFill(storage.AcidFill);
         ChlPump.ResetUpTime();
         ChlPump.SetTankFill(storage.ChlFill);
         RobotPump.ResetUpTime();
-        SWGPump.ResetUpTime();
+        SWGPump.ResetUpTime();*/
 
         //EmergencyStopFiltPump = false;
         d_calc = false;
@@ -168,9 +182,9 @@ void PoolMaster(void *pvParameters)
     // taking into account not yet measured temperature if the system starts at 15:xx. 
     // Depending on water temperature, the filtration duration is either 2 hours, temp/3 or temp/2 hours.
     #ifdef DEBUG
-    if (second() == 0 && (millis() - FiltrationPump.LastStartTime) > 300000 && !d_calc)
+    if (second() == 0 && (millis() - FiltrationPump.StartTime) > 300000 && !d_calc)
     #else
-    if (hour() == 15 && (millis() - FiltrationPump.LastStartTime) > 300000 && !d_calc)
+    if (hour() == 15 && (millis() - FiltrationPump.StartTime) > 300000 && !d_calc)
     #endif
     {
         if (storage.WaterTemp < storage.WaterTempLowThreshold){
@@ -216,7 +230,7 @@ void PoolMaster(void *pvParameters)
   } else {  //Filtration Pump Running
 
     // Check over and under pressure alarms
-    if ((((millis() - FiltrationPump.LastStartTime) > 180000) && (storage.PSIValue < storage.PSI_MedThreshold)) ||
+    if ((((millis() - FiltrationPump.StartTime) > 180000) && (storage.PSIValue < storage.PSI_MedThreshold)) ||
         (storage.PSIValue > storage.PSI_HighThreshold))
     {
       PSIError = true;
@@ -229,34 +243,34 @@ void PoolMaster(void *pvParameters)
     {
       //start cleaning robot for ROBOT_DURATION minutes, ROBOT_DELAY minutes after filtration start
       if (storage.AutoMode && !RobotPump.IsRunning() &&
-          ((millis() - FiltrationPump.LastStartTime) / 1000 / 60) >= ROBOT_DELAY &&
+          ((millis() - FiltrationPump.StartTime) / 1000 / 60) >= ROBOT_DELAY &&
           !cleaning_done)
       {
           RobotPump.Start();
           Debug.print(DBG_INFO,"[LOGIC] Robot Start %d mn after Filtration",ROBOT_DELAY);   
       }
-      if(RobotPump.IsRunning() && storage.AutoMode && ((millis() - RobotPump.LastStartTime) / 1000 / 60) >= ROBOT_DURATION)
+      if(RobotPump.IsRunning() && storage.AutoMode && ((millis() - RobotPump.StartTime) / 1000 / 60) >= ROBOT_DURATION)
       {
           RobotPump.Stop();
           cleaning_done = true;
-          Debug.print(DBG_INFO,"[LOGIC] Robot Stop after: %d mn",(int)(millis()-RobotPump.LastStartTime)/1000/60);
+          Debug.print(DBG_INFO,"[LOGIC] Robot Stop after: %d mn",(int)(millis()-RobotPump.StartTime)/1000/60);
       }
 
       // pH Regulation tasks
       if (storage.pHAutoMode)
       {
-        if ((PhPID.GetMode()==MANUAL) && ((millis() - FiltrationPump.LastStartTime) / 1000 / 60 >= storage.DelayPIDs)) {
+        if ((PhPID.GetMode()==MANUAL) && ((millis() - FiltrationPump.StartTime) / 1000 / 60 >= storage.DelayPIDs)) {
           SetPhPID(true);
-          Debug.print(DBG_INFO,"[LOGIC] Activate pH PID (delay %d)",(millis() - FiltrationPump.LastStartTime) / 1000 / 60 );
+          Debug.print(DBG_INFO,"[LOGIC] Activate pH PID (delay %dmn)",(millis() - FiltrationPump.StartTime) / 1000 / 60 );
         }
       }
 
       // Orp Regulation tasks
       if (storage.OrpAutoMode)
       {
-        if ((OrpPID.GetMode()==MANUAL) && ((millis() - FiltrationPump.LastStartTime) / 1000 / 60 >= storage.DelayPIDs)) {
+        if ((OrpPID.GetMode()==MANUAL) && ((millis() - FiltrationPump.StartTime) / 1000 / 60 >= storage.DelayPIDs)) {
           SetOrpPID(true);
-          Debug.print(DBG_INFO,"[LOGIC] Activate Orp PID (delay %d)",(millis() - FiltrationPump.LastStartTime) / 1000 / 60 );
+          Debug.print(DBG_INFO,"[LOGIC] Activate Orp PID (delay %dmn)",(millis() - FiltrationPump.StartTime) / 1000 / 60 );
         }
       }
 
@@ -267,10 +281,10 @@ void PoolMaster(void *pvParameters)
         {
           if ((storage.OrpValue <= storage.Orp_SetPoint*0.9) && 
               (storage.WaterTemp >= (double)storage.SecureElectro) && 
-              (millis() - FiltrationPump.LastStartTime)/ 1000 / 60 >= (unsigned long)storage.DelayElectro) 
+              (millis() - FiltrationPump.StartTime)/ 1000 / 60 >= (unsigned long)storage.DelayElectro) 
             {
               SWGPump.Start();
-              Debug.print(DBG_INFO,"[LOGIC] Start SWG  %3.0f <= %3.0f - (delay %d)",storage.OrpValue,(storage.Orp_SetPoint*0.9),(millis() - FiltrationPump.LastStartTime)/ 1000 / 60);   
+              Debug.print(DBG_INFO,"[LOGIC] Start SWG  %3.0f <= %3.0f - (delay %dmn)",storage.OrpValue,(storage.Orp_SetPoint*0.9),(millis() - FiltrationPump.StartTime)/ 1000 / 60);   
             }
         } else 
         { //SWG Running
@@ -300,7 +314,7 @@ if((digitalRead(POOL_LEVEL) == HIGH) && (!FillingPump.IsRunning())) {
 } 
 
 // Stop Pump if level back to normal and minimum runtime reached
-if(FillingPump.IsRunning() && (digitalRead(POOL_LEVEL) == LOW) && (FillingPump.UpTime > (storage.FillingPumpMinTime*1000))) {
+if(FillingPump.IsRunning() && (digitalRead(POOL_LEVEL) == LOW) && (FillingPump.UpTime > (storage.PumpsConfig[PUMP_FILL].pump_min_uptime*1000))) {
   FillingPump.Stop();
 }
 

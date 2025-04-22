@@ -12,7 +12,7 @@
 
 //Version of config stored in EEPROM
 //Random value. Change this value (to any other value) to revert the config to default values
-#define CONFIG_VERSION 66
+#define CONFIG_VERSION 68
 
 // Compile on development environment or production (if not defined)
 //#define DEVT // Value defined in platformio.ini
@@ -34,14 +34,17 @@
 #define PhPID_DIRECTION REVERSE
 #define OrpPID_DIRECTION DIRECT
 
+// Default ports (can be changed at runtime)
 #define FILTRATION      32
 #define ROBOT     	    33
 #define PH_PUMP         25
-#define CHL_PUMP        13  // Default 26
+#define CHL_PUMP        26
 #define PROJ            27  // Projecteur
-#define SPARE           23  // Default  4  
-#define SWG_PUMP        26  // Default  13
-#define FILL_PUMP       4   // Default  23
+#define SPARE           4
+#define SWG_PUMP        13
+#define FILL_PUMP       23
+
+#define ALL_PINS        "4|13|23|25|26|27|32|33" // List of all usable PINs on the ESP32 (to be sent to Nextion)
 
 //Digital input pins connected to Acid and Chl tank level reed switches
 #define CHL_LEVEL       39   // If chlorine tank empty switch used (contact open if low level)
@@ -92,9 +95,10 @@
 //------------------------------------------------------------------
 
 //interval (in millisec) between MQTT publishement of measurement data
+// can be configured at runtime
 #define PUBLISHINTERVAL 30000
 
-// Default values if nothing better is recorded
+// Default values if nothing better is recorded at runtime
 #define POOLTOPIC "Home/Pool/"
 #define MQTTID "PoolMaster"
 // ElegantOTA Config
@@ -109,8 +113,23 @@
 #define ROBOT_DELAY 60     // Robot start delay after filtration in mn
 #define ROBOT_DURATION 90  // Robot cleaning duration
 
-// Pool Filling System
-#define FILLING_PUMP_MINI_DURATION 16   // Swimming Pool Filling Valve minimum runtime 15 minutes
+// Default values Maxi and Mini Running time for the Pumps (mn)
+#define FILLING_PUMP_MIN_UPTIME 15   // Default swimming Pool Filling Valve minimum runtime
+#define FILLING_PUMP_MAX_UPTIME 50   // Default swimming Pool Filling Valve maximum runtime
+#define PH_PUMP_MAX_UPTIME 15   // Default swimming Pool Filling Valve maximum runtime
+#define CHL_PUMP_MAX_UPTIME 40   // Default swimming Pool Filling Valve maximum runtime
+
+// Define pumps index in pump and relays table
+// Needs to correspond to Setup.cpp order of introduction in table
+#define PUMP_FILT 0
+#define PUMP_PH   1
+#define PUMP_CHL  2
+#define PUMP_ROBO 3
+#define PUMP_SWG  4
+#define PUMP_FILL 5
+#define RELA_R0   6
+#define RELA_R1   7
+
 
 //Display timeout before blanking
 //-------------------------------
