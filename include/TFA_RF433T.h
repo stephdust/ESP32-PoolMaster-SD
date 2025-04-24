@@ -1,11 +1,11 @@
 
 // 433 Mhz Temperature transmitter
+#ifndef TFA_RF433T_H
+#define TFA_RF433T_H
 
-#ifdef _TFA_RF433T_
+#if defined(_ADDONS_) && defined(_TFA_RF433T_)
 
-extern const char* TFA_RF433TName;
-void TFA_RF433TInit(void);
-void TFA_RF433TAction(void*);
-//void TFA_RF433TSettingsJSON(void);
-//void TFA_RF433TMeasureJSON(void);
+AddonStruct TFA_RF433TInit(void);
+
+#endif
 #endif

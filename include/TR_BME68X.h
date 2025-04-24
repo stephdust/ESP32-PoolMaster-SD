@@ -1,11 +1,8 @@
 // Air TechRoom Temp., Pressure and Humidity  
+#ifndef TR_BME68X_H
+#if defined(_ADDONS_) && defined(_TR_BME68X_)
 
-#ifdef _TR_BME68X_
+AddonStruct TR_BME68XInit(void);
 
-extern const char* TR_BME68XName;
-void TR_BME68XInit(void);
-void TR_BME68XAction(void*);
-void TR_BME68XSettingsJSON(void);
-void TR_BME68XMeasureJSON(void);
-
+#endif
 #endif

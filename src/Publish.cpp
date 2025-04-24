@@ -30,8 +30,6 @@ static char tempTopicMeas[100];
 
 int freeRam(void);
 void stack_mon(UBaseType_t&);
-void AddonsPublishSettings();
-void AddonsPublishMeasures();
 
 //Encode digital inputs states into one Byte (more efficient to send over MQTT)
 void EncodeBitMap()
@@ -222,9 +220,11 @@ void SettingsPublish(void *pvParameters)
     else
         Debug.print(DBG_ERROR,"Failed to connect to the MQTT broker");
 
-    // Publish Settings for Addons
-    if (mqttClient.connected()) AddonsPublishSettings();
+#ifdef _ADDONS_
+    // Publish Addons Settings
+    if (mqttClient.connected()) AddonsPublishSettings(nullptr);
     else Debug.print(DBG_ERROR,"Failed to connect to the MQTT broker");
+#endif
 
     //display remaining RAM space. For debug
     Debug.print(DBG_DEBUG,"[memCheck]: %db",freeRam());
@@ -346,9 +346,12 @@ void MeasuresPublish(void *pvParameters)
     else
         Debug.print(DBG_ERROR,"Failed to connect to the MQTT broker");
 
-    // Publish Measures for Addons
-    if (mqttClient.connected()) AddonsPublishMeasures();
+  
+#ifdef _ADDONS_
+    // Publish Addons Measures
+    if (mqttClient.connected()) AddonsPublishMeasures(nullptr);
     else Debug.print(DBG_ERROR,"Failed to connect to the MQTT broker");
+#endif
 
     //display remaining RAM space. For debug
     Debug.print(DBG_DEBUG,"[memCheck]: %db",freeRam());

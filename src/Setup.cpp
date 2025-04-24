@@ -207,9 +207,6 @@ unsigned stack_hwm();
 void stack_mon(UBaseType_t&);
 void info();
 
-// Manage Addons
-void AddonsInit(void);
-
 // Functions used as Tasks
 void PoolMaster(void*);
 void AnalogPoll(void*);
@@ -223,9 +220,6 @@ void StatusLights(void*);
 void UpdateTFT(void*);
 void HistoryStats(void *);
 void int_array_init(uint8_t *a, const int ct, ...);
-
-// Manage Addons
-void AddonsAction(void*);
 
 // For ElegantOTA
 void onOTAStart(void);
@@ -354,10 +348,7 @@ void setup()
   // Init Water and Air temperatures measurements
   TempInit();
 
-  // Init Personal Addons
-  AddonsInit();
-  
-  // Clear status LEDs
+   // Clear status LEDs
   Wire.beginTransmission(PCF8574ADDRESS);
   Wire.write((uint8_t)0xFF);
   Wire.endTransmission();
@@ -520,16 +511,9 @@ void setup()
     app_cpu
   );
 
-  // Personal Addons
-  xTaskCreatePinnedToCore(
-    AddonsAction,
-    "AddonsAction",
-    2048,
-    NULL,
-    1,
-    nullptr,
-    app_cpu
-  );
+#ifdef _ADDONS_
+   AddonsInit();
+#endif
 
 #ifdef ELEGANT_OTA
 // ELEGANTOTA Configuration

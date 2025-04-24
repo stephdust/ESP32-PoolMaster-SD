@@ -148,7 +148,7 @@
 // T9: PublishSettings 
 // T10: Nextion Screen Refresh On (/2 when screen on, /4 if menu page for faster refresh)
 // T11: Every 2 minutes, statistics recording, MQTT and NTP reconnects
-// T12: Addons GPIO+I2C, every 1 minute
+
 
 
 //Periods 
@@ -164,7 +164,6 @@
 #define PT9 1000
 #define PT10 1000
 #define PT11 120000 // Run once every 2 minutes
-#define PT12 1000
 
 
 //Start offsets to spread tasks along time
@@ -179,8 +178,6 @@
 #define DT9 940/portTICK_PERIOD_MS
 #define DT10 50/portTICK_PERIOD_MS
 #define DT11 2000/portTICK_PERIOD_MS
-#define DT12 1000/portTICK_PERIOD_MS
-
 
 
 //#define CHRONO                    // Activate tasks timings traces for profiling
@@ -189,5 +186,19 @@
                                     // loop to reach linearly the theorical value produced by this
                                     // output after one hour
 
-#define _TR_BME68X_   // Include BME68X addon in Tech Room
-#define _TFA_RF433T_  // Include Water Temperature -> TFA 433Mhz Broadcast adddon
+// Addons
+// Check GPIO IDs possibilities and limitations 
+// https://www.upesy.fr/blogs/tutorials/esp32-pinout-reference-gpio-pins-ultimate-guide// 
+//
+// GPIOs Available :
+//  GPIO O5   --> free - Input+Output + pullup/down
+//  GPIO 12   --> TFA_RF433T - Output data 
+//  GPIO 14   --> Pulse WaterMeter - activate Input + Pullup 
+//  GPIO 15   --> free - 
+//  GPIO 35   --> free - Input only, no pullup/pulldown
+
+#include "Addons.h"
+#define _TFA_RF433T_        12    // Water Temperature broadcasted to TFA 433Mhz receiver
+//#define _WATERMETER_PULSE_  14    // Count WaterMeter pulse from external reader.
+#define _TR_BME68X_         "I2C" // I2C-BME68X addon Temperature + Humidity in Tech Room
+//#define _PR_BME68X_         "I2C" // I2C-BME68X addon Temperature + Humidity in Pool Room
