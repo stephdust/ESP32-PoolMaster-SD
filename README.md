@@ -102,7 +102,6 @@ The version V6, (aka ESP-2.0) implement direct usage of FreeRTOS functions for m
 |T9| `PublishSettings` | publish settings on the MQTT topic (Set1 - Set5) |`When notifed`|`940`
 |T10| `UpdateTFT` | update Screen |`1s screen off, 500ms screen on, 200ms menu page`|`50`
 |T11| `DataHistory` | store last 12h statistics of pH, Orp and Temp |`2 mn`|`2000`
-|T12| `Addons` | manage Private Addons |`1 mn`|`1500`
 
 [https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/PoolMaster_FullLogic.pdf](https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/PoolMaster_FullLogic.pdf)
 
