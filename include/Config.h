@@ -149,8 +149,6 @@
 // T10: Nextion Screen Refresh On (/2 when screen on, /4 if menu page for faster refresh)
 // T11: Every 2 minutes, statistics recording, MQTT and NTP reconnects
 
-
-
 //Periods 
 // Task9 period is initialized with PUBLISHINTERVAL and can be changed dynamically
 #define PT1 125
@@ -178,7 +176,6 @@
 #define DT9 940/portTICK_PERIOD_MS
 #define DT10 50/portTICK_PERIOD_MS
 #define DT11 2000/portTICK_PERIOD_MS
-
 
 //#define CHRONO                    // Activate tasks timings traces for profiling
 //#define SIMU                      // Used to simulate pH/ORP sensors. Very simple simulation:

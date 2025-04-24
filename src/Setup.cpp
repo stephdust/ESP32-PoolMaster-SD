@@ -348,7 +348,7 @@ void setup()
   // Init Water and Air temperatures measurements
   TempInit();
 
-   // Clear status LEDs
+  // Clear status LEDs
   Wire.beginTransmission(PCF8574ADDRESS);
   Wire.write((uint8_t)0xFF);
   Wire.endTransmission();

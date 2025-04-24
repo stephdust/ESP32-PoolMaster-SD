@@ -166,5 +166,5 @@ AddonStruct TFA_RF433TInit(void)
     return myTFA_RF433T;
 }
 
-
 #endif
+
