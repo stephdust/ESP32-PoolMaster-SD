@@ -20,7 +20,7 @@
 #include "Config.h"
 #include "PoolMaster.h"
 
-#if defined(_ADDONS_) && defined(_TFA_RF433T_)
+#if defined(_ADDONS_) && defined(_IO_TFA_RF433T_)
 #include "TFA_RF433T.h"
 #include <driver/rmt.h>
 
@@ -124,13 +124,11 @@ void TFA_RF433TTask(void *pvParameters)
 
 AddonStruct TFA_RF433TInit(void)
 {
-
     // search and init the chip
-    int GPIO = _TFA_RF433T_;
-    rmt_config_t txconfig;
+      rmt_config_t txconfig;
     txconfig.rmt_mode                 = RMT_MODE_TX;
     txconfig.channel                  = RMT_TX_CHANNEL;
-    txconfig.gpio_num                 = gpio_num_t(GPIO);
+    txconfig.gpio_num                 = gpio_num_t(_IO_TFA_RF433T_);
     txconfig.mem_block_num            = RTM_BLOCK_NUM;
     txconfig.tx_config.loop_en        = false;
     txconfig.tx_config.carrier_en     = false;

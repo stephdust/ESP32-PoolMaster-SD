@@ -15,9 +15,12 @@ struct AddonStruct {
 };
 
 void AddonsInit();
+void AddonsLoadConfig(void*);
+void AddonsSaveConfig(void*);
 void AddonLoop(void*);
 void AddonsPublishSettings(void*);
 void AddonsPublishMeasures(void*);
-
+void AddonsHistoryStats(void*);
+int  NbAddons();
 #endif
 

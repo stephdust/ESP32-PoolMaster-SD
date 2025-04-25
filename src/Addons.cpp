@@ -4,7 +4,6 @@
 
 #ifdef _ADDONS_
 
-#define MaxAddons 5
 #include "TR_BME68X.h"
 //#include "PR_BME68X.h"
 #include "TFA_RF433T.h"
@@ -15,32 +14,34 @@
 void stack_mon(UBaseType_t&);
 
 static int _NbAddons = 0;
-static AddonStruct myAddons[MaxAddons];
-
+static AddonStruct myAddons[_MaxAddons_];
+#define SANITYDELAY delay(50);
 
 //Init All Addons
 void AddonsInit()
 {
-#ifdef _TR_BME68X_
+    memset(myAddons, 0, sizeof(myAddons));
+#ifdef _IO_TR_BME68X_
     myAddons[_NbAddons++] = TR_BME68XInit();
 #endif
-#ifdef _PR_BME68X_
-    myAddons[_NbAddons++] = InitAddon(PR_BME68XInit);
+#ifdef _IO_PR_BME68X_
+ //   myAddons[_NbAddons++] = PR_BME68XInit());
 #endif
-#ifdef _TFA_RF433T_
+#ifdef _IO_TFA_RF433T_
     myAddons[_NbAddons++] = TFA_RF433TInit();
 #endif
-#ifdef _WATERMETER_PULSE_
+#ifdef _IO_WATERMETER_PULSE_
+//    myAddons[_NbAddons++] = WaterMeter_PulseInit();
 #endif
 
 }
 
-/*
+
 int NbAddons()
 {
     return _NbAddons;
 }
-*/
+
 
 void AddonLoop(void *pvParameters)
 {
@@ -60,7 +61,7 @@ void AddonLoop(void *pvParameters)
   int n=1;
   #endif
 
-  Debug.print(DBG_INFO,"[Start AddonLoop %s] freq: %d",myAddon->name,myAddon->frequency);
+  Debug.print(DBG_INFO,"[Start AddonLoop] name %s freq: %d ms",myAddon->name,myAddon->frequency);
   for(;;)
   {       
     vTaskDelayUntil(&ticktime,period);
@@ -70,7 +71,7 @@ void AddonLoop(void *pvParameters)
     #endif 
 
     if (myAddon->Task) myAddon->Task(pvParameters);
-    delay(50);
+    SANITYDELAY;
     
     #ifdef CHRONO
     t_act = millis() - td;
@@ -78,20 +79,25 @@ void AddonLoop(void *pvParameters)
     if(t_act < t_min) t_min = t_act;
     t_mean += (t_act - t_mean)/n;
     ++n;
-    Debug.print(DBG_INFO,"[Addons Action %s] td: %d t_act: %d t_min: %d t_max: %d t_mean: %4.1f",myAddon->name,td,t_act,t_min,t_max,t_mean);
+    Debug.print(DBG_INFO,"[Addons Action] name:%s td: %d t_act: %d t_min: %d t_max: %d t_mean: %4.1f",myAddon->name,td,t_act,t_min,t_max,t_mean);
     #endif
 
     stack_mon(hwm);
   }
 }
 
+void AddonsLoadConfig(void *pvParameters)
+{}
+
+void AddonsSaveConfig(void *pvParameters)
+{}
 
 void AddonsPublishSettings(void *pvParameters)
 {
     for (int i=0; i<_NbAddons; i++) {
         if (myAddons[i].SettingsJSON) {
             myAddons[i].SettingsJSON(pvParameters);
-            delay(50);
+            SANITYDELAY;
         }
     }
 }
@@ -102,9 +108,11 @@ void AddonsPublishMeasures(void *pvParameters)
     for (int i=0; i<_NbAddons; i++) {
         if (myAddons[i].MeasuresJSON) {
             myAddons[i].MeasuresJSON(pvParameters);
-            delay(50);
+            SANITYDELAY;
         }
     }
 }
 
+void AddonsHistoryStats(void* pvParameters)
+{}
 #endif

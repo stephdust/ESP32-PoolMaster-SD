@@ -8,7 +8,7 @@
 #include "Config.h"
 #include "PoolMaster.h"
 
-#if defined(_ADDONS_) && defined(_TR_BME68X_)
+#if defined(_ADDONS_) && defined(_IO_TR_BME68X_)
 #include "TR_BME68X.h"                     
 #include <bsec2.h>
 
