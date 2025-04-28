@@ -22,8 +22,6 @@ void AddonsPublishSettings(void*);
 void AddonsPublishMeasures(void*);
 void AddonsHistoryStats(void*);
 int  AddonsNb(void);
-//void AddonsPublishTopic(char*, JsonDocument&);
-//void AddonsReadRetainedTopic(char*, JsonDocument&);
 void AddonsLoop(void*);
 #endif
 

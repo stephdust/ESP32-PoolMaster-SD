@@ -36,9 +36,8 @@ static char *AddonsMqttMsgTopic = 0;
 void onAddonsMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total)
 {
   if (strcmp(topic,AddonsMqttMsgTopic)==0)
-    for (uint8_t i=0 ; i<len ; i++) {
+    for (uint8_t i=0 ; i<len ; i++) 
         AddonsMqttMsg[i] = payload[i];
-    }
 }
 
 
@@ -89,6 +88,9 @@ int AddonsReadRetainedTopic(char* topic, JsonDocument& root)
     AddonsMqttMsgTopic = topic;
     AddonsMqttClient.subscribe(topic, 1);
     AddonsMqttClient.unsubscribe(topic);
+
+    if (!AddonsMqttMsg[0]) return 0; 
+    
     deserializeJson(root, AddonsMqttMsg);
     AddonsMqttOnRead = false;
     AddonsMqttMsgTopic = 0;
