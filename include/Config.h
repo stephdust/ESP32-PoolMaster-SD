@@ -185,19 +185,19 @@
 
 // Addons
 // Check GPIO IDs possibilities and limitations 
-// https://www.upesy.fr/blogs/tutorials/esp32-pinout-reference-gpio-pins-ultimate-guide// 
+// https://www.upesy.fr/blogs/tutorials/esp32-pinout-reference-gpio-pins-ultimate-guide
 //
 // GPIOs Available :
-//  GPIO O5   --> free - Input+Output + pullup/down
-//  GPIO 12   --> TFA_RF433T - Output data 
-//  GPIO 14   --> Pulse WaterMeter - activate Input + Pullup 
-//  GPIO 15   --> free - 
-//  GPIO 35   --> free - Input only, no pullup/pulldown
+//  GPIO O5   --> Input+Output + pullup/down
+//  GPIO 12   --> Input+Output + pullup/down
+//  GPIO 14   --> Input+Output + pullup/down
+//  GPIO 15   --> Input(pullup) + output 
+//  GPIO 35   --> Input only, no pullup/pulldown
 //  I2C       --> IO = 0
 
 #include "Addons.h"
-#define _MaxAddons_           4   // Number of Addons below
-#define _IO_TFA_RF433T_       12  // Water Temperature broadcasted to TFA 433Mhz receiver
-#define _IO_WATERMETER_PULSE_ 14  // Count WaterMeter pulse from external reader.
-#define _IO_TR_BME68X_        0   // I2C-BME68X addon Temperature + Humidity in Tech Room
-#define _IO_PR_BME68X_        0   // I2C-BME68X addon Temperature + Humidity in Pool Room
+#define _MaxAddons_                  4   // Number of Addons below
+#define _IO_ADDON_TFA_RF433T_        12  // Water Temperature broadcasted to TFA 433Mhz receiver
+#define _IO_ADDON_WATERMETER_PULSE_  14  // Count WaterMeter pulse from external reader.
+#define _IO_ADDON_TR_BME68X_         0   // I2C-BME68X addon Temperature + Humidity in Tech Room
+#define _IO_ADDON_PR_BME68X_         0   // I2C-BME68X addon Temperature + Humidity in Pool Room

@@ -4,34 +4,35 @@
 
 #ifdef _ADDONS_
 
-#include "TR_BME68X.h"
-//#include "PR_BME68X.h"
-#include "TFA_RF433T.h"
-//#include "WaterMeter_Pulse.h"
+#include "Addon_TR_BME68X.h"
+#include "Addon_PR_BME68X.h"
+#include "Addon_TFA_RF433T.h"
+#include "Addon_WaterMeter_Pulse.h"
 //#include "Dehumidifier.h"
 //#include "PoolCover.h"
 
 void stack_mon(UBaseType_t&);
 
 static int _NbAddons = 0;
-static AddonStruct myAddons[_MaxAddons_];
+static AddonStruct myAddons[_MaxAddons_] ;
 #define SANITYDELAY delay(50);
 
 //Init All Addons
 void AddonsInit()
 {
     memset(myAddons, 0, sizeof(myAddons));
-#ifdef _IO_TR_BME68X_
+
+#ifdef _IO_ADDON_TR_BME68X_
     myAddons[_NbAddons++] = TR_BME68XInit();
 #endif
-#ifdef _IO_PR_BME68X_
- //   myAddons[_NbAddons++] = PR_BME68XInit());
+#ifdef _IO_ADDON_PR_BME68X_
+    myAddons[_NbAddons++] = PR_BME68XInit();
 #endif
-#ifdef _IO_TFA_RF433T_
+#ifdef _IO_ADDON_TFA_RF433T_
     myAddons[_NbAddons++] = TFA_RF433TInit();
 #endif
-#ifdef _IO_WATERMETER_PULSE_
-//    myAddons[_NbAddons++] = WaterMeter_PulseInit();
+#ifdef _IO_ADDON_WATERMETER_PULSE_
+    myAddons[_NbAddons++] = WaterMeterPulseInit();
 #endif
 
 }
@@ -48,7 +49,7 @@ void AddonLoop(void *pvParameters)
   AddonStruct *myAddon  = (AddonStruct*)pvParameters;
   TickType_t period     = myAddons->frequency;
 
-  while (!startTasks) ;
+  while (!startTasks) delay(200);
   vTaskDelay(500/portTICK_PERIOD_MS);           // Scheduling offset 
 
   TickType_t ticktime = xTaskGetTickCount();
