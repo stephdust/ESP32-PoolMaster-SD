@@ -145,15 +145,15 @@ AddonStruct TFA_RF433TInit(void)
     myTFA_RF433T.name         = TFA_RF433TName;
     myTFA_RF433T.Task         = TFA_RF433TTask;
     myTFA_RF433T.frequency    = 1000;     // Update value each 1000 millisecondes (per TFA requirement)
-    myTFA_RF433T.SettingsJSON = 0;
-    myTFA_RF433T.MeasuresJSON = 0;
+    myTFA_RF433T.LoadSettings = 0;
+    myTFA_RF433T.SaveSettings = 0;
+    myTFA_RF433T.LoadMeasures = 0;
+    myTFA_RF433T.SaveMeasures = 0;
     myTFA_RF433T.HistoryStats = 0;
-    myTFA_RF433T.LoadConfig   = 0;
-    myTFA_RF433T.SaveConfig   = 0;
 
     if (TFA_RF433T) 
         xTaskCreatePinnedToCore(
-            AddonLoop,
+            AddonsLoop,
             myTFA_RF433T.name,
             3072,
             &myTFA_RF433T,

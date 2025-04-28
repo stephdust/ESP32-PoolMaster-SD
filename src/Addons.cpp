@@ -1,15 +1,24 @@
-#include <Arduino.h>                // Arduino framework
+
+#include <Arduino.h>
 #include "Config.h"
 #include "PoolMaster.h"
 
 #ifdef _ADDONS_
-
+#ifdef _IO_ADDON_TR_BME68X_
 #include "Addon_TR_BME68X.h"
+#endif
+#ifdef _IO_ADDON_PR_BME68X_
 #include "Addon_PR_BME68X.h"
+#endif
+#ifdef _IO_ADDON_TFA_RF433T_
 #include "Addon_TFA_RF433T.h"
+#endif
+#ifdef _IO_ADDON_WATERMETER_PULSE_
 #include "Addon_WaterMeter_Pulse.h"
-//#include "Dehumidifier.h"
-//#include "PoolCover.h"
+#endif
+//#include "Addon_Dehumidifier.h"
+//#include "Addon_PoolCover.h"
+//#include "Addon_MiLight.h"
 
 void stack_mon(UBaseType_t&);
 
@@ -17,10 +26,82 @@ static int _NbAddons = 0;
 static AddonStruct myAddons[_MaxAddons_] ;
 #define SANITYDELAY delay(50);
 
+AsyncMqttClient AddonsMqttClient;
+#define PAYLOAD_BUFFER_LENGTH 200
+static bool AddonsMqttOnRead = false;
+static char AddonsMqttMsg[PAYLOAD_BUFFER_LENGTH] = "";
+static char *AddonsMqttMsgTopic = 0;
+
+// Addon MQTT callback reading RETAINED values
+void onAddonsMqttMessage(char* topic, char* payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total)
+{
+  if (strcmp(topic,AddonsMqttMsgTopic)==0)
+    for (uint8_t i=0 ; i<len ; i++) {
+        AddonsMqttMsg[i] = payload[i];
+    }
+}
+
+
+void AddonsMqttInit() 
+{
+    //Init 2nd Async MQTT session for Addons
+    AddonsMqttClient.setServer(storage.MQTT_IP,storage.MQTT_PORT);
+    if(strlen(storage.MQTT_LOGIN)>0)
+        AddonsMqttClient.setCredentials(storage.MQTT_LOGIN,storage.MQTT_PASS);
+    // AddonsMqttClient.setClientId(storage.MQTT_ID);
+    AddonsMqttClient.onMessage(onAddonsMqttMessage);
+} 
+
+void AddonsPublishTopic(char* topic, JsonDocument& root)
+{
+    if (!AddonsMqttClient.connected()) {
+        Debug.print(DBG_ERROR,"Failed to connect to the MQTT broker");
+        return;
+    }
+    char Payload[PAYLOAD_BUFFER_LENGTH];
+    size_t n=serializeJson(root,Payload);
+    remove_duplicates_slash(topic);
+
+    if (AddonsMqttClient.publish(topic, 1, true, Payload,n) != 0) {
+      delay(50);
+      Debug.print(DBG_DEBUG,"Publish Addons: %s - size: %d/%d",Payload,root.size(),n);
+      return;
+    }
+
+    Debug.print(DBG_DEBUG,"Unable to publish: %s",Payload);
+}
+
+int AddonsReadRetainedTopic(char* topic, JsonDocument& root)
+{
+    int nbTry = 5;
+    while (AddonsMqttOnRead) {
+        delay(200);
+        nbTry--;
+        if (!nbTry) AddonsMqttOnRead = false;
+    }
+
+    if (!AddonsMqttClient.connected()) {
+        Debug.print(DBG_ERROR,"Failed to connect to the MQTT broker");
+        return 0;
+    }
+    remove_duplicates_slash(topic);
+    AddonsMqttOnRead = true;
+    AddonsMqttMsgTopic = topic;
+    AddonsMqttClient.subscribe(topic, 1);
+    AddonsMqttClient.unsubscribe(topic);
+    deserializeJson(root, AddonsMqttMsg);
+    AddonsMqttOnRead = false;
+    AddonsMqttMsgTopic = 0;
+    AddonsMqttMsg[0] = '\0';
+    return 1;
+}
+
+
 //Init All Addons
 void AddonsInit()
 {
     memset(myAddons, 0, sizeof(myAddons));
+    AddonsMqttInit();
 
 #ifdef _IO_ADDON_TR_BME68X_
     myAddons[_NbAddons++] = TR_BME68XInit();
@@ -38,13 +119,13 @@ void AddonsInit()
 }
 
 
-int NbAddons()
+int AddonsNb()
 {
     return _NbAddons;
 }
 
 
-void AddonLoop(void *pvParameters)
+void AddonsLoop(void *pvParameters)
 {
   AddonStruct *myAddon  = (AddonStruct*)pvParameters;
   TickType_t period     = myAddons->frequency;
@@ -87,33 +168,34 @@ void AddonLoop(void *pvParameters)
   }
 }
 
-void AddonsLoadConfig(void *pvParameters)
-{}
-
-void AddonsSaveConfig(void *pvParameters)
-{}
-
 void AddonsPublishSettings(void *pvParameters)
 {
     for (int i=0; i<_NbAddons; i++) {
-        if (myAddons[i].SettingsJSON) {
-            myAddons[i].SettingsJSON(pvParameters);
+        if (myAddons[i].SaveSettings) {
+            myAddons[i].SaveSettings(pvParameters);
             SANITYDELAY;
         }
     }
 }
 
-
 void AddonsPublishMeasures(void *pvParameters)
 {
     for (int i=0; i<_NbAddons; i++) {
-        if (myAddons[i].MeasuresJSON) {
-            myAddons[i].MeasuresJSON(pvParameters);
+        if (myAddons[i].SaveMeasures) {
+            myAddons[i].SaveMeasures(pvParameters);
             SANITYDELAY;
         }
     }
 }
 
 void AddonsHistoryStats(void* pvParameters)
-{}
+{  
+    for (int i=0; i<_NbAddons; i++) {
+        if (myAddons[i].HistoryStats) {
+            myAddons[i].HistoryStats(pvParameters);
+            SANITYDELAY;
+        }
+    }
+}
+
 #endif

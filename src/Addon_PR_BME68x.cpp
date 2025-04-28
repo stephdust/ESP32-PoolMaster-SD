@@ -21,23 +21,15 @@ static Bsec2 PR_envSensorBME688;
 
 void PR_BME688newDataCallback(const bme68xData data, const bsecOutputs outputs, Bsec2 bsec);
 
-extern void PublishTopic(const char*, JsonDocument&);
-static char *PoolTopicMeas=0, *PoolTopicSet=0;
+static char *PR_BME68xPoolTopicMeas=0;
+void AddonsPublishTopic(char*, JsonDocument&);
+//int AddonsReadRetainedTopic(char*, JsonDocument&);
 
 void lockI2C();
 void unlockI2C();
 
-void PR_BME68XTask(void *pvParameters)
-{
-    if (!PR_BME688) return;
-
-    lockI2C();
-    PR_envSensorBME688.run();
-    unlockI2C();
-}
-
 //  Publish BME688 -> MQTT
-void PR_BME68XMeasureJSON (void *pvParameters)
+void  PR_BME68X_SaveMeasures(void *pvParameters)
 {
     //send a JSON to MQTT broker. /!\ Split JSON if longer than 100 bytes
     const int capacity = JSON_OBJECT_SIZE(3); // only 3 values to publish
@@ -49,15 +41,18 @@ void PR_BME68XMeasureJSON (void *pvParameters)
     root["Humidity"]    = PR_Humidity;
     root["Pressure"]    = PR_Pressure;
 
-    PublishTopic(PoolTopicMeas, root);
+    AddonsPublishTopic(PR_BME68xPoolTopicMeas, root);
 }
 
-void PR_BME68XSettingsJSON(void *pvParameters)
+void PR_BME68XTask(void *pvParameters)
 {
     if (!PR_BME688) return;
-    // No settings to store in MQTT
-}
 
+    lockI2C();
+    PR_envSensorBME688.run();
+    unlockI2C();
+    PR_BME68X_SaveMeasures(pvParameters);
+}
 
 AddonStruct PR_BME68XInit(void)
 {
@@ -81,7 +76,6 @@ if (!PR_BME688) {
     Debug.print(DBG_INFO,"no BME68X");
     Debug.print(DBG_ERROR,"BME688 Init : BSEC Error : %d", PR_envSensorBME688.status);
     Debug.print(DBG_ERROR,"BME688 Init : BME68x Error : %d", PR_envSensorBME688.sensor.status);
-
 }
 else {
 
@@ -91,24 +85,26 @@ else {
     Debug.print(DBG_INFO,"BSEC library version %d.%d.%d.%d",
             PR_envSensorBME688.version.major, PR_envSensorBME688.version.minor,
             PR_envSensorBME688.version.major_bugfix, PR_envSensorBME688.version.minor_bugfix);
-
     }
 
-if (!PoolTopicMeas) PoolTopicMeas = (char*)malloc(strlen(POOLTOPIC)+strlen(PR_BME68XName)+5);
-sprintf(PoolTopicMeas, "%sMeas%s", POOLTOPIC, PR_BME68XName);
-if (!PoolTopicSet)  PoolTopicSet = (char*)malloc(strlen(POOLTOPIC)+strlen(PR_BME68XName)+4);
-sprintf(PoolTopicSet,  "%sSet%s", POOLTOPIC, PR_BME68XName);
+// init MQTT Topic name
+if (!PR_BME68xPoolTopicMeas) {
+    PR_BME68xPoolTopicMeas = (char*)malloc(strlen(POOLTOPIC)+strlen(PR_BME68XName)+5);
+    sprintf(PR_BME68xPoolTopicMeas, "%s/Meas%s", POOLTOPIC, PR_BME68XName);
+}
 
 myPR_BME68X.name         = PR_BME68XName;
 myPR_BME68X.Task         = PR_BME68XTask;
 myPR_BME68X.frequency    = 5000;     // Update values every 5 secs.
-myPR_BME68X.SettingsJSON = PR_BME68XSettingsJSON;
-myPR_BME68X.MeasuresJSON = PR_BME68XMeasureJSON;
+myPR_BME68X.LoadSettings = 0;
+myPR_BME68X.SaveSettings = 0;
+myPR_BME68X.LoadMeasures = 0;
+myPR_BME68X.SaveMeasures = PR_BME68X_SaveMeasures;
 myPR_BME68X.HistoryStats = 0;
 
 if (PR_BME688) 
     xTaskCreatePinnedToCore(
-        AddonLoop,
+        AddonsLoop,
         myPR_BME68X.name,
         3072,
         &myPR_BME68X,

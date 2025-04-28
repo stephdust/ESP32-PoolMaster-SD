@@ -220,12 +220,6 @@ void SettingsPublish(void *pvParameters)
     else
         Debug.print(DBG_ERROR,"Failed to connect to the MQTT broker");
 
-#ifdef _ADDONS_
-    // Publish Addons Settings
-    if (mqttClient.connected()) AddonsPublishSettings(nullptr);
-    else Debug.print(DBG_ERROR,"Failed to connect to the MQTT broker");
-#endif
-
     //display remaining RAM space. For debug
     Debug.print(DBG_DEBUG,"[memCheck]: %db",freeRam());
 
@@ -345,13 +339,6 @@ void MeasuresPublish(void *pvParameters)
     }
     else
         Debug.print(DBG_ERROR,"Failed to connect to the MQTT broker");
-
-  
-#ifdef _ADDONS_
-    // Publish Addons Measures
-    if (mqttClient.connected()) AddonsPublishMeasures(nullptr);
-    else Debug.print(DBG_ERROR,"Failed to connect to the MQTT broker");
-#endif
 
     //display remaining RAM space. For debug
     Debug.print(DBG_DEBUG,"[memCheck]: %db",freeRam());
