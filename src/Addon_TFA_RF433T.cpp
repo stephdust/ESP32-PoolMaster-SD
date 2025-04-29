@@ -24,9 +24,7 @@
 #include "Addon_TFA_RF433T.h"
 #include <driver/rmt.h>
 
-const char *TFA_RF433TName = "TFA_RF433T";
-static bool TFA_RF433T = false; // no TFA_RF433T transmitter by default
-AddonStruct myTFA_RF433T;
+AddonStruct myTFA_RF433T = {0};
 
 #define RMT_TX_CHANNEL  (RMT_CHANNEL_0)
 //#define RMT_RX_CHANNEL  (RMT_CHANNEL_1)
@@ -115,7 +113,7 @@ xxxxMMMM IIIIIIII BCCCTTTT TTTTTTTT HHHHHHHH MMMMMMMM
 
 void TFA_RF433TTask(void *pvParameters)
 {
-    if (!TFA_RF433T) return;
+    if (!myTFA_RF433T.detected) return;
    
     // Read Water Temp, Format TFA Dostmann payload and send
     TFA_Data(storage.WaterTemp * 100);
@@ -135,14 +133,14 @@ AddonStruct TFA_RF433TInit(void)
     txconfig.tx_config.idle_output_en = true;
     txconfig.tx_config.idle_level     = rmt_idle_level_t(0);
     txconfig.clk_div                  = RMT_CLK_DIV;
-    if (rmt_config(&txconfig) == ESP_OK) TFA_RF433T = true;
-    if ((TFA_RF433T) && (rmt_driver_install(txconfig.channel, 0, 0) != ESP_OK)) {
-        TFA_RF433T = false;
+    if (rmt_config(&txconfig) == ESP_OK) myTFA_RF433T.detected = true;
+    if ((myTFA_RF433T.detected) && (rmt_driver_install(txconfig.channel, 0, 0) != ESP_OK)) {
+        myTFA_RF433T.detected = false;
         Debug.print(DBG_INFO,"no TFA_RF433T");
     }
 
-    // Init xTask
-    myTFA_RF433T.name         = TFA_RF433TName;
+    // Init structure
+    myTFA_RF433T.name         = "TFA_RF433T";
     myTFA_RF433T.Task         = TFA_RF433TTask;
     myTFA_RF433T.frequency    = 1000;     // Update value each 1000 millisecondes (per TFA requirement)
     myTFA_RF433T.LoadSettings = 0;
@@ -151,16 +149,6 @@ AddonStruct TFA_RF433TInit(void)
     myTFA_RF433T.SaveMeasures = 0;
     myTFA_RF433T.HistoryStats = 0;
 
-    if (TFA_RF433T) 
-        xTaskCreatePinnedToCore(
-            AddonsLoop,
-            myTFA_RF433T.name,
-            3072,
-            &myTFA_RF433T,
-            1,
-            nullptr,
-            xPortGetCoreID()
-        );
     return myTFA_RF433T;
 }
 

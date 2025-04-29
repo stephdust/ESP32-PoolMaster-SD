@@ -24,7 +24,7 @@ void stack_mon(UBaseType_t&);
 
 static int _NbAddons = 0;
 static AddonStruct myAddons[_MaxAddons_] ;
-#define SANITYDELAY delay(50);
+
 
 AsyncMqttClient AddonsMqttClient;
 #define PAYLOAD_BUFFER_LENGTH 200
@@ -50,6 +50,14 @@ void AddonsMqttInit()
     // AddonsMqttClient.setClientId(storage.MQTT_ID);
     AddonsMqttClient.onMessage(onAddonsMqttMessage);
 } 
+
+char *AddonsCreateMQTTTopic(const char *name, const char *sub)
+{
+    char *topic = (char*)malloc(strlen(POOLTOPIC)+strlen(name)+strlen(sub)+1);
+    sprintf(topic, "%s/%s%s", POOLTOPIC, sub, name);
+    return topic;
+}
+
 
 void AddonsPublishTopic(char* topic, JsonDocument& root)
 {
@@ -99,32 +107,7 @@ int AddonsReadRetainedTopic(char* topic, JsonDocument& root)
 }
 
 
-//Init All Addons
-void AddonsInit()
-{
-    memset(myAddons, 0, sizeof(myAddons));
-    AddonsMqttInit();
-
-#ifdef _IO_ADDON_TR_BME68X_
-    myAddons[_NbAddons++] = TR_BME68XInit();
-#endif
-#ifdef _IO_ADDON_PR_BME68X_
-    myAddons[_NbAddons++] = PR_BME68XInit();
-#endif
-#ifdef _IO_ADDON_TFA_RF433T_
-    myAddons[_NbAddons++] = TFA_RF433TInit();
-#endif
-#ifdef _IO_ADDON_WATERMETER_PULSE_
-    myAddons[_NbAddons++] = WaterMeterPulseInit();
-#endif
-
-}
-
-
-int AddonsNb()
-{
-    return _NbAddons;
-}
+//Init All Addons and run loops
 
 
 void AddonsLoop(void *pvParameters)
@@ -170,6 +153,40 @@ void AddonsLoop(void *pvParameters)
   }
 }
 
+void AddonsInit()
+{
+    memset(myAddons, 0, sizeof(myAddons));
+    AddonsMqttInit();
+
+#ifdef _IO_ADDON_TR_BME68X_
+    myAddons[_NbAddons++] = TR_BME68XInit();
+#endif
+#ifdef _IO_ADDON_PR_BME68X_
+    myAddons[_NbAddons++] = PR_BME68XInit();
+#endif
+#ifdef _IO_ADDON_TFA_RF433T_
+    myAddons[_NbAddons++] = TFA_RF433TInit();
+#endif
+#ifdef _IO_ADDON_WATERMETER_PULSE_
+    myAddons[_NbAddons++] = WaterMeterPulseInit();
+#endif
+
+    for (int i=0; i<_NbAddons; i++) {
+        if (myAddons[i].detected)
+            xTaskCreatePinnedToCore(
+                AddonsLoop,
+                myAddons[i].name,
+                3072,       // can we decrease this value ??
+                &myAddons[i],
+                1,
+                nullptr,
+                xPortGetCoreID()
+                );
+        }
+}
+
+
+
 void AddonsPublishSettings(void *pvParameters)
 {
     for (int i=0; i<_NbAddons; i++) {
@@ -199,5 +216,11 @@ void AddonsHistoryStats(void* pvParameters)
         }
     }
 }
+
+int AddonsNb()
+{
+    return _NbAddons;
+}
+
 
 #endif

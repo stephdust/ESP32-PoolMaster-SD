@@ -12,19 +12,13 @@
 #include "Addon_PR_BME68X.h"                     
 #include <bsec2.h>
 
-const char *PR_BME68XName = "PoolRoom";
-static bool PR_BME688 = false; // no BME688 sensor by default
-AddonStruct myPR_BME68X;
+AddonStruct myPR_BME68X = {0};
 
 static double PR_Temp, PR_Humidity, PR_Pressure;
 static Bsec2 PR_envSensorBME688;
 
 void PR_BME688newDataCallback(const bme68xData data, const bsecOutputs outputs, Bsec2 bsec);
-
-static char *PR_BME68xPoolTopicMeas=0;
 void AddonsPublishTopic(char*, JsonDocument&);
-//int AddonsReadRetainedTopic(char*, JsonDocument&);
-
 void lockI2C();
 void unlockI2C();
 
@@ -35,18 +29,18 @@ void  PR_BME68X_SaveMeasures(void *pvParameters)
     const int capacity = JSON_OBJECT_SIZE(3); // only 3 values to publish
     StaticJsonDocument<capacity> root;
 
-    if (!PR_BME688) return;
+    if (!myPR_BME68X.detected) return;
 
     root["Temperature"] = PR_Temp;
     root["Humidity"]    = PR_Humidity;
     root["Pressure"]    = PR_Pressure;
 
-    AddonsPublishTopic(PR_BME68xPoolTopicMeas, root);
+    AddonsPublishTopic(myPR_BME68X.MQTTTopicMeasures, root);
 }
 
 void PR_BME68XTask(void *pvParameters)
 {
-    if (!PR_BME688) return;
+    if (!myPR_BME68X.detected) return;
 
     lockI2C();
     PR_envSensorBME688.run();
@@ -56,64 +50,49 @@ void PR_BME68XTask(void *pvParameters)
 
 AddonStruct PR_BME68XInit(void)
 {
-/* Desired subscription list of BSEC2 outputs */
-bsecSensor sensorList[] = {
-    BSEC_OUTPUT_IAQ,          BSEC_OUTPUT_RAW_TEMPERATURE,
-    BSEC_OUTPUT_RAW_PRESSURE, BSEC_OUTPUT_RAW_HUMIDITY,
-    BSEC_OUTPUT_RAW_GAS,      BSEC_OUTPUT_STABILIZATION_STATUS,
-    BSEC_OUTPUT_RUN_IN_STATUS};
+    /* Desired subscription list of BSEC2 outputs */
+    bsecSensor sensorList[] = {
+        BSEC_OUTPUT_IAQ,          BSEC_OUTPUT_RAW_TEMPERATURE,
+        BSEC_OUTPUT_RAW_PRESSURE, BSEC_OUTPUT_RAW_HUMIDITY,
+        BSEC_OUTPUT_RAW_GAS,      BSEC_OUTPUT_STABILIZATION_STATUS,
+        BSEC_OUTPUT_RUN_IN_STATUS};
 
-/* Initialize the library and interfaces */
-lockI2C();
-if (PR_envSensorBME688.begin(BME68X_I2C_ADDR_HIGH, Wire)) PR_BME688 = true;
-unlockI2C();
+    /* Initialize the library and interfaces */
+    lockI2C();
+    if (PR_envSensorBME688.begin(BME68X_I2C_ADDR_HIGH, Wire)) myPR_BME68X.detected = true;
+    unlockI2C();
 
-/* Subsribe to the desired BSEC2 outputs */
-if (!PR_envSensorBME688.updateSubscription(sensorList, ARRAY_LEN(sensorList), BSEC_SAMPLE_RATE_LP)) 
-    PR_BME688 = false;
+    /* Subsribe to the desired BSEC2 outputs */
+    if (!PR_envSensorBME688.updateSubscription(sensorList, ARRAY_LEN(sensorList), BSEC_SAMPLE_RATE_LP)) 
+        myPR_BME68X.detected = false;
 
-if (!PR_BME688) {
-    Debug.print(DBG_INFO,"no BME68X");
-    Debug.print(DBG_ERROR,"BME688 Init : BSEC Error : %d", PR_envSensorBME688.status);
-    Debug.print(DBG_ERROR,"BME688 Init : BME68x Error : %d", PR_envSensorBME688.sensor.status);
-}
-else {
-
-    /* Whenever new data is available call the newDataCallback function */
-    PR_envSensorBME688.attachCallback(PR_BME688newDataCallback);
-
-    Debug.print(DBG_INFO,"BSEC library version %d.%d.%d.%d",
-            PR_envSensorBME688.version.major, PR_envSensorBME688.version.minor,
-            PR_envSensorBME688.version.major_bugfix, PR_envSensorBME688.version.minor_bugfix);
+    if (!myPR_BME68X.detected) {
+        Debug.print(DBG_INFO,"no BME68X");
+        Debug.print(DBG_ERROR,"BME688 Init : BSEC Error : %d", PR_envSensorBME688.status);
+        Debug.print(DBG_ERROR,"BME688 Init : BME68x Error : %d", PR_envSensorBME688.sensor.status);
     }
+    else {
 
-// init MQTT Topic name
-if (!PR_BME68xPoolTopicMeas) {
-    PR_BME68xPoolTopicMeas = (char*)malloc(strlen(POOLTOPIC)+strlen(PR_BME68XName)+5);
-    sprintf(PR_BME68xPoolTopicMeas, "%s/Meas%s", POOLTOPIC, PR_BME68XName);
-}
+        /* Whenever new data is available call the newDataCallback function */
+        PR_envSensorBME688.attachCallback(PR_BME688newDataCallback);
 
-myPR_BME68X.name         = PR_BME68XName;
-myPR_BME68X.Task         = PR_BME68XTask;
-myPR_BME68X.frequency    = 5000;     // Update values every 5 secs.
-myPR_BME68X.LoadSettings = 0;
-myPR_BME68X.SaveSettings = 0;
-myPR_BME68X.LoadMeasures = 0;
-myPR_BME68X.SaveMeasures = PR_BME68X_SaveMeasures;
-myPR_BME68X.HistoryStats = 0;
+        Debug.print(DBG_INFO,"BSEC library version %d.%d.%d.%d",
+                PR_envSensorBME688.version.major, PR_envSensorBME688.version.minor,
+                PR_envSensorBME688.version.major_bugfix, PR_envSensorBME688.version.minor_bugfix);
+        }
 
-if (PR_BME688) 
-    xTaskCreatePinnedToCore(
-        AddonsLoop,
-        myPR_BME68X.name,
-        3072,
-        &myPR_BME68X,
-        1,
-        nullptr,
-        xPortGetCoreID()
-    );
+    myPR_BME68X.name                = "PoolRoom";
+    myPR_BME68X.Task                = PR_BME68XTask;
+    myPR_BME68X.frequency           = 5000;     // Update values every 5 secs.
+    myPR_BME68X.LoadSettings        = 0;
+    myPR_BME68X.SaveSettings        = 0;
+    myPR_BME68X.LoadMeasures        = 0;
+    myPR_BME68X.SaveMeasures        = PR_BME68X_SaveMeasures;
+    myPR_BME68X.HistoryStats        = 0;
+    myPR_BME68X.MQTTTopicSettings   = 0;
+    myPR_BME68X.MQTTTopicMeasures   = AddonsCreateMQTTTopic(myPR_BME68X.name, "Meas");
 
-  return myPR_BME68X;
+    return myPR_BME68X;
 }
 
 

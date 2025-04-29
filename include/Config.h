@@ -183,7 +183,10 @@
                                     // loop to reach linearly the theorical value produced by this
                                     // output after one hour
 
-// Addons
+
+// *************************
+// Addons on Extension Ports
+// *************************
 // Check GPIO IDs possibilities and limitations 
 // https://www.upesy.fr/blogs/tutorials/esp32-pinout-reference-gpio-pins-ultimate-guide
 //
