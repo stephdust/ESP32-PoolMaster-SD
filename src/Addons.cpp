@@ -45,16 +45,15 @@ void AddonsMqttInit()
 {
     //Init 2nd Async MQTT session for Addons
     AddonsMqttClient.setServer(storage.MQTT_IP,storage.MQTT_PORT);
-    if(strlen(storage.MQTT_LOGIN)>0)
-        AddonsMqttClient.setCredentials(storage.MQTT_LOGIN,storage.MQTT_PASS);
+    if(strlen(storage.MQTT_LOGIN)>0) AddonsMqttClient.setCredentials(storage.MQTT_LOGIN,storage.MQTT_PASS);
     // AddonsMqttClient.setClientId(storage.MQTT_ID);
     AddonsMqttClient.onMessage(onAddonsMqttMessage);
 } 
 
-char *AddonsCreateMQTTTopic(const char *name, const char *sub)
+char *AddonsCreateMQTTTopic(const char *t1, const char *t2)
 {
-    char *topic = (char*)malloc(strlen(POOLTOPIC)+strlen(name)+strlen(sub)+1);
-    sprintf(topic, "%s/%s%s", POOLTOPIC, sub, name);
+    char *topic = (char*)malloc(strlen(POOLTOPIC)+strlen(t1)+strlen(t2)+1);
+    sprintf(topic, "%s/%s%s", POOLTOPIC, t1, t2);
     return topic;
 }
 
@@ -157,7 +156,7 @@ void AddonsInit()
 {
     memset(myAddons, 0, sizeof(myAddons));
     AddonsMqttInit();
-
+    Debug.print(DBG_INFO,"[Addons Action]");
 #ifdef _IO_ADDON_TR_BME68X_
     myAddons[_NbAddons++] = TR_BME68XInit();
 #endif

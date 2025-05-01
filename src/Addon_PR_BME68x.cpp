@@ -58,12 +58,13 @@ AddonStruct PR_BME68XInit(void)
         BSEC_OUTPUT_RUN_IN_STATUS};
 
     /* Initialize the library and interfaces */
+    myPR_BME68X.detected = false;
     lockI2C();
     if (PR_envSensorBME688.begin(BME68X_I2C_ADDR_HIGH, Wire)) myPR_BME68X.detected = true;
     unlockI2C();
 
     /* Subsribe to the desired BSEC2 outputs */
-    if (!PR_envSensorBME688.updateSubscription(sensorList, ARRAY_LEN(sensorList), BSEC_SAMPLE_RATE_LP)) 
+    if (myPR_BME68X.detected && !PR_envSensorBME688.updateSubscription(sensorList, ARRAY_LEN(sensorList), BSEC_SAMPLE_RATE_LP)) 
         myPR_BME68X.detected = false;
 
     if (!myPR_BME68X.detected) {
@@ -72,7 +73,7 @@ AddonStruct PR_BME68XInit(void)
         Debug.print(DBG_ERROR,"BME688 Init : BME68x Error : %d", PR_envSensorBME688.sensor.status);
     }
     else {
-
+        Debug.print(DBG_INFO,"BME68X detected");
         /* Whenever new data is available call the newDataCallback function */
         PR_envSensorBME688.attachCallback(PR_BME688newDataCallback);
 

@@ -100,12 +100,13 @@ AddonStruct TR_BME68XInit(void)
         BSEC_OUTPUT_RUN_IN_STATUS};
 
     /* Initialize the library and interfaces */
+    myTR_BME68X.detected = false;
     lockI2C();
     if (TR_envSensorBME688.begin(BME68X_I2C_ADDR_HIGH, Wire)) myTR_BME68X.detected = true;
     unlockI2C();
 
     /* Subsribe to the desired BSEC2 outputs */
-    if (!TR_envSensorBME688.updateSubscription(sensorList, ARRAY_LEN(sensorList), BSEC_SAMPLE_RATE_LP)) 
+    if (myTR_BME68X.detected &&!TR_envSensorBME688.updateSubscription(sensorList, ARRAY_LEN(sensorList), BSEC_SAMPLE_RATE_LP)) 
         myTR_BME68X.detected = false;
 
     if (!myTR_BME68X.detected) {

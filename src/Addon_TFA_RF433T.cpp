@@ -84,21 +84,21 @@ static uint8_t lfsr_digest8(uint8_t const message[], unsigned bytes, uint8_t gen
 
 static void TFA_Data(double WTemp)
 {
-#define TFA_CHANNEL 1         // TFA is using channel 1 of 8
-int temp_raw = (((WTemp * 9.0f / 5.0f) + 32.0f) * 10 ) + 400;
-/*
-Byte 0   Byte 1   Byte 2   Byte 3   Byte 4   Byte 5
-xxxxMMMM IIIIIIII BCCCTTTT TTTTTTTT HHHHHHHH MMMMMMMM
+    #define TFA_CHANNEL 2         // TFA is using channel 1 of 8
+    int temp_raw = (((WTemp * 9.0f / 5.0f) + 32.0f) * 10 ) + 400;
+    /*
+    Byte 0   Byte 1   Byte 2   Byte 3   Byte 4   Byte 5
+    xxxxMMMM IIIIIIII BCCCTTTT TTTTTTTT HHHHHHHH MMMMMMMM
 
-- x: Unknown 0x04 on F007TH/F012TH
-- M: Model Number?, 0x05 on F007TH/F012TH/SwitchDocLabs F016TH
-- I: ID byte (8 bits), volatie, changes at power up,
-- B: Battery Low
-- C: Channel (3 bits 1-8) - F007TH set by Dip switch, F012TH soft setting
-- T: Temperature 12 bits - Fahrenheit * 10 + 400
-- H: Humidity (8 bits)
-- M: Message integrity check LFSR Digest-8, gen 0x98, key 0x3e, init 0x64
-*/
+    - x: Unknown 0x04 on F007TH/F012TH
+    - M: Model Number?, 0x05 on F007TH/F012TH/SwitchDocLabs F016TH
+    - I: ID byte (8 bits), volatie, changes at power up,
+    - B: Battery Low
+    - C: Channel (3 bits 1-8) - F007TH set by Dip switch, F012TH soft setting
+    - T: Temperature 12 bits - Fahrenheit * 10 + 400
+    - H: Humidity (8 bits)
+    - M: Message integrity check LFSR Digest-8, gen 0x98, key 0x3e, init 0x64
+    */
     data[0] = 0x04 << 4;        // F007TH 
     data[0] |= 0x05;            // F007TH/F012TH/F016TH
     data[1] = 0x01;             // random id
@@ -113,6 +113,7 @@ xxxxMMMM IIIIIIII BCCCTTTT TTTTTTTT HHHHHHHH MMMMMMMM
 
 void TFA_RF433TTask(void *pvParameters)
 {
+    Debug.print(DBG_INFO,"TFA_RF433TTask");
     if (!myTFA_RF433T.detected) return;
    
     // Read Water Temp, Format TFA Dostmann payload and send
@@ -123,7 +124,7 @@ void TFA_RF433TTask(void *pvParameters)
 AddonStruct TFA_RF433TInit(void)
 {
     // search and init the chip
-      rmt_config_t txconfig;
+    rmt_config_t txconfig;
     txconfig.rmt_mode                 = RMT_MODE_TX;
     txconfig.channel                  = RMT_TX_CHANNEL;
     txconfig.gpio_num                 = gpio_num_t(_IO_ADDON_TFA_RF433T_);
@@ -140,6 +141,7 @@ AddonStruct TFA_RF433TInit(void)
     }
 
     // Init structure
+    Debug.print(DBG_INFO,"[TFA_RF433T] Init structure ");
     myTFA_RF433T.name         = "TFA_RF433T";
     myTFA_RF433T.Task         = TFA_RF433TTask;
     myTFA_RF433T.frequency    = 1000;     // Update value each 1000 millisecondes (per TFA requirement)

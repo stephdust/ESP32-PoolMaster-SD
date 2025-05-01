@@ -24,7 +24,7 @@
 #ifdef DEVT
   #define HOSTNAME "PoolMaster_Dev"
 #else
-  #define HOSTNAME "MonjoliVexin"
+  #define HOSTNAME "PoolMaster"
 #endif 
 
 // Mail parameters and credentials
@@ -101,14 +101,15 @@
 // Default values if nothing better is recorded at runtime
 #define POOLTOPIC "Home/Pool/"
 #define MQTTID "PoolMaster"
-// ElegantOTA Config
-//#define ELEGANT_OTA
 
+// ElegantOTA Config
+#define ELEGANT_OTA
 #ifdef ELEGANT_OTA
-  //#define ELEGANT_OTA_AUTH
-  //#define ELEGANT_OTA_USERNAME  "username"
-  //#define ELEGANT_OTA_PASSWORD  "password"
+#define ELEGANT_OTA_AUTH
+#define ELEGANT_OTA_USERNAME  "username"
+#define ELEGANT_OTA_PASSWORD  "password"
 #endif
+
 // Robot pump timing
 #define ROBOT_DELAY 60     // Robot start delay after filtration in mn
 #define ROBOT_DURATION 90  // Robot cleaning duration

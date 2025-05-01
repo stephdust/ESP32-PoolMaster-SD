@@ -75,8 +75,8 @@ AddonStruct WaterMeterPulseInit(void)
 {
     // PCNT counter
 
-    // verif pullup ?
-    // verif sens input 
+    // *************verif pullup ?
+    // *************verif sens input 
     pcnt_config_t pcnt_config = {};
     pcnt_config.pulse_gpio_num = _IO_ADDON_WATERMETER_PULSE_;
     pcnt_config.ctrl_gpio_num = PCNT_PIN_NOT_USED;
@@ -88,7 +88,7 @@ AddonStruct WaterMeterPulseInit(void)
     pcnt_config.hctrl_mode = PCNT_MODE_KEEP;
     pcnt_unit_config(&pcnt_config);
 
-    // verif filter
+    // *************verif filter
     pcnt_set_filter_value(PCNT_UNIT_0, 1);
     pcnt_filter_enable(PCNT_UNIT_0);
     pcnt_counter_pause(PCNT_UNIT_0);
@@ -99,7 +99,7 @@ AddonStruct WaterMeterPulseInit(void)
     myWaterMeterPulse.name              = "WaterMeter";
     myWaterMeterPulse.Task              = WaterMeterPulseTask;
     myWaterMeterPulse.detected          = true;
-    myWaterMeterPulse.frequency         = 800;     // check value every 800 ms
+    myWaterMeterPulse.frequency         = 900;     // check and broadcast temperature every 900 ms
     myWaterMeterPulse.LoadSettings      = 0;
     myWaterMeterPulse.SaveSettings      = 0;
     myWaterMeterPulse.LoadMeasures      = WaterMeterPulseLoadMeasures;
