@@ -12,7 +12,7 @@
 #include <vector>                 // List vectors
 #include <ArduinoJson.h>          // JSON library
 #include <Pump.h>                 // Simple library to handle home-pool filtration and peristaltic pumps
-#include <Relay.h>                 // Simple library to handle home-pool filtration and peristaltic pumps
+//#include <Relay.h>                 // Simple library to handle home-pool filtration and peristaltic pumps
 #include <DallasTemperature.h>    // Maxim (Dallas DS18B20) Temperature temperature sensor library
 #include <esp_task_wdt.h>         // ESP task management library
 #include <Preferences.h>          // Non Volatile Storage management (ESP)
