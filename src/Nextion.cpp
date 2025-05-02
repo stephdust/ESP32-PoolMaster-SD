@@ -1107,21 +1107,21 @@ void easyNexReadCustomCommand()
           Debug.print(DBG_INFO,"pH Graph Requested");
           //Change Title
           myNex.writeStr(PSTR("tTitle.txt"),Helpers::translated_word(FL_(NXT_PH_GRAPH_TITLE),storage.Lang_Locale));
-          // Send samples to Nextion
+          // Send samples to Nextion (default to graph object .id=2, channel=0)
           graphTable(pH_Samples);
         break;
         case 0x01:  // Orp
           Debug.print(DBG_INFO,"Orp Graph Requested");
           //Change Title
           myNex.writeStr(PSTR("tTitle.txt"),Helpers::translated_word(FL_(NXT_ORP_GRAPH_TITLE),storage.Lang_Locale));
-          // Send samples to Nextion
+          // Send samples to Nextion (default to graph object .id=2, channel=0)
           graphTable(Orp_Samples);
         break;
         case 0x02:  // Temperature
           Debug.print(DBG_INFO,"Temp Graph Requested");
           //Change Title
           myNex.writeStr(PSTR("tTitle.txt"),Helpers::translated_word(FL_(NXT_TEMP_GRAPH_TITLE),storage.Lang_Locale));
-          // Send samples to Nextion
+          // Send samples to Nextion (default to graph object .id=2, channel=0)
           graphTable(WTemp_Samples);
         break;
       }
