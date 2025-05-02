@@ -43,29 +43,6 @@ extern CircularBuffer<int,NUMBER_OF_HISTORY_SAMPLES> pH_Samples;
 extern CircularBuffer<int,NUMBER_OF_HISTORY_SAMPLES> Orp_Samples;
 extern CircularBuffer<int,NUMBER_OF_HISTORY_SAMPLES> WTemp_Samples;
 
-// Variables used to refresh buttons only on status change
-
-/*static bool TFT_Automode = false;
-static bool TFT_Filt = false;
-static bool TFT_Robot = false;
-static bool TFT_R0 = false;
-static bool TFT_R1 = false;
-static bool TFT_Winter = false;
-static bool TFT_Electro = false; // ajout
-static bool TFT_Electro_Mode = false; // ajout
-static bool TFT_pHAutoMode = false; // ajout
-static bool TFT_OrpAutoMode = false; // ajout
-static uint32_t MASK_AUTOMODE = 512;
-static uint32_t MASK_FILT     = 256;
-static uint32_t MASK_ROBOT    = 128;
-static uint32_t MASK_R0       = 64;
-static uint32_t MASK_R1       = 32;
-static uint32_t MASK_WINTER   = 16;
-static uint32_t MASK_ELECTRO  = 8;
-static uint32_t MASK_ELEC_MOD = 4;
-static uint32_t MASK_PH_AUTO  = 2;
-static uint32_t MASK_ORP_AUTO = 1;*/
-
 // NEXTION BUTTON RESULTS
 #define BUTTON_OFF  0
 #define BUTTON_ON   1
@@ -99,6 +76,7 @@ static EasyNextionMenus  SubMenu12(&myNex,7,ENM_SUB);
 void InitMenu(void);
 void ResetTFT(void);
 double map(double, double, double, int, int);
+char map(int, int, int, int, int);
 void syncESP2RTC(uint32_t , uint32_t , uint32_t , uint32_t , uint32_t , uint32_t );
 void syncRTC2ESP(void);
 void UpdateTFT(void*);
@@ -112,4 +90,5 @@ extern void mqttDisconnect(void);
 void printLanguages(void);
 void SetValue(const char* , int = -1, int = -1, int = -1);
 void ToggleValue(const char* , int );
+void graphTable(CircularBuffer<int,NUMBER_OF_HISTORY_SAMPLES>&, int = 2 , int = 0);
 #endif

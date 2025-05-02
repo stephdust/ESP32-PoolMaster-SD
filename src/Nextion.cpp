@@ -175,7 +175,7 @@ void UpdateTFT(void *pvParameters)
         temp_gauge = constrain(temp_gauge, 0, 147);
         myNex.writeNum(F("pageHome.vaPercArrowT.val"), temp_gauge);
         if (storage.PSIValue <= storage.PSI_MedThreshold) {
-          temp_gauge = map(storage.PSIValue, 0, storage.PSI_MedThreshold, 0, 24);
+          temp_gauge = map(storage.PSIValue, (double)0, storage.PSI_MedThreshold, 0, 24);
           temp_gauge = constrain(temp_gauge, 0, 78);        
           myNex.writeNum(F("pageHome.vaPercArrowP.val"), temp_gauge);
         } else {
@@ -1100,97 +1100,34 @@ void easyNexReadCustomCommand()
     {
       // from Nextion printh 23 02 47 XX (graph reference)
       // Read graph reference
-      int graphIndex;
-      graphIndex = myNex.readByte();
-      char buf[NUMBER_OF_HISTORY_SAMPLES];
+      int graphIndex = myNex.readByte();
       switch(graphIndex)
       {
         case 0x00:  // pH
           Debug.print(DBG_INFO,"pH Graph Requested");
           //Change Title
           myNex.writeStr(PSTR("tTitle.txt"),Helpers::translated_word(FL_(NXT_PH_GRAPH_TITLE),storage.Lang_Locale));
-          // Change scale values
-          snprintf_P(temp,sizeof(temp),PSTR("%4.2f"),((float(GRAPH_PH_BASELINE)+200)/100));
-          myNex.writeStr(F("tMax.txt"),temp);
-          snprintf_P(temp,sizeof(temp),PSTR("%4.2f"),float(GRAPH_PH_BASELINE)/100);
-          myNex.writeStr(F("tMin.txt"),temp);
-          snprintf_P(temp,sizeof(temp),PSTR("%4.2f"),(float(GRAPH_PH_BASELINE)+100)/100);
-          myNex.writeStr(F("tMed.txt"),temp);
-
-          // Initialize table
-          for(int i=0;i<NUMBER_OF_HISTORY_SAMPLES;i++)
-          {
-          if(i<pH_Samples.size())
-            // Get the pH Sample with baseline reference
-            buf[i] = (char)(pH_Samples[i]-GRAPH_PH_BASELINE);
-          else
-            buf[i] = 0;
-          }
-          snprintf_P(temp_command,sizeof(temp_command),PSTR("addt %d,%d,%d"),2,0,pH_Samples.size());
-          myNex.writeStr(temp_command);
-          myNex.writeAllowed=false;
-          vTaskDelay(5 / portTICK_PERIOD_MS);
-          Serial2.write(buf,pH_Samples.size());
-          myNex.writeAllowed=true;
+          // Send samples to Nextion (default to graph object .id=2, channel=0)
+          graphTable(pH_Samples);
         break;
         case 0x01:  // Orp
           Debug.print(DBG_INFO,"Orp Graph Requested");
           //Change Title
           myNex.writeStr(PSTR("tTitle.txt"),Helpers::translated_word(FL_(NXT_ORP_GRAPH_TITLE),storage.Lang_Locale));
-          // Change scale values
-          snprintf_P(temp,sizeof(temp),PSTR("%d"),(GRAPH_ORP_BASELINE+200));
-          myNex.writeStr(F("tMax.txt"),temp);
-          snprintf_P(temp,sizeof(temp),PSTR("%d"),GRAPH_ORP_BASELINE);
-          myNex.writeStr(F("tMin.txt"),temp);
-          snprintf_P(temp,sizeof(temp),PSTR("%d"),(GRAPH_ORP_BASELINE+100));
-          myNex.writeStr(F("tMed.txt"),temp);
-
-          // Initialize table
-          for(int i=0;i<NUMBER_OF_HISTORY_SAMPLES;i++)
-          {
-          if(i<Orp_Samples.size())
-            // Get the Orp Sample with baseline reference
-            buf[i] = (char)(Orp_Samples[i]-GRAPH_ORP_BASELINE);
-          else
-            buf[i] = 0;
-          }
-          snprintf_P(temp_command,sizeof(temp_command),PSTR("addt %d,%d,%d"),2,0,Orp_Samples.size());
-          myNex.writeStr(temp_command);
-          myNex.writeAllowed=false;
-          vTaskDelay(10 / portTICK_PERIOD_MS);
-          myNex.writeAllowed=true;
-          Serial2.write(buf,Orp_Samples.size());
+          // Send samples to Nextion (default to graph object .id=2, channel=0)
+          graphTable(Orp_Samples);
         break;
-        case 0x02:  // pH
+        case 0x02:  // Temperature
           Debug.print(DBG_INFO,"Temp Graph Requested");
           //Change Title
           myNex.writeStr(PSTR("tTitle.txt"),Helpers::translated_word(FL_(NXT_TEMP_GRAPH_TITLE),storage.Lang_Locale));
-          // Change scale values
-          snprintf_P(temp,sizeof(temp),PSTR("%4.1f"),((float(GRAPH_TEMP_BASELINE)+200)/10));
-          myNex.writeStr(F("tMax.txt"),temp);
-          snprintf_P(temp,sizeof(temp),PSTR("%4.1f"),float(GRAPH_TEMP_BASELINE)/10);
-          myNex.writeStr(F("tMin.txt"),temp);
-          snprintf_P(temp,sizeof(temp),PSTR("%4.1f"),(float(GRAPH_TEMP_BASELINE)+100)/10);
-          myNex.writeStr(F("tMed.txt"),temp);
-
-          // Initialize table
-          for(int i=0;i<NUMBER_OF_HISTORY_SAMPLES;i++)
-          {
-          if(i<pH_Samples.size())
-            // Get the Water Temperature Sample with baseline reference
-            buf[i] = (char)(WTemp_Samples[i]-GRAPH_TEMP_BASELINE);
-          else
-            buf[i] = 0;
-          }
-          snprintf_P(temp_command,sizeof(temp_command),PSTR("addt %d,%d,%d"),2,0,WTemp_Samples.size());
-          myNex.writeStr(temp_command);
-          //vTaskDelay(5 / portTICK_PERIOD_MS);
-          Serial2.write(buf,WTemp_Samples.size());
+          // Send samples to Nextion (default to graph object .id=2, channel=0)
+          graphTable(WTemp_Samples);
         break;
       }
-    } // And of Case
+    } // End of Case
   }  // End of Switch
-} // End of function
+} // End of Function
 
 /********************** MENU TRIGGERS  *********************
  ***************************************************************/
@@ -1332,6 +1269,12 @@ double map(double x, double in_min, double in_max, int out_min, int out_max) {
   return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
 
+char map(int x, int in_min, int in_max, int out_min, int out_max) {
+  if ((in_max - in_min)==0)
+    return 0;
+  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}
+
 void syncESP2RTC(uint32_t _second, uint32_t _minute, uint32_t _hour, uint32_t _day, uint32_t _month, uint32_t _year) {
   Debug.print(DBG_INFO,"[TIME] ESP/NTP -> RTC");
 
@@ -1385,5 +1328,58 @@ void SetValue(const char* _server_command, int _force_state, int _state_table, i
   }
   xQueueSendToBack(queueIn,&Cmd,0);
   LastAction = millis();
+}
+
+// Function to graph values. It computed best scale and send to Nextion
+void graphTable(CircularBuffer<int,NUMBER_OF_HISTORY_SAMPLES> &_sample_table, int _graph_object_id, int _graph_channel)
+{
+  char buf[NUMBER_OF_HISTORY_SAMPLES] = { 0 };
+  uint16_t sample_table_size = _sample_table.size();
+  // ²
+  // Calculate min and max values for automatic scaling
+  if (!_sample_table.isEmpty()) {
+    int minValue = 9999;
+    int maxValue = -9999;
+
+    // Find the maximum and minimum values
+    for (int i = 0; i < sample_table_size; ++i) {
+      if (_sample_table[i] < minValue) {
+        minValue = _sample_table[i];
+      }
+      if (_sample_table[i] > maxValue) {
+        maxValue = _sample_table[i];
+    }
+    }
+
+    // Adjust baseline and scale values
+    int graphMin = minValue - 10; // Add some padding
+    int graphMax = maxValue + 10; // Add some padding
+    int graphMid = (graphMin + graphMax) / 2;
+
+    // Update graph scale on the Nextion display
+    snprintf_P(temp, sizeof(temp), PSTR("%4.2f"), float(graphMax) / 100);
+    myNex.writeStr(F("tMax.txt"), temp);
+    snprintf_P(temp, sizeof(temp), PSTR("%4.2f"), float(graphMin) / 100);
+    myNex.writeStr(F("tMin.txt"), temp);
+    snprintf_P(temp, sizeof(temp), PSTR("%4.2f"), float(graphMid) / 100);
+    myNex.writeStr(F("tMed.txt"), temp);
+
+
+    // Initialize table
+    for(int i=0;i<NUMBER_OF_HISTORY_SAMPLES;i++)
+    {
+      if(i<sample_table_size)
+        // Get the pH Sample with baseline reference
+        buf[i] = map(_sample_table[i],graphMin,graphMax,0,GRAPH_Y_SIZE);
+      else
+        buf[i] = 0;
+    }
+  }
+  snprintf_P(temp_command,sizeof(temp_command),PSTR("addt %d,%d,%d"),_graph_object_id,_graph_channel,sample_table_size);
+  myNex.writeStr(temp_command);
+  myNex.writeAllowed=false;
+  vTaskDelay(5 / portTICK_PERIOD_MS);
+  Serial2.write(buf,sample_table_size);
+  myNex.writeAllowed=true;
 }
 

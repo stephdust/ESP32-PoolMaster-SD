@@ -37,7 +37,7 @@ StoreStruct storage =
   8, 11, 19, 8, 22, 20,
   30000,
   1800000, 1800000, 0, 0,
-  7.3, 720.0, 1.8, 0.3, 16.0, 27.0, 3.0, 1.15, 6.97, 244.42, -18.15, 1.11, 0.00,
+  7.3, 720.0, 1.8, 0.3, 16.0, 27.0, 3.0, -2.50133333, 6.9, 431.03, 0, 0.377923399, -0.17634473,
   2700000.0, 0.0, 0.0, 18000.0, 0.0, 0.0, 0.0, 0.0, 28.0, 7.3, 720., 1.3,
   //100.0, 100.0, 20.0, 20.0, 1.5, 1.5,
   15, 2,  //ajout
@@ -52,14 +52,14 @@ StoreStruct storage =
   //FILLING_PUMP_MINI_DURATION,FILLING_PUMP_MAXI_DURATION,
   0,
   {
-    {  FILTRATION, NO_INTERLOCK, ACTIVE_LOW, MODE_LATCHING, 0., 0., 100., NO_TANK, 0, 0},
-    {  PH_PUMP, 0, OUTPUT_DIGITAL, ACTIVE_LOW, MODE_LATCHING , 1.5, 20., 100., PH_LEVEL, 0, PH_PUMP_MAX_UPTIME*60},
-    {  CHL_PUMP, 0, OUTPUT_DIGITAL, ACTIVE_LOW, MODE_LATCHING , 1.5, 20., 100., CHL_LEVEL, 0, CHL_PUMP_MAX_UPTIME*60},
-    {  ROBOT, 0, OUTPUT_DIGITAL, ACTIVE_LOW, MODE_LATCHING , 0., 0., 100., NO_TANK, 0, 0},
-    {  SWG_PUMP, 0, OUTPUT_DIGITAL, ACTIVE_LOW, MODE_LATCHING , 0., 0., 100., NO_TANK, 0, 0},
-    {  FILL_PUMP, NO_INTERLOCK, OUTPUT_DIGITAL, ACTIVE_LOW, MODE_LATCHING , 0., 0., 100., NO_TANK, FILLING_PUMP_MIN_UPTIME*60, FILLING_PUMP_MAX_UPTIME*60},
-    {  PROJ, NO_INTERLOCK, OUTPUT_DIGITAL, ACTIVE_LOW, MODE_LATCHING , 0., 0., 100., NO_TANK, 0, 0},
-    {  SPARE, NO_INTERLOCK, OUTPUT_DIGITAL, ACTIVE_LOW, MODE_LATCHING , 0., 0., 100., NO_TANK, 0, 0},
+    {  FILTRATION, OUTPUT_DIGITAL, NO_INTERLOCK, ACTIVE_LOW, MODE_LATCHING, 0., 0., 100., NO_TANK, 0, 0},
+    {  PH_PUMP, OUTPUT_DIGITAL, 0,ACTIVE_LOW, MODE_LATCHING , 1.5, 20., 100., PH_LEVEL, 0, PH_PUMP_MAX_UPTIME*60},
+    {  CHL_PUMP, OUTPUT_DIGITAL, 0,ACTIVE_LOW, MODE_LATCHING , 1.5, 20., 100., CHL_LEVEL, 0, CHL_PUMP_MAX_UPTIME*60},
+    {  ROBOT, OUTPUT_DIGITAL, 0, ACTIVE_LOW, MODE_LATCHING , 0., 0., 100., NO_TANK, 0, 0},
+    {  SWG_PUMP, OUTPUT_DIGITAL, 0, ACTIVE_LOW, MODE_LATCHING , 0., 0., 100., NO_TANK, 0, 0},
+    {  FILL_PUMP, OUTPUT_DIGITAL, NO_INTERLOCK, ACTIVE_LOW, MODE_LATCHING , 0., 0., 100., NO_TANK, FILLING_PUMP_MIN_UPTIME*60, FILLING_PUMP_MAX_UPTIME*60},
+    {  PROJ, OUTPUT_DIGITAL, NO_INTERLOCK, ACTIVE_LOW, MODE_LATCHING , 0., 0., 100., NO_TANK, 0, 0},
+    {  SPARE, OUTPUT_DIGITAL, NO_INTERLOCK, ACTIVE_LOW, MODE_LATCHING , 0., 0., 100., NO_TANK, 0, 0},
    }
 };
 #else
@@ -633,10 +633,10 @@ bool loadConfig()
   storage.WaterTempLowThreshold = nvs.getDouble("WaterTempLow",10.);
   storage.WaterTemp_SetPoint    = nvs.getDouble("WaterTempSet",27.);
   storage.AirTemp               = nvs.getDouble("TempExternal",3.);
-  storage.pHCalibCoeffs0        = nvs.getDouble("pHCalibCoeffs0",0.9583);
-  storage.pHCalibCoeffs1        = nvs.getDouble("pHCalibCoeffs1",4.834);
-  storage.OrpCalibCoeffs0       = nvs.getDouble("OrpCalibCoeffs0",129.2);
-  storage.OrpCalibCoeffs1       = nvs.getDouble("OrpCalibCoeffs1",384.1);
+  storage.pHCalibCoeffs0        = nvs.getDouble("pHCalibCoeffs0",-2.50133333);
+  storage.pHCalibCoeffs1        = nvs.getDouble("pHCalibCoeffs1",6.9);
+  storage.OrpCalibCoeffs0       = nvs.getDouble("OrpCalibCoeffs0",431.03);
+  storage.OrpCalibCoeffs1       = nvs.getDouble("OrpCalibCoeffs1",0);
   storage.PSICalibCoeffs0       = nvs.getDouble("PSICalibCoeffs0",0.377923399);
   storage.PSICalibCoeffs1       = nvs.getDouble("PSICalibCoeffs1",-0.17634473);
   storage.Ph_Kp                 = nvs.getDouble("Ph_Kp",2000000.);

@@ -12,7 +12,7 @@
 
 //Version of config stored in EEPROM
 //Random value. Change this value (to any other value) to revert the config to default values
-#define CONFIG_VERSION 68
+#define CONFIG_VERSION 70
 
 // Compile on development environment or production (if not defined)
 //#define DEVT // Value defined in platformio.ini
