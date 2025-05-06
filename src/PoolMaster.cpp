@@ -118,24 +118,6 @@ void PoolMaster(void *pvParameters)
       // Save 
       savePumpsConf();
 
-        //First store current Chl and Acid consumptions of the day in Eeprom
-        //storage.AcidFill = PhPump.GetTankFill();
-        //storage.ChlFill = ChlPump.GetTankFill();
-        //saveParam("AcidFill", storage.AcidFill);
-        //saveParam("ChlFill", storage.ChlFill);
-
-        // New way of doing
-
-
-       /* FiltrationPump.ResetUpTime();
-        PhPump.ResetUpTime();
-        PhPump.SetTankFill(storage.AcidFill);
-        ChlPump.ResetUpTime();
-        ChlPump.SetTankFill(storage.ChlFill);
-        RobotPump.ResetUpTime();
-        SWGPump.ResetUpTime();*/
-
-        //EmergencyStopFiltPump = false;
         d_calc = false;
         DoneForTheDay = true;
         cleaning_done = false;
@@ -274,24 +256,41 @@ void PoolMaster(void *pvParameters)
         }
       }
 
-      // Electyrolyse Regulation Tasks
+      // Electrolyse Regulation Tasks
       if (storage.ElectrolyseMode) 
       {
         if (!SWGPump.IsRunning()) //SWG NOT Running
         {
-          if ((storage.OrpValue <= storage.Orp_SetPoint*0.9) && 
-              (storage.WaterTemp >= (double)storage.SecureElectro) && 
-              (millis() - FiltrationPump.StartTime)/ 1000 / 60 >= (unsigned long)storage.DelayElectro) 
-            {
-              SWGPump.Start();
-              Debug.print(DBG_INFO,"[LOGIC] Start SWG  %3.0f <= %3.0f - (delay %dmn)",storage.OrpValue,(storage.Orp_SetPoint*0.9),(millis() - FiltrationPump.StartTime)/ 1000 / 60);   
+          if(storage.ElectroRunMode) //SWG Run Mode is ADJUSTED
+          {  
+            if ((storage.OrpValue <= storage.Orp_SetPoint*0.9) && 
+                (storage.WaterTemp >= (double)storage.SecureElectro) && 
+                (millis() - FiltrationPump.StartTime)/ 1000 / 60 >= (unsigned long)storage.DelayElectro) 
+              {
+                SWGPump.Start();
+                Debug.print(DBG_INFO,"[LOGIC] Start SWG ADJ  %3.0f <= %3.0f - (delay %dmn)",storage.OrpValue,(storage.Orp_SetPoint*0.9),(millis() - FiltrationPump.StartTime)/ 1000 / 60);   
+              }
+            } else // SWG Run Mode is FIXED
+            {  
+              // Switch ON SWG with Pump (after Delay). It will switch OFF automatically when pump switches off (interlock)
+              if ((storage.WaterTemp >= (double)storage.SecureElectro) && 
+                  ((millis() - FiltrationPump.StartTime)/ 1000 / 60 >= (unsigned long)storage.DelayElectro))
+              {
+                SWGPump.Start();
+                Debug.print(DBG_INFO,"[LOGIC] Start SWG FIX  %3.0f <= %3.0f - (delay %dmn)",storage.OrpValue,(storage.Orp_SetPoint*0.9),(millis() - FiltrationPump.StartTime)/ 1000 / 60);   
+              }              
             }
         } else 
         { //SWG Running
-          if (storage.OrpValue > storage.Orp_SetPoint) 
-          {
-            SWGPump.Stop();
-            Debug.print(DBG_INFO,"[LOGIC] Stop SWG  %3.0f > %3.0f",storage.OrpValue,storage.Orp_SetPoint);   
+          if(storage.ElectroRunMode) //SWG Run Mode is ADJUSTED
+          {  
+            if (storage.OrpValue > storage.Orp_SetPoint) 
+            {
+              SWGPump.Stop();
+              Debug.print(DBG_INFO,"[LOGIC] Stop SWG  %3.0f > %3.0f",storage.OrpValue,storage.Orp_SetPoint);   
+            }
+          } else // SWG Run Mode is FIXED (nothing to do. Will be switched off with pump interlock)
+          {  
           }
         }
       }
