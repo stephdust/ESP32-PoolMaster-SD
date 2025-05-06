@@ -41,6 +41,7 @@ StoreStruct storage =
   2700000.0, 0.0, 0.0, 18000.0, 0.0, 0.0, 0.0, 0.0, 28.0, 7.3, 720., 1.3,
   //100.0, 100.0, 20.0, 20.0, 1.5, 1.5,
   15, 2,  //ajout
+  SWG_MODE_ADJUST, 8,
   0, 1, 0, 0,
   0,
   IPAddress(192,168,0,0), // IP
@@ -74,6 +75,7 @@ StoreStruct storage =
   2700000.0, 0.0, 0.0, 18000.0, 0.0, 0.0, 0.0, 0.0, 28.0, 7.3, 720., 1.3,
   //25.0, 60.0, 20.0, 20.0, 1.5, 1.5,
   15, 2,  //ajout
+  SWG_MODE_ADJUST, 8,
   0, 1, 0, 0,
   0,
   IPAddress(192,168,0,0), // IP
@@ -615,8 +617,6 @@ bool loadConfig()
   storage.FiltrationStartMin    = nvs.getUChar("FiltrStartMin",8);
   storage.FiltrationStopMax     = nvs.getUChar("FiltrStopMax",22);
   storage.DelayPIDs             = nvs.getUChar("DelayPIDs",0);
-  //storage.PhPumpUpTimeLimit     = nvs.getULong("PhPumpUTL",PH_PUMP_MAX_UPTIME*60);
-  //storage.ChlPumpUpTimeLimit    = nvs.getULong("ChlPumpUTL",CHL_PUMP_MAX_UPTIME*60);
   storage.PublishPeriod         = nvs.getULong("PublishPeriod",PUBLISHINTERVAL);
   storage.PhPIDWindowSize       = nvs.getULong("PhPIDWSize",60000);
   storage.OrpPIDWindowSize      = nvs.getULong("OrpPIDWSize",60000);
@@ -647,22 +647,16 @@ bool loadConfig()
   storage.PhValue               = nvs.getDouble("PhValue",0.);
   storage.OrpValue              = nvs.getDouble("OrpValue",0.);
   storage.PSIValue              = nvs.getDouble("PSIValue",0.4);
- /* storage.AcidFill              = nvs.getDouble("AcidFill",100.);
-  storage.ChlFill               = nvs.getDouble("ChlFill",100.);
-  storage.pHTankVol             = nvs.getDouble("pHTankVol",20.);
-  storage.ChlTankVol            = nvs.getDouble("ChlTankVol",20.);
-  storage.pHPumpFR              = nvs.getDouble("pHPumpFR",1.5);
-  storage.ChlPumpFR             = nvs.getDouble("ChlPumpFR",1.5);*/
   storage.SecureElectro         = nvs.getUChar("SecureElectro",15); 
   storage.DelayElectro          = nvs.getUChar("DelayElectro",2); 
+  storage.ElectroRunMode       = nvs.getBool("ElectroRunMode",SWG_MODE_ADJUST); 
+  storage.ElectroRuntime       = nvs.getUChar("ElectroRunTime",8);
   storage.ElectrolyseMode       = nvs.getBool("ElectrolyseMode",false); 
   storage.pHAutoMode            = nvs.getBool("pHAutoMode",false);
   storage.OrpAutoMode           = nvs.getBool("OrpAutoMode",false); 
   storage.Lang_Locale           = nvs.getUChar("Lang_Locale",0);
   storage.MQTT_IP               = nvs.getUInt("MQTT_IP",IPAddress(192,168,0,0));
   storage.MQTT_PORT             = nvs.getUInt("MQTT_PORT",1883);
-  //storage.FillingPumpMaxTime    = nvs.getUInt("FillPumpMaxTime",FILLING_PUMP_MIN_UPTIME*60);
-  //storage.FillingPumpMinTime    = nvs.getUInt("FillPumpMinTime",FILLING_PUMP_MAX_UPTIME*60);
   storage.SMTP_PORT             = nvs.getUInt("SMTP_PORT",587);
   
   nvs.getString("SMTP_SERVER",storage.SMTP_SERVER,49); 
@@ -701,7 +695,6 @@ bool loadConfig()
   Debug.print(DBG_INFO,"%d, %d, %d, %d, %d, %d",storage.FiltrationDuration,storage.FiltrationStart,storage.FiltrationStop,
               storage.FiltrationStartMin,storage.FiltrationStopMax,storage.DelayPIDs);
   delay(100);
-  //Debug.print(DBG_INFO,"%d, %d, %d",storage.PhPumpUpTimeLimit,storage.ChlPumpUpTimeLimit,storage.PublishPeriod);
   Debug.print(DBG_INFO,"%d",storage.PublishPeriod);
   
   Debug.print(DBG_INFO,"%d, %d, %d, %d",storage.PhPIDWindowSize,storage.OrpPIDWindowSize,storage.PhPIDwindowStartTime,storage.OrpPIDwindowStartTime);
@@ -714,8 +707,6 @@ bool loadConfig()
   Debug.print(DBG_INFO,"%8.0f, %3.0f, %3.0f, %6.0f, %3.0f, %3.0f, %7.0f, %7.0f, %4.2f, %4.2f, %4.0f, %4.2f",
               storage.Ph_Kp,storage.Ph_Ki,storage.Ph_Kd,storage.Orp_Kp,storage.Orp_Ki,storage.Orp_Kd,
               storage.PhPIDOutput,storage.OrpPIDOutput,storage.WaterTemp,storage.PhValue,storage.OrpValue,storage.PSIValue);
-  //Debug.print(DBG_INFO,"%3.0f, %3.0f, %3.0f, %3.0f, %3.1f, %3.1f ",storage.AcidFill,storage.ChlFill,storage.pHTankVol,storage.ChlTankVol,
-  //            storage.pHPumpFR,storage.ChlPumpFR);
   Debug.print(DBG_INFO,"%d, %d, %d, %d, %d %d",storage.SecureElectro,storage.DelayElectro,storage.ElectrolyseMode,storage.pHAutoMode,
               storage.OrpAutoMode,storage.Lang_Locale);
   delay(100);
@@ -724,7 +715,7 @@ bool loadConfig()
   delay(100);
   Debug.print(DBG_INFO,"%s, %d, %s, %s, %s",storage.SMTP_SERVER,storage.SMTP_PORT, storage.SMTP_LOGIN,storage.SMTP_SENDER,storage.SMTP_RECIPIENT);
   
-  //Debug.print(DBG_INFO,"%d, %d",storage.FillingPumpMinTime,storage.FillingPumpMaxTime);
+  
   return (storage.ConfigVersion == CONFIG_VERSION);
 }
 
@@ -743,8 +734,6 @@ bool saveConfig()
   i += nvs.putUChar("FiltrStartMin",storage.FiltrationStartMin);
   i += nvs.putUChar("FiltrStopMax",storage.FiltrationStopMax);
   i += nvs.putUChar("DelayPIDs",storage.DelayPIDs);
-  //i += nvs.putULong("PhPumpUTL",storage.PhPumpUpTimeLimit);
-  //i += nvs.putULong("ChlPumpUTL",storage.ChlPumpUpTimeLimit);
   i += nvs.putULong("PublishPeriod",storage.PublishPeriod);
   i += nvs.putULong("PhPIDWSize",storage.PhPIDWindowSize);
   i += nvs.putULong("OrpPIDWSize",storage.OrpPIDWindowSize);
@@ -775,14 +764,10 @@ bool saveConfig()
   i += nvs.putDouble("PhValue",storage.PhValue);
   i += nvs.putDouble("OrpValue",storage.OrpValue);
   i += nvs.putDouble("PSIValue",storage.PSIValue);
-  /*i += nvs.putDouble("AcidFill",storage.AcidFill);
-  i += nvs.putDouble("ChlFill",storage.ChlFill);
-  i += nvs.putDouble("pHTankVol",storage.pHTankVol);
-  i += nvs.putDouble("ChlTankVol",storage.ChlTankVol);
-  i += nvs.putDouble("pHPumpFR",storage.pHPumpFR);
-  i += nvs.putDouble("ChlPumpFR",storage.ChlPumpFR);*/
   i += nvs.putUChar("SecureElectro",storage.SecureElectro);
   i += nvs.putUChar("DelayElectro",storage.DelayElectro);
+  i += nvs.putBool("ElectroRunMode",storage.ElectroRunMode);
+  i += nvs.putUChar("ElectroRunTime",storage.ElectroRuntime);
   i += nvs.putBool("ElectrolyseMode",storage.ElectrolyseMode);
   i += nvs.putBool("pHAutoMode",storage.pHAutoMode);
   i += nvs.putBool("OrpAutoMode",storage.OrpAutoMode);
@@ -799,8 +784,6 @@ bool saveConfig()
   i += nvs.putString("SMTP_PASS",storage.SMTP_PASS); 
   i += nvs.putString("SMTP_SENDER",storage.SMTP_SENDER); 
   i += nvs.putString("SMTP_RECIPIENT",storage.SMTP_RECIPIENT); 
-  //i += nvs.putUInt("FillPumpMaxTime",storage.FillingPumpMaxTime);
-  //i += nvs.putUInt("FillPumpMinTime",storage.FillingPumpMinTime);
   i += nvs.putBool("BuzzerOn",storage.BuzzerOn);
 
   i += nvs.putBytes("PumpsConf", (byte*)(&storage.PumpsConfig), sizeof(storage.PumpsConfig));
