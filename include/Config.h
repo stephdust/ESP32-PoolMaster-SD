@@ -113,6 +113,9 @@
 #define ROBOT_DELAY 60     // Robot start delay after filtration in mn
 #define ROBOT_DURATION 90  // Robot cleaning duration
 
+#define SWG_MODE_ADJUST 0   // Adjust SWG production time according to the pool ORP
+#define SWG_MODE_FIXED 1    // Fixed time for SWG production (in hours)
+
 // Default values Maxi and Mini Running time for the Pumps (mn)
 #define FILLING_PUMP_MIN_UPTIME 15   // Default swimming Pool Filling Valve minimum runtime
 #define FILLING_PUMP_MAX_UPTIME 50   // Default swimming Pool Filling Valve maximum runtime
