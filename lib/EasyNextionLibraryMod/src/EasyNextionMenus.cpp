@@ -13,6 +13,18 @@ EasyNextionMenus::EasyNextionMenus(EasyNex* _nextion_display, int _max_number_of
     max_number_of_items = _max_number_of_items;
 }
 
+EasyNextionMenus::EasyNextionMenus(int _max_number_of_items, int _menu_type)
+{
+    menu_type = _menu_type;
+    max_number_of_items = _max_number_of_items;
+}
+
+
+void EasyNextionMenus::SetNextionScreen(EasyNex* _nextion_display)
+{
+    nextion_display = _nextion_display;
+}
+
 void EasyNextionMenus::SetNxtObjectName(const char* _object_name)
 {
     menu_nxt_obj_name = _object_name;

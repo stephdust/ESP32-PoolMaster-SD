@@ -74,7 +74,9 @@ class EasyNextionMenus {
   public:
  //   EasyNextionMenus(EasyNex*,int, void(*)(),int = ENM_MAIN);   //Constructor
     EasyNextionMenus(EasyNex*,int, int = ENM_MAIN);             //Constructor
+    EasyNextionMenus(int, int = ENM_MAIN);             //Constructor
 
+    void SetNextionScreen(EasyNex*); 
     void SetNxtObjectName(const char*);     // If we want to change the Nextion Object Name at run time #define MENU_MAIN_OBJECT_TXT & MENU_SUB_OBJECT_TXT
     void SetNxtCheckObjectName(const char*);// If we want to change the Nextion CheckBox Object Name at run time #define MENU_SUB_OBJECT_CHK
     int AddItem(void (*_CallBackFunction)(),bool (*_checkEnabledFunction)(),const char*, const char* ,const char* ,int);
