@@ -70,3 +70,35 @@ const char * Helpers::translated_word(const char * const * strings, uint8_t lang
 
     return strings[index];
 }
+
+
+//Linear regression coefficients calculation function
+// pass x and y arrays (pointers), lrCoef pointer, and n.
+//The lrCoef array is comprised of the slope=lrCoef[0] and intercept=lrCoef[1].  n is the length of the x and y arrays.
+//http://jwbrooks.blogspot.com/2014/02/arduino-linear-regression-function.html
+void simpLinReg(float * x, float * y, double & lrCoef0, double & lrCoef1, int n)
+{
+  // initialize variables
+  float xbar = 0;
+  float ybar = 0;
+  float xybar = 0;
+  float xsqbar = 0;
+
+  // calculations required for linear regression
+  for (int i = 0; i < n; i++)
+  {
+    xbar += x[i];
+    ybar += y[i];
+    xybar += x[i] * y[i];
+    xsqbar += x[i] * x[i];
+  }
+
+  xbar /= n;
+  ybar /= n;
+  xybar /= n;
+  xsqbar /= n;
+
+  // simple linear regression algorithm
+  lrCoef0 = (xybar - xbar * ybar) / (xsqbar - xbar * xbar);
+  lrCoef1 = ybar - lrCoef0 * xbar;
+}

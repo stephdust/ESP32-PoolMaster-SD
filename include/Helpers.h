@@ -4,6 +4,7 @@
 #include "PoolMaster.h"
 
 void remove_duplicates_slash(char*);
+void simpLinReg(float * , float * , double & , double &, int );
 
 class Helpers {
   public:
