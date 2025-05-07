@@ -68,6 +68,27 @@ static char ExtensionsMqttMsg[PAYLOAD_BUFFER_LENGTH] = "";
 static char *ExtensionsMqttMsgTopic = 0;
 TimerHandle_t mqttExtensionsReconnectTimer;
 
+
+// Removes the duplicates "/" from the string provided as an argument
+static void mqttRemoveDoubleSlash(char *str)
+{
+  int i,j,len,len1;
+  /*calculating length*/
+  for(len=0; str[len]!='\0'; len++);
+  /*assign 0 to len1 - length of removed characters*/
+  len1=0;
+  /*Removing consecutive repeated characters from string*/
+  for(i=0; i<(len-len1);) {
+      if((str[i]==str[i+1]) && (str[i] == '/')) {
+          /*shift all characters*/
+          for(j=i;j<(len-len1);j++)
+              str[j]=str[j+1];
+          len1++;
+      }
+      else i++;
+  }
+}
+
 void connectExtensionsToMqtt() {
     Serial.println("Extensions Connecting to MQTT...");
     ExtensionsMqttClient.connect();
@@ -148,7 +169,7 @@ void ExtensionsPublishTopic(char *topic, JsonDocument &root)
     }
     char Payload[PAYLOAD_BUFFER_LENGTH];
     size_t n = serializeJson(root, Payload);
-    remove_duplicates_slash(topic);
+    mqttRemoveDoubleSlash(topic);
 
     if (ExtensionsMqttClient.publish(topic, 1, true, Payload, n) != 0) {
         delay(50);
@@ -175,7 +196,7 @@ int ExtensionsReadRetainedTopic(char *topic, JsonDocument &root)
         Debug.print(DBG_ERROR, "[ExtensionsReadRetainedTopic] Failed to connect to the MQTT broker for %s", topic);
         return 0;
     }
-    remove_duplicates_slash(topic);
+    mqttRemoveDoubleSlash(topic);
     ExtensionsMqttOnRead = true;
     ExtensionsMqttMsgTopic = topic;
     ExtensionsMqttClient.subscribe(topic, 1);
