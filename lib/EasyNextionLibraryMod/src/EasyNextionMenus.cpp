@@ -193,7 +193,9 @@ void EasyNextionMenus::MenuDisplay(bool _full_menu_drawing)
 
 void EasyNextionMenus::Refresh()
 {
-    menu_items[selected_item].submenu->MenuDisplay(false);
+    if(menu_items[selected_item].submenu != nullptr) {
+        menu_items[selected_item].submenu->MenuDisplay(false);
+    } 
 }
 
 void EasyNextionMenus::Select(uint8_t _menu_item_index)
@@ -203,7 +205,9 @@ void EasyNextionMenus::Select(uint8_t _menu_item_index)
     }
 
     if (menu_type==ENM_MAIN) {
-        menu_items[selected_item].submenu->MenuDisplay(true);
+        if(menu_items[selected_item].submenu != nullptr) {
+            menu_items[selected_item].submenu->MenuDisplay(true);
+        }
     }
     if (menu_type==ENM_SUB) {
         switch(menu_items[selected_item].mnu_item_type){
