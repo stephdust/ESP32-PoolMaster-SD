@@ -511,8 +511,8 @@ void setup()
     app_cpu
   );
 
-#ifdef _ADDONS_
-   AddonsInit();
+#ifdef _EXTENSIONS_
+   ExtensionsInit();
 #endif
 
 #ifdef ELEGANT_OTA

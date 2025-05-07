@@ -9,7 +9,8 @@ static OneWire oneWire_A(ONE_WIRE_BUS_A);
 static DallasTemperature sensors_W(&oneWire_W);
 static DallasTemperature sensors_A(&oneWire_A);
 // MAC Addresses of DS18b20 water & Air temperature sensor
-static DeviceAddress DS18B20_W = { 0x28, 0x9F, 0x24, 0x24, 0x0C, 0x00, 0x00, 0xA9 };
+//steph static DeviceAddress DS18B20_W = { 0x28, 0x9F, 0x24, 0x24, 0x0C, 0x00, 0x00, 0xA9 };
+static DeviceAddress DS18B20_W = { 0x28, 0x66, 0xa9, 0x56, 0x00, 0x00, 0x00, 0x7e };
 static DeviceAddress DS18B20_A = { 0x28, 0xB0, 0x70, 0x75, 0xD0, 0x01, 0x3C, 0x9D };
 
 // Setup an ADS1115 instance for analog measurements
@@ -290,6 +291,7 @@ void StatusLights(void *pvParameters)
     {
       (status & 0xF0) ? digitalWrite(BUZZER,HIGH) : digitalWrite(BUZZER,LOW) ;
     }
+
     if(WiFi.status() == WL_CONNECTED) status |= 0x01;
         else status &= 0xFE;
     Debug.print(DBG_VERBOSE,"Status LED : 0x%02x",status);
@@ -462,21 +464,50 @@ void OrpRegulation(void *pvParameters)
 //Init DS18B20 one-wire library
 void TempInit()
 {
-  bool error = false;
+  // Scan 
+  byte i;
+  byte present = 0;
+  byte data[12];
+  byte addr[8];
+  
+  Debug.print(DBG_ERROR, "Looking for 1-Wire devices...\n\r");
+  while(oneWire_W.search(addr)) {
+    Debug.print(DBG_ERROR,"\n\rFound \'1-Wire\' device with address:\n\r");
+    for( i = 0; i < 8; i++) {
+      Debug.print(DBG_ERROR,"0x");
+      if (addr[i] < 16) {
+        Debug.print(DBG_ERROR,"0");
+      }
+      Debug.print(DBG_ERROR,"%x", addr[i]);
+      if (i < 7) {
+        Debug.print(DBG_ERROR,", ");
+      }
+    }
+    if ( OneWire::crc8( addr, 7) != addr[7]) {
+        Debug.print(DBG_ERROR,"CRC is not valid!\n");
+        return;
+    }
+  }
+  Debug.print(DBG_ERROR,"\n\r\n\rThat's it.\r\n");
+  oneWire_W.reset_search();
+ 
   // Start up the library
+  sensors_A.begin();
   sensors_W.begin();
   sensors_W.begin(); // two times to work-around of a OneWire library bug for enumeration
-  sensors_A.begin();
-
+  
   Debug.print(DBG_INFO,"1wire W devices: %d device(s) found",sensors_W.getDeviceCount());
   Debug.print(DBG_INFO,"1wire A devices: %d device(s) found",sensors_A.getDeviceCount());
 
   if (!sensors_W.getAddress(DS18B20_W, 0)) 
   {
     Debug.print(DBG_ERROR,"Unable to find address for bus W");
-    error = true;
   }  
   else {
+    // set the resolution
+    sensors_W.setResolution(DS18B20_W, TEMPERATURE_RESOLUTION);
+    //don't wait ! Asynchronous mode
+    sensors_W.setWaitForConversion(false);
     Serial.printf("DS18B20_W: ");
     for(uint8_t i=0;i<8;i++){
       Serial.printf("%02x",DS18B20_W[i]);
@@ -487,9 +518,12 @@ void TempInit()
   if (!sensors_A.getAddress(DS18B20_A, 0)) 
   {
     Debug.print(DBG_ERROR,"Unable to find address for bus A"); 
-    error = true;
   }  
   else {
+    // set the resolution
+    sensors_A.setResolution(DS18B20_A, TEMPERATURE_RESOLUTION);
+    //don't wait ! Asynchronous mode
+    sensors_A.setWaitForConversion(false);
     Serial.printf("DS18B20_A: ");
     for(uint8_t i=0;i<8;i++){
       Serial.printf("%02x",DS18B20_A[i]);
@@ -497,17 +531,6 @@ void TempInit()
         else Serial.printf("\r\n");
     }
   } 
-
-  if(!error) 
-  {
-    // set the resolution
-    sensors_W.setResolution(DS18B20_W, TEMPERATURE_RESOLUTION);
-    sensors_A.setResolution(DS18B20_A, TEMPERATURE_RESOLUTION);
-
-    //don't wait ! Asynchronous mode
-    sensors_W.setWaitForConversion(false);
-    sensors_A.setWaitForConversion(false);
-  }
 }
 
 //Request temperature asynchronously

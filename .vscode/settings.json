@@ -6,7 +6,12 @@
         "random": "cpp",
         "*.tcc": "cpp",
         "map": "cpp",
-        "cstddef": "cpp"
+        "cstddef": "cpp",
+        "xlocale": "cpp",
+        "vector": "cpp",
+        "xstring": "cpp",
+        "xutility": "cpp",
+        "xmemory": "cpp"
     },
     "C_Cpp.dimInactiveRegions": false
 }

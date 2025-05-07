@@ -764,6 +764,7 @@ void ProcessCommand(void *pvParameters)
 
         if(storage.BuzzerOn)
         {
+          /* steph ******
           // Sound configuration applied
           digitalWrite(BUZZER,HIGH);
           delay(30);
@@ -772,6 +773,7 @@ void ProcessCommand(void *pvParameters)
           digitalWrite(BUZZER,HIGH);
           delay(30);
           digitalWrite(BUZZER,LOW);
+          */
         }
         // Publish Update on the MQTT broker the status of our variables
         PublishMeasures();

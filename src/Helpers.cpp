@@ -70,3 +70,4 @@ const char * Helpers::translated_word(const char * const * strings, uint8_t lang
 
     return strings[index];
 }
+
