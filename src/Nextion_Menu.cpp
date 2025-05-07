@@ -7,6 +7,20 @@
 */
 #include "Nextion_Menu.h"
 
+EasyNextionMenus  MainMenu(15,ENM_MAIN);
+EasyNextionMenus  SubMenu1(7,ENM_SUB);
+EasyNextionMenus  SubMenu2(7,ENM_SUB);
+EasyNextionMenus  SubMenu3(7,ENM_SUB);
+EasyNextionMenus  SubMenu4(7,ENM_SUB);
+EasyNextionMenus  SubMenu5(7,ENM_SUB);
+EasyNextionMenus  SubMenu6(7,ENM_SUB);
+EasyNextionMenus  SubMenu7(7,ENM_SUB);
+EasyNextionMenus  SubMenu8(7,ENM_SUB);
+EasyNextionMenus  SubMenu9(7,ENM_SUB);
+EasyNextionMenus  SubMenu10(7,ENM_SUB);
+EasyNextionMenus  SubMenu11(7,ENM_SUB);
+EasyNextionMenus  SubMenu12(7,ENM_SUB);
+
 /**
  * @brief Initialize the Nextion menu system.
  * @param _myNex The EasyNex object to use for the menu.
@@ -28,58 +42,58 @@ void NexMenu_Init(EasyNex& _myNex)
     SubMenu11.SetNextionScreen(&_myNex);  
     SubMenu12.SetNextionScreen(&_myNex);  
 
-  // ENM_ACTION CONFIG (on pageMenu)
-  // 1: page pageOVControls + control page index (as described in object "pageOVControls.vaOverlayIndex.val")
-  // 121: Calib
-  // 141: Language
-  // 143: SysInfo
-  // 144: Date/Time
-  // 145: Wifi Settings
-  // 146: MQTT Settings
-  // 147: Alerts Settings
+    // ENM_ACTION CONFIG (on pageMenu)
+    // 1: page pageOVControls + control page index (as described in object "pageOVControls.vaOverlayIndex.val")
+    // 121: Calib
+    // 141: Language
+    // 143: SysInfo
+    // 144: Date/Time
+    // 145: Wifi Settings
+    // 146: MQTT Settings
+    // 147: Alerts Settings
 
-  //Delete all previously defined menu
-  MainMenu.Reinitialize();
-  SubMenu1.Reinitialize();
-  SubMenu2.Reinitialize();
-  SubMenu3.Reinitialize();
-  SubMenu4.Reinitialize();
-  SubMenu5.Reinitialize();
+    //Delete all previously defined menu
+    MainMenu.Reinitialize();
+    SubMenu1.Reinitialize();
+    SubMenu2.Reinitialize();
+    SubMenu3.Reinitialize();
+    SubMenu4.Reinitialize();
+    SubMenu5.Reinitialize();
 
-  // Main Menu
-  MainMenu.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_MENU_LEFT1),storage.Lang_Locale),nullptr,nullptr,&SubMenu1);
-  MainMenu.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_MENU_LEFT2),storage.Lang_Locale),nullptr,nullptr,&SubMenu2);
-  MainMenu.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_MENU_LEFT3),storage.Lang_Locale),nullptr,nullptr,&SubMenu3);
-  MainMenu.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_MENU_LEFT4),storage.Lang_Locale),nullptr,nullptr,&SubMenu4);
-  MainMenu.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_MENU_LEFT5),storage.Lang_Locale),nullptr,nullptr,ENM_NONE);
-  
-  // Sub Menus
-  SubMenu1.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU1),storage.Lang_Locale),"┖",nullptr,ENM_ACTION,1,ENMP_FILTRATION);       // Filtration Options
-  SubMenu1.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU2),storage.Lang_Locale),"▫",nullptr,ENM_ACTION,1,ENMP_PSI_OPTIONS);      // PSI  Options
-  SubMenu1.AddItem([]() {SetValue("Winter",SETVALUE_TOGGLE,SETVALUE_DIRECT,storage.WinterMode);},nullptr,Helpers::translated_word(FL_(NXT_SUBMENU3),storage.Lang_Locale),"┡","┢",ENM_BISTABLE, []() {return (storage.WinterMode==1);});
-  
-  SubMenu2.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU8),storage.Lang_Locale),"▦",nullptr,ENM_ACTION,121);                     // Calibrate Probes
-  SubMenu2.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU9),storage.Lang_Locale),"╆",nullptr,ENM_ACTION,1,ENMP_PH_REGULATION);    // pH Regulation
-  SubMenu2.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU10),storage.Lang_Locale),"╇",nullptr,ENM_ACTION,1,ENMP_ORP_REGULATION);  // Orp Regulation
-  SubMenu2.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU11),storage.Lang_Locale),"▓",nullptr,ENM_ACTION,1,ENMP_TANK_STATUS);     // Tank Status
-  SubMenu2.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU13),storage.Lang_Locale),"▮",nullptr,ENM_ACTION,1,ENMP_HEAT_REGULATION);// Heat Options
-  SubMenu2.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU14),storage.Lang_Locale),"╒",nullptr,ENM_ACTION,1,ENMP_WATER_LEVEL);     // Water Level Options
+    // Main Menu
+    MainMenu.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_MENU_LEFT1),storage.Lang_Locale),nullptr,nullptr,&SubMenu1);
+    MainMenu.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_MENU_LEFT2),storage.Lang_Locale),nullptr,nullptr,&SubMenu2);
+    MainMenu.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_MENU_LEFT3),storage.Lang_Locale),nullptr,nullptr,&SubMenu3);
+    MainMenu.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_MENU_LEFT4),storage.Lang_Locale),nullptr,nullptr,&SubMenu4);
+    MainMenu.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_MENU_LEFT5),storage.Lang_Locale),nullptr,nullptr,ENM_NONE);
 
-  SubMenu3.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU30),storage.Lang_Locale),"▭",nullptr,ENM_ACTION,1,ENMP_SWG_MODES);      // SWG Mode
-  SubMenu3.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU31),storage.Lang_Locale),"╃",nullptr,ENM_ACTION,1,ENMP_SWG_REGULATION);  // SWG Regulation
+    // Sub Menus
+    SubMenu1.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU1),storage.Lang_Locale),"┖",nullptr,ENM_ACTION,1,ENMP_FILTRATION);       // Filtration Options
+    SubMenu1.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU2),storage.Lang_Locale),"▫",nullptr,ENM_ACTION,1,ENMP_PSI_OPTIONS);      // PSI  Options
+    SubMenu1.AddItem([]() {SetValue("Winter",SETVALUE_TOGGLE,SETVALUE_DIRECT,storage.WinterMode);},nullptr,Helpers::translated_word(FL_(NXT_SUBMENU3),storage.Lang_Locale),"┡","┢",ENM_BISTABLE, []() {return (storage.WinterMode==1);});
 
-  SubMenu4.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU17),storage.Lang_Locale),"╂",nullptr,ENM_ACTION,1,ENMP_RELAYS_CONTROL);  // Control Relays
-  SubMenu4.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU18),storage.Lang_Locale),"╲",nullptr,ENM_ACTION,149);                    // Assign PINs
+    SubMenu2.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU8),storage.Lang_Locale),"▦",nullptr,ENM_ACTION,121);                     // Calibrate Probes
+    SubMenu2.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU9),storage.Lang_Locale),"╆",nullptr,ENM_ACTION,1,ENMP_PH_REGULATION);    // pH Regulation
+    SubMenu2.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU10),storage.Lang_Locale),"╇",nullptr,ENM_ACTION,1,ENMP_ORP_REGULATION);  // Orp Regulation
+    SubMenu2.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU11),storage.Lang_Locale),"▓",nullptr,ENM_ACTION,1,ENMP_TANK_STATUS);     // Tank Status
+    SubMenu2.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU13),storage.Lang_Locale),"▮",nullptr,ENM_ACTION,1,ENMP_HEAT_REGULATION);// Heat Options
+    SubMenu2.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU14),storage.Lang_Locale),"╒",nullptr,ENM_ACTION,1,ENMP_WATER_LEVEL);     // Water Level Options
 
-  SubMenu5.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU22),storage.Lang_Locale),"╴",nullptr,ENM_ACTION,141);                    // Language
-  SubMenu5.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU23),storage.Lang_Locale),"▘",nullptr,ENM_ACTION,147);                   // Alerts Settings
-  SubMenu5.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU26),storage.Lang_Locale),"┮",nullptr,ENM_ACTION,145);                    // Wifi Settings
-  SubMenu5.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU27),storage.Lang_Locale),"▪",nullptr,ENM_ACTION,146);                    // MQTT Settings
-  #ifdef SMTP
-  SubMenu5.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU28),storage.Lang_Locale),"◁",nullptr,ENM_ACTION,148);                   // SMTP Settings
-  #endif
-  SubMenu5.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU25),storage.Lang_Locale),"╃",nullptr,ENM_ACTION,144);                    // Set Date/Time
-  SubMenu5.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU24),storage.Lang_Locale),"▴",nullptr,ENM_ACTION,143);                    // System Info
+    SubMenu3.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU30),storage.Lang_Locale),"▭",nullptr,ENM_ACTION,1,ENMP_SWG_MODES);      // SWG Mode
+    SubMenu3.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU31),storage.Lang_Locale),"╃",nullptr,ENM_ACTION,1,ENMP_SWG_REGULATION);  // SWG Regulation
+
+    SubMenu4.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU17),storage.Lang_Locale),"╂",nullptr,ENM_ACTION,1,ENMP_RELAYS_CONTROL);  // Control Relays
+    SubMenu4.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU18),storage.Lang_Locale),"╲",nullptr,ENM_ACTION,149);                    // Assign PINs
+
+    SubMenu5.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU22),storage.Lang_Locale),"╴",nullptr,ENM_ACTION,141);                    // Language
+    SubMenu5.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU23),storage.Lang_Locale),"▘",nullptr,ENM_ACTION,147);                   // Alerts Settings
+    SubMenu5.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU26),storage.Lang_Locale),"┮",nullptr,ENM_ACTION,145);                    // Wifi Settings
+    SubMenu5.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU27),storage.Lang_Locale),"▪",nullptr,ENM_ACTION,146);                    // MQTT Settings
+    #ifdef SMTP
+    SubMenu5.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU28),storage.Lang_Locale),"◁",nullptr,ENM_ACTION,148);                   // SMTP Settings
+    #endif
+    SubMenu5.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU25),storage.Lang_Locale),"╃",nullptr,ENM_ACTION,144);                    // Set Date/Time
+    SubMenu5.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU24),storage.Lang_Locale),"▴",nullptr,ENM_ACTION,143);                    // System Info
 }
 
 /** 

@@ -234,7 +234,6 @@ void UpdateTFT(void *pvParameters)
         snprintf_P(temp,sizeof(temp),PSTR("%4.1f°C"),storage.WaterTemp);
         myNex.writeStr(F("pageHomeSimple.tTemp.txt"),temp);
       }
-
       if(myNex.currentPageId == ENP_MENU)     //Settings Menu
       {
         period=PT10/2;  // Accelerate TFT refresh when browsing menu
@@ -251,7 +250,6 @@ void UpdateTFT(void *pvParameters)
         {
           // Redraw only the submenu currently selected for status change
           MainMenu.Refresh();
-
           myNex.LastSentCommandMillis = millis();
         }
 
