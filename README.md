@@ -1,8 +1,8 @@
 
 # ESP32 PoolMaster
 
-## About the Project
-PoolMaster is a pool management system which automates water maintenance and control.
+## Brief description
+Complete pool management system which automates water maintenance and control.
 
 ### Measurement and control
 System continuously monitors various metrics and periodically reports them over MQTT and touchscreen:
