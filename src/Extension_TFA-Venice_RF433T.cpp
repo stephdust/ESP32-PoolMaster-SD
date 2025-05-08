@@ -59,6 +59,9 @@ rmt_item32_t rmtbuff[2048];
 
 static void RF433Tsend(uint8_t* buff, size_t size)
 {
+    Debug.print(DBG_DEBUG, "[RF433Tsend] bits....");
+    for (int i=0; i<size; i++)
+         Debug.print(DBG_DEBUG, "[RF433Tsend]    bit[%d]=%x", i, buff[i]);
     rmtbuff[0] = (rmt_item32_t){RMT_START_CODE0};
     rmtbuff[1] = (rmt_item32_t){RMT_START_CODE1};
     for (int i = 0; i < size; i++) {
@@ -116,17 +119,19 @@ void TFAVenice_RF433TTask(void *pvParameters)
 
 // debug
 // #define TFA_CHANNEL 0x00         // TFA is using channel 1 of 8 (0-7)
-#define TFA_CHANNEL 0x01
+#define TFA_CHANNEL 0x03
 storage.WaterTemp = 1234;
 // debug
     
     uint8_t data[30]  = { 0 };// for (int i=0; i<30; i++) data[i] = 0x0;
-    uint8_t seq[6]    = { 0 };//for (int i=0; i<6; i++) seq[i] = 0x0;
-    uint8_t preamb[2];
-
+    uint8_t seq[7]    = { 0 };//for (int i=0; i<6; i++) seq[i] = 0x0;
+    uint8_t preamb2[2];
+    uint8_t preamb1[2];
     // The preamble contains a total of 13 bits; the first 11 are ones, followed by a 01 sequence
-    preamb[0] = 0xFF; // 11111111
-    preamb[1] = 0xE8; // 11101000
+    preamb1[0] = 0x00; // 00000000
+    preamb1[1] = 0x10; // 00010000
+    preamb2[0] = 0x3F; // 00111111
+    preamb2[1] = 0xFA; // 11111010
 
     /* the sequence, 6 bytes
     Byte 0   Byte 1   Byte 2   Byte 3   Byte 4   Byte 5
@@ -142,25 +147,27 @@ storage.WaterTemp = 1234;
 
     unsigned int temp_raw = (((storage.WaterTemp / 100.0 * 9 / 5) + 32) * 10 ) + 400;
     seq[0] = 0x46;             // 0x46 or 0x45 for F007TH/F012TH/F016TH, mine is 0x46
-    seq[1] = 0x07;             // random id
+    seq[1] = 0x41;             // random id
     seq[2] = 0x00;             // all 0 so Battery=0 (OK), 
     seq[2] |= TFA_CHANNEL << 4;
     seq[2] |= (temp_raw & 0xF00) >> 8;
     seq[3] = temp_raw & 0xFF;
     seq[4] = 0x32;             // any, not used by TFA Venice
     seq[5] = lfsr_digest8(seq, 5, 0x98, 0x3e) ^ 0x64;
+    seq[6] = 0x00;
   
     int bitpos = 0;
-    #define _lenpreamb_   13
-    #define _lenseq_      48
-    #define _repeat_       3
-    for (int i=0; i<_repeat_; i++) {
-        TFAVeniceFillData(data, preamb, bitpos, _lenpreamb_); bitpos += _lenpreamb_;
-        TFAVeniceFillData(data, seq, bitpos, _lenseq_); bitpos += _lenseq_;
-    }
-
+    #define _lenpreamb1_   12
+    #define _lenpreamb2_   15
+    #define _lenseq_       50
+    TFAVeniceFillData(data, preamb1, bitpos, _lenpreamb1_);  bitpos += _lenpreamb1_;
+    TFAVeniceFillData(data, seq,     bitpos, _lenseq_);      bitpos += _lenseq_;
+    TFAVeniceFillData(data, preamb2, bitpos, _lenpreamb2_);  bitpos += _lenpreamb2_;
+    TFAVeniceFillData(data, seq,     bitpos, _lenseq_);      bitpos += _lenseq_;
+    TFAVeniceFillData(data, preamb2, bitpos, _lenpreamb2_);  bitpos += _lenpreamb2_;
+    TFAVeniceFillData(data, seq,     bitpos, _lenseq_);
+    
     RF433Tsend(data, 24);
-
 }
 
 ExtensionStruct TFAVenice_RF433TInit(const char* name, int IO)

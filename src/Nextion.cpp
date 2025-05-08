@@ -21,7 +21,7 @@ void ResetTFT()
   myNex.writeStr(F("usup=1")); // Authorize auto wake up on serial data
   myNex.writeStr("page pageSplash");
   delay(500);
-  InitMenu();
+  NexMenu_Init(myNex);
 }
 
 // Read and Write the boolean values stored in a 32 bits number
@@ -43,7 +43,8 @@ void WriteSwitches()
   switches_bitmap |= (ChlPump.UpTimeError & 1)      << 21;     //    2 097 152
   switches_bitmap |= ((digitalRead(POOL_LEVEL)==HIGH) & 1) << 20; // 1 048 576
 
-  switches_bitmap |= (FillingPump.UpTimeError & 1)  << 15;     //       16 384
+  //switches_bitmap |= (storage.ElectroRunMode & 1)   << 16;     //       65 536
+  switches_bitmap |= (FillingPump.UpTimeError & 1)  << 15;     //       32 768
   switches_bitmap |= (FillingPump.IsRunning() & 1)  << 14;     //       16 384
   switches_bitmap |= (PhPID.GetMode() & 1)          << 13;     //        8 192
   switches_bitmap |= (OrpPID.GetMode() & 1)         << 12;     //        4 096
@@ -100,30 +101,6 @@ void UpdateTFT(void *pvParameters)
     //         1 if Nextion Up
     if(myNex.NextionListen())
     {
-      // Send data according to current page on Nextion
-      // #      Page
-      // 0      Nothing started
-      // 1      Splash Screen
-      // 2      Home
-      // 3      Settings
-      // 4      Calib
-      // 5      KeyPad & Keyboard
-      // 6      Wifi Scan
-      // 7      Electrolyse Config
-      // 8      New Tank
-      // 9      Info
-      // 10     Set Date/Time
-      // 11     Wifi Configuration
-      // 12     pH & Orp tank status POPup
-      // 13     Graph and History Stats
-      // 14     Home Page Simplified
-      // 15     Language Selection
-      // 16     MQTT Configuration
-      // 17-24  Overlay Control
-
-      // 30     Help Screen PoPup
-
-
       // Do not update switch status during 1s after a change of switch to allow the system to reflect it in real life
       // avoids switches to flicker on/off on the screen
       if (((unsigned long)(millis() - myNex.LastActionMillis) > 1000) || (myNex.currentPageId==1))
@@ -131,7 +108,7 @@ void UpdateTFT(void *pvParameters)
         WriteSwitches();
       }
 
-      if(myNex.currentPageId==1 || myNex.currentPageId==2)    //Splash & Home
+      if(myNex.currentPageId==ENP_SPLASH || myNex.currentPageId==ENP_HOME)    //Splash & Home
       {
         // Home page data is loaded during splash screen to avoid lag when Home page appears
         snprintf_P(temp,sizeof(temp),PSTR("%02d-%02dh"),storage.FiltrationStart,storage.FiltrationStop);
@@ -257,8 +234,7 @@ void UpdateTFT(void *pvParameters)
         snprintf_P(temp,sizeof(temp),PSTR("%4.1f°C"),storage.WaterTemp);
         myNex.writeStr(F("pageHomeSimple.tTemp.txt"),temp);
       }
-
-      if(myNex.currentPageId == 3)     //Settings Menu
+      if(myNex.currentPageId == ENP_MENU)     //Settings Menu
       {
         period=PT10/2;  // Accelerate TFT refresh when browsing menu
         
@@ -266,7 +242,7 @@ void UpdateTFT(void *pvParameters)
         if(storage.Lang_Locale != Current_Language)
         {
           Current_Language = storage.Lang_Locale;
-          InitMenu();
+          NexMenu_Init(myNex);
           MainMenu.MenuDisplay(true);
         }
 
@@ -274,7 +250,6 @@ void UpdateTFT(void *pvParameters)
         {
           // Redraw only the submenu currently selected for status change
           MainMenu.Refresh();
-
           myNex.LastSentCommandMillis = millis();
         }
 
@@ -287,7 +262,7 @@ void UpdateTFT(void *pvParameters)
         period=PT10/2;
       }
 
-      if(myNex.currentPageId == 4)      //Calib
+      if(myNex.currentPageId == ENP_CALIB)      //Calib
       {
         // Translations for page
         if(myNex.hasPageChanged()) {
@@ -310,14 +285,14 @@ void UpdateTFT(void *pvParameters)
         myNex.writeStr(F(GLOBAL".vaOrp.txt"),temp);
       } 
 
-      if(myNex.currentPageId == 5)      //Keypad & Keyboard
+      if(myNex.currentPageId == ENP_KEYPAD)      //Keypad & Keyboard
       {
         if(myNex.hasPageChanged()) {
           myNex.Deactivate_Sleep(); // Deactivate Sleep until next page change
         }
       }
 
-      if(myNex.currentPageId == 6)      //Wifi Scanner
+      if(myNex.currentPageId == ENP_WIFI_SCAN)      //Wifi Scanner
       {
         if(myNex.hasPageChanged()) {
           myNex.Deactivate_Sleep(); // Deactivate Sleep until next page change
@@ -342,7 +317,7 @@ void UpdateTFT(void *pvParameters)
         }
       }
 
-      if(myNex.currentPageId == 7)      //Electrolyse
+      if(myNex.currentPageId == ENP_ELECTROLYSE)      //Electrolyse
       {
       // Translations for page
         if(myNex.hasPageChanged()) {
@@ -355,7 +330,7 @@ void UpdateTFT(void *pvParameters)
         myNex.writeNum(F(GLOBAL".vaElectroDelay.val"), storage.DelayElectro);
       }
 
-      if(myNex.currentPageId == 8)      //New Tank
+      if(myNex.currentPageId == ENP_NEWTANK)      //New Tank
       {
         // Translations for page
         if(myNex.hasPageChanged()) {
@@ -366,7 +341,7 @@ void UpdateTFT(void *pvParameters)
         }
       }
 
-      if(myNex.currentPageId == 9)      //Info
+      if(myNex.currentPageId == ENP_INFO)      //Info
       {
         // Translations for page
         if(myNex.hasPageChanged()) {
@@ -389,7 +364,7 @@ void UpdateTFT(void *pvParameters)
         }
       }
 
-      if(myNex.currentPageId == 10)      //Date Time
+      if(myNex.currentPageId == ENP_DATETIME)      //Date Time
       {
         // Translations for page
         if(myNex.hasPageChanged()) {
@@ -400,7 +375,7 @@ void UpdateTFT(void *pvParameters)
         }
       }
 
-      if(myNex.currentPageId == 11)      //Wifi Config
+      if(myNex.currentPageId == ENP_WIFI_CONFIG)      //Wifi Config
       {
         // Translations for page
         if(myNex.hasPageChanged()) {
@@ -426,7 +401,7 @@ void UpdateTFT(void *pvParameters)
         } 
       }
 
-      if(myNex.currentPageId == 13)      //Graph card
+      if(myNex.currentPageId == ENP_GRAPH)      //Graph card
       {
         // Stop sending other values not to interphere with graph data sending
         LastUpdatedHome = millis(); // Prevent home page values from being sent out 
@@ -437,7 +412,7 @@ void UpdateTFT(void *pvParameters)
         }
       }
 
-      if(myNex.currentPageId == 14)     // Switches minimalist home page
+      if(myNex.currentPageId == ENP_HOME_SWITCH)     // Switches minimalist home page
       {
         if(myNex.hasPageChanged()) {
           myNex.writeStr(PSTR("tLights.txt"),Helpers::translated_word(FL_(NXT_SWITCH_LIGHTS),storage.Lang_Locale));
@@ -446,7 +421,7 @@ void UpdateTFT(void *pvParameters)
         }
       }
 
-      if(myNex.currentPageId == 15)     //Page Language Selection
+      if(myNex.currentPageId == ENP_LANGUAGE)     //Page Language Selection
       {
         if(myNex.hasPageChanged()) {
           Debug.print(DBG_WARNING,"Language Requested");
@@ -455,7 +430,7 @@ void UpdateTFT(void *pvParameters)
         }        
       }
 
-      if(myNex.currentPageId == 16)     //MQTT Configuration
+      if(myNex.currentPageId == ENP_MQTT_CONFIG)     //MQTT Configuration
       {
         if(myNex.hasPageChanged()) {
           myNex.Deactivate_Sleep(); // Deactivate Sleep until next page change
@@ -484,7 +459,7 @@ void UpdateTFT(void *pvParameters)
         }
       }
       
-      if(myNex.currentPageId == 50)     //Alerts
+      if(myNex.currentPageId == ENP_ALERTS)     //Alerts
       {
         if(myNex.hasPageChanged()) {
           myNex.writeStr(PSTR("tTitle.txt"),Helpers::translated_word(FL_(NXT_ALERTS_TITLE),storage.Lang_Locale));
@@ -493,7 +468,7 @@ void UpdateTFT(void *pvParameters)
         }
       }
 
-      if(myNex.currentPageId == 51)     // SMTP Config
+      if(myNex.currentPageId == ENP_SMTP_CONFIG)     // SMTP Config
       {
         if(myNex.hasPageChanged()) {
           myNex.Deactivate_Sleep(); // Deactivate Sleep until next page change
@@ -521,7 +496,7 @@ void UpdateTFT(void *pvParameters)
         }
       }
 
-      if(myNex.currentPageId == 52)     // PINs Config
+      if(myNex.currentPageId == ENP_PINS_CONFIG)     // PINs Config
       {
         if(myNex.hasPageChanged()) {
           myNex.Deactivate_Sleep(); // Deactivate Sleep until next page change
@@ -584,346 +559,8 @@ void UpdateTFT(void *pvParameters)
         myNex.writeStr(temp_command,SrcLOCKs);
       }
 
-      /////////////////////////////////////////////////
-      ///////// ACTIONS LINKED TO OVERLAY CONTROL PAGE 
-      if(myNex.currentPageId == 17)     //pH Regulation
-      {
-        if(myNex.hasPageChanged()) {
-          myNex.writeStr(PSTR("tTitle.txt"),Helpers::translated_word(FL_(NXT_REGULATION_PH),storage.Lang_Locale));
-          myNex.writeStr(PSTR("tItem_0.txt"),Helpers::translated_word(FL_(NXT_PUMP_PH),storage.Lang_Locale));
-          myNex.writeStr(PSTR("tIcon_0.txt"),"╄");
-          myNex.writeStr(PSTR("tItem_1.txt"),Helpers::translated_word(FL_(NXT_SETPPOINTS_PH),storage.Lang_Locale));
-          myNex.writeStr(PSTR("tIcon_1.txt"),"╆");
-          myNex.writeStr(PSTR("vaDecimal_1.txt"),"2|1|1|");
-          myNex.writeStr(PSTR("vaCommand_1.txt"),"PhSetPoint");
-          myNex.writeStr(PSTR("tItem_2.txt"),Helpers::translated_word(FL_(NXT_PUMPFLOW_PH),storage.Lang_Locale));
-          myNex.writeStr(PSTR("tIcon_2.txt"),"├");
-          myNex.writeStr(PSTR("vaDecimal_2.txt"),"1|1|1|l/mn");
-          myNex.writeStr(PSTR("vaCommand_2.txt"),"pHPumpFR");
-          myNex.writeStr(F("tsw 255,1"));
-        }
-
-        if (myNex.readNumber(F("vaUpdAuth.val"))==1) {
-          //Update Button when authorized
-          myNex.writeNum(F("btAUTO_0.val"),storage.pHAutoMode);
-          myNex.writeNum(F("btON_0.val"),(PhPump.IsRunning()&&!storage.pHAutoMode));
-          myNex.writeNum(F("btOFF_0.val"),(!PhPump.IsRunning()&&!storage.pHAutoMode));
-        }
-
-        //Update Values
-        snprintf_P(temp,sizeof(temp),PSTR("%3.1f"),storage.Ph_SetPoint);
-        myNex.writeStr(F("vaValueSrc_1.txt"),temp);
-        snprintf_P(temp,sizeof(temp),PSTR("%3.1f"),storage.PumpsConfig[PUMP_PH].pump_flow_rate);
-        myNex.writeStr(F("vaValueSrc_2.txt"),temp);
-      }
-
-      if(myNex.currentPageId == 18)     //Orp Regulation
-      {
-        if(myNex.hasPageChanged()) {
-          myNex.writeStr(PSTR("tTitle.txt"),Helpers::translated_word(FL_(NXT_REGULATION_ORP),storage.Lang_Locale));
-          myNex.writeStr(PSTR("tItem_0.txt"),Helpers::translated_word(FL_(NXT_PUMP_CHL),storage.Lang_Locale));
-          myNex.writeStr(PSTR("tIcon_0.txt"),"╅");
-          myNex.writeStr(PSTR("tItem_1.txt"),Helpers::translated_word(FL_(NXT_SETPPOINTS_ORP),storage.Lang_Locale));
-          myNex.writeStr(PSTR("tIcon_1.txt"),"╇");
-          myNex.writeStr(PSTR("vaDecimal_1.txt"),"3|0|5|mV");
-          myNex.writeStr(PSTR("vaCommand_1.txt"),"OrpSetPoint");
-          myNex.writeStr(PSTR("tItem_2.txt"),Helpers::translated_word(FL_(NXT_PUMPFLOW_CHL),storage.Lang_Locale));
-          myNex.writeStr(PSTR("tIcon_2.txt"),"├");
-          myNex.writeStr(PSTR("vaDecimal_2.txt"),"1|1|1|l/mn");
-          myNex.writeStr(PSTR("vaCommand_2.txt"),"ChlPumpFR");
-          myNex.writeStr(F("tsw 255,1"));
-        }
-
-        if (myNex.readNumber(F("vaUpdAuth.val"))==1) {
-          //Update Button when authorized
-          myNex.writeNum(F("btAUTO_0.val"),storage.OrpAutoMode);
-          myNex.writeNum(F("btON_0.val"),(ChlPump.IsRunning()&&!storage.OrpAutoMode));
-          myNex.writeNum(F("btOFF_0.val"),(!ChlPump.IsRunning()&&!storage.OrpAutoMode));
-        }
-
-        snprintf_P(temp,sizeof(temp),PSTR("%3.0f"),storage.Orp_SetPoint);
-        myNex.writeStr(F("vaValueSrc_1.txt"),temp);
-        snprintf_P(temp,sizeof(temp),PSTR("%3.1f"),storage.PumpsConfig[PUMP_CHL].pump_flow_rate);
-        myNex.writeStr(F("vaValueSrc_2.txt"),temp);
-      }
-
-      if(myNex.currentPageId == 19)     // Filtration Control
-      {
-        if(myNex.hasPageChanged()) {
-          myNex.writeStr(PSTR("tTitle.txt"),Helpers::translated_word(FL_(NXT_SUBMENU1),storage.Lang_Locale));
-          myNex.writeStr(PSTR("tItem_0.txt"),Helpers::translated_word(FL_(NXT_MODE_PUMP),storage.Lang_Locale));
-          myNex.writeStr(PSTR("tIcon_0.txt"),"╛");
-          myNex.writeStr(PSTR("vis tValue_0,1"));
-          myNex.writeStr(PSTR("tItem_1.txt"),Helpers::translated_word(FL_(NXT_MODE_PUMP_START),storage.Lang_Locale));
-          myNex.writeStr(PSTR("tIcon_1.txt"),"╃");
-          myNex.writeStr(PSTR("tItem_2.txt"),Helpers::translated_word(FL_(NXT_MODE_PUMP_END),storage.Lang_Locale));
-          myNex.writeStr(PSTR("tIcon_2.txt"),"╹");
-          myNex.writeStr(PSTR("vaDecimal_1.txt"),"2|0|1|h");
-          myNex.writeStr(PSTR("vaCommand_1.txt"),"FiltT0");
-          myNex.writeStr(PSTR("vaDecimal_2.txt"),"2|0|1|h");
-          myNex.writeStr(PSTR("vaCommand_2.txt"),"FiltT1");
-          myNex.writeStr(F("tsw 255,1"));
-        }
-        
-
-        snprintf_P(temp,sizeof(temp),PSTR("%02d-%02dh"),storage.FiltrationStart,storage.FiltrationStop);
-        myNex.writeStr(F("btAUTO_0.txt"),temp);
-
-        if (myNex.readNumber(F("vaUpdAuth.val"))==1) {
-          //Update Button when authorized
-          myNex.writeNum(F("btAUTO_0.val"),storage.AutoMode);
-          myNex.writeNum(F("btON_0.val"),(FiltrationPump.IsRunning()&&!storage.AutoMode));
-          myNex.writeNum(F("btOFF_0.val"),(!FiltrationPump.IsRunning()&&!storage.AutoMode));
-        }  
-
-        //Update Values
-        snprintf_P(temp,sizeof(temp),PSTR("%d"),storage.FiltrationStartMin);
-        myNex.writeStr(F("vaValueSrc_1.txt"),temp);
-        snprintf_P(temp,sizeof(temp),PSTR("%d"),storage.FiltrationStopMax);
-        myNex.writeStr(F("vaValueSrc_2.txt"),temp);
-
-      }
-
-      if(myNex.currentPageId == 21)     // Heat Control
-      {
-        if(myNex.hasPageChanged()) {
-          myNex.writeStr(PSTR("tTitle.txt"),Helpers::translated_word(FL_(NXT_MODE_HEAT_TITLE),storage.Lang_Locale));
-          myNex.writeStr(PSTR("tItem_0.txt"),Helpers::translated_word(FL_(NXT_MODE_HEAT),storage.Lang_Locale));
-          myNex.writeStr(PSTR("tIcon_0.txt"),"▮");
-          myNex.writeStr(PSTR("tItem_1.txt"),Helpers::translated_word(FL_(NXT_MODE_HEAT_TMP_LOW),storage.Lang_Locale));
-          myNex.writeStr(PSTR("tIcon_1.txt"),"┬");
-          myNex.writeStr(PSTR("tItem_2.txt"),Helpers::translated_word(FL_(NXT_MODE_HEAT_TMP_HIGH),storage.Lang_Locale));
-          myNex.writeStr(PSTR("tIcon_2.txt"),"┬");
-          myNex.writeStr(PSTR("vaDecimal_1.txt"),"2|1|5|°C");
-          myNex.writeStr(PSTR("vaCommand_1.txt"),"WTempLow");
-          myNex.writeStr(PSTR("vaDecimal_2.txt"),"2|1|5|°C");
-          myNex.writeStr(PSTR("vaCommand_2.txt"),"WSetPoint");
-          myNex.writeStr(F("tsw 255,1"));
-        }
-
-        snprintf_P(temp,sizeof(temp),PSTR("%3.1f"),storage.WaterTempLowThreshold);
-        myNex.writeStr(F("vaValueSrc_1.txt"),temp);
-        snprintf_P(temp,sizeof(temp),PSTR("%3.1f"),storage.WaterTemp_SetPoint);
-        myNex.writeStr(F("vaValueSrc_2.txt"),temp);
-
-      }
-
-      if(myNex.currentPageId == 22)     // PSI Control
-      {
-        if(myNex.hasPageChanged()) {
-          myNex.writeStr(PSTR("tTitle.txt"),Helpers::translated_word(FL_(NXT_MODE_PSI_TITLE),storage.Lang_Locale));
-          myNex.writeStr(PSTR("tItem_0.txt"),Helpers::translated_word(FL_(NXT_MODE_PSI_MIN),storage.Lang_Locale));
-          myNex.writeStr(PSTR("tIcon_0.txt"),"▫");
-          myNex.writeStr(PSTR("tItem_1.txt"),Helpers::translated_word(FL_(NXT_MODE_PSI_MAX),storage.Lang_Locale));
-          myNex.writeStr(PSTR("tIcon_1.txt"),"▫");
-          myNex.writeStr(PSTR("tItem_2.txt"),Helpers::translated_word(FL_(NXT_MODE_PSI_CURRENT),storage.Lang_Locale));
-          myNex.writeStr(PSTR("tIcon_2.txt"),"├");
-          myNex.writeStr(PSTR("vaDecimal_0.txt"),"1|1|1|psi");
-          myNex.writeStr(PSTR("vaCommand_0.txt"),"PSILow");
-          myNex.writeStr(PSTR("vaDecimal_1.txt"),"1|1|1|psi");
-          myNex.writeStr(PSTR("vaCommand_1.txt"),"PSIHigh");
-          myNex.writeStr(PSTR("vaDecimal_2.txt"),"1|1|1|psi");
-          myNex.writeStr(PSTR("vaCommand_2.txt"),"");
-          myNex.writeStr(F("tsw 255,1"));
-        }
-
-        snprintf_P(temp,sizeof(temp),PSTR("%3.1f"),storage.PSI_MedThreshold);
-        myNex.writeStr(F("vaValueSrc_0.txt"),temp);
-        snprintf_P(temp,sizeof(temp),PSTR("%3.1f"),storage.PSI_HighThreshold);
-        myNex.writeStr(F("vaValueSrc_1.txt"),temp);
-        snprintf_P(temp,sizeof(temp),PSTR("%3.1f"),storage.PSIValue);
-        myNex.writeStr(F("tValue_2.txt"),temp);
-        myNex.writeNum(F("jGauge_2.val"),(int)constrain(((storage.PSIValue/storage.PSI_HighThreshold)*100),0,100));
-      }
-      if(myNex.currentPageId == 23)     // SWG Control
-      {
-        if(myNex.hasPageChanged()) {
-          myNex.writeStr(PSTR("tTitle.txt"),Helpers::translated_word(FL_(NXT_REGULATION_SWG_TITLE),storage.Lang_Locale));
-          myNex.writeStr(PSTR("tItem_0.txt"),Helpers::translated_word(FL_(NXT_REGULATION_SWG_CONTROL),storage.Lang_Locale));
-          myNex.writeStr(PSTR("tIcon_0.txt"),"▭");
-          myNex.writeStr(PSTR("tItem_1.txt"),Helpers::translated_word(FL_(NXT_REGULATION_SWG_MINI),storage.Lang_Locale));
-          myNex.writeStr(PSTR("tIcon_1.txt"),"┬");
-          myNex.writeStr(PSTR("tItem_2.txt"),Helpers::translated_word(FL_(NXT_REGULATION_SWG_START),storage.Lang_Locale));
-          myNex.writeStr(PSTR("tIcon_2.txt"),"╃");
-          myNex.writeStr(PSTR("vaDecimal_1.txt"),"2|0|1|°C");
-          myNex.writeStr(PSTR("vaCommand_1.txt"),"SecureElectro");
-          myNex.writeStr(PSTR("vaDecimal_2.txt"),"2|0|1|mn");
-          myNex.writeStr(PSTR("vaCommand_2.txt"),"DelayElectro");
-          myNex.writeStr(F("tsw 255,1"));
-        }
-
-        if (myNex.readNumber(F("vaUpdAuth.val"))==1) {
-          //Update Button when authorized
-          myNex.writeNum(F("btAUTO_0.val"),storage.ElectrolyseMode);
-          myNex.writeNum(F("btON_0.val"),(SWGPump.IsRunning()&&!storage.ElectrolyseMode));
-          myNex.writeNum(F("btOFF_0.val"),(!SWGPump.IsRunning()&&!storage.ElectrolyseMode));
-        }
-
-        snprintf_P(temp,sizeof(temp),PSTR("%d"),storage.SecureElectro);
-        myNex.writeStr(F("vaValueSrc_1.txt"),temp);
-        snprintf_P(temp,sizeof(temp),PSTR("%d"),storage.DelayElectro);
-        myNex.writeStr(F("vaValueSrc_2.txt"),temp);
-
-      }
-      if(myNex.currentPageId == 24)     // Tank Status
-      {
-        if(myNex.hasPageChanged()) {
-          myNex.writeStr(PSTR("tTitle.txt"),Helpers::translated_word(FL_(NXT_PHORPTANKS_TITLE),storage.Lang_Locale));
-          myNex.writeStr(PSTR("tItem_0.txt"),Helpers::translated_word(FL_(NXT_PHORPTANKS_PH),storage.Lang_Locale));
-          myNex.writeStr(PSTR("tIcon_0.txt"),"╄");
-          myNex.writeStr(PSTR("tItem_1.txt"),Helpers::translated_word(FL_(NXT_PHORPTANKS_CHL),storage.Lang_Locale));
-          myNex.writeStr(PSTR("tIcon_1.txt"),"╅");
-          myNex.writeStr(PSTR("tItem_2.txt"),Helpers::translated_word(FL_(NXT_PHORPTANKS_FILL),storage.Lang_Locale));
-          myNex.writeStr(PSTR("tIcon_2.txt"),"▓");
-          myNex.writeStr(PSTR("vaDecimal_0.txt"),"2|0|1|mn");
-          myNex.writeStr(PSTR("vaCommand_0.txt"),"");
-          myNex.writeStr(PSTR("vaDecimal_1.txt"),"2|0|1|mn");
-          myNex.writeStr(PSTR("btOFF_2.txt"),Helpers::translated_word(FL_(NXT_PHORPTANKS_FILL_PH),storage.Lang_Locale));
-          myNex.writeStr(PSTR("btON_2.txt"),Helpers::translated_word(FL_(NXT_PHORPTANKS_FILL_CHL),storage.Lang_Locale));
-
-          myNex.writeStr(F("tsw 255,1"));
-        }
-
-        snprintf_P(temp,sizeof(temp),PSTR("%4.1f"),float(PhPump.UpTime)/1000./60.);
-        myNex.writeStr(F("tValue_0.txt"),temp);
-        snprintf_P(temp,sizeof(temp),PSTR("%4.1f"),float(ChlPump.UpTime)/1000./60.);
-        myNex.writeStr(F("tValue_1.txt"),temp);
-
-        myNex.writeNum(F("jGauge_0.val"), constrain((int)(PhPump.GetTankFill()),0,100));
-        myNex.writeNum(F("jGauge_1.val"), constrain((int)(ChlPump.GetTankFill()),0,100));
-      }
-
-      if(myNex.currentPageId == 25)     // Relays
-      {
-        if(myNex.hasPageChanged()) {
-          myNex.writeStr(PSTR("tTitle.txt"),Helpers::translated_word(FL_(NXT_RELAYS_TITLE),storage.Lang_Locale));
-          myNex.writeStr(PSTR("tItem_0.txt"),Helpers::translated_word(FL_(NXT_RELAYS_ROBOT),storage.Lang_Locale));
-          myNex.writeStr(PSTR("tIcon_0.txt"),"▱");
-          myNex.writeStr(PSTR("tItem_1.txt"),Helpers::translated_word(FL_(NXT_RELAYS_LIGHTS),storage.Lang_Locale));
-          myNex.writeStr(PSTR("tIcon_1.txt"),"▰");
-          myNex.writeStr(PSTR("tItem_2.txt"),Helpers::translated_word(FL_(NXT_RELAYS_SPARE),storage.Lang_Locale));
-          myNex.writeStr(PSTR("tIcon_2.txt"),"▲");
-          myNex.writeStr(PSTR("vaDecimal_0.txt"),"");
-          myNex.writeStr(PSTR("vaCommand_0.txt"),"");
-          myNex.writeStr(PSTR("vaDecimal_1.txt"),"");
-          myNex.writeStr(PSTR("vaCommand_1.txt"),"");
-          myNex.writeStr(PSTR("vaDecimal_2.txt"),"");
-          myNex.writeStr(PSTR("vaCommand_2.txt"),"");
-          myNex.writeStr(F("tsw 255,1"));
-        }
-
-        if (myNex.readNumber(F("vaUpdAuth.val"))==1) {
-          //Update Button when authorized
-          myNex.writeNum(F("btON_0.val"),RobotPump.IsRunning());
-          myNex.writeNum(F("btOFF_0.val"),!RobotPump.IsRunning());
-
-          myNex.writeNum(F("btON_1.val"),RELAYR0.IsActive());
-          myNex.writeNum(F("btOFF_1.val"),!RELAYR0.IsActive());
-
-          myNex.writeNum(F("btON_2.val"),RELAYR1.IsActive());
-          myNex.writeNum(F("btOFF_2.val"),!RELAYR1.IsActive());
-        }
-      }
-
-      if(myNex.currentPageId == 26)     // Water Level Regulation
-      {
-        if(myNex.hasPageChanged()) {
-          myNex.writeStr(PSTR("tTitle.txt"),Helpers::translated_word(FL_(NXT_WATERLEVEL_TITLE),storage.Lang_Locale));
-          myNex.writeStr(PSTR("tItem_0.txt"),Helpers::translated_word(FL_(NXT_WATERLEVEL_MIN_UPTIME),storage.Lang_Locale));
-          myNex.writeStr(PSTR("tIcon_0.txt"),"╃");
-          myNex.writeStr(PSTR("tItem_1.txt"),Helpers::translated_word(FL_(NXT_WATERLEVEL_MAX_UPTIME),storage.Lang_Locale));
-          myNex.writeStr(PSTR("tIcon_1.txt"),"╹");
-          myNex.writeStr(PSTR("vaDecimal_0.txt"),"2|0|1|mn");
-          myNex.writeStr(PSTR("vaCommand_0.txt"),"FillMinUpTime");
-          myNex.writeStr(PSTR("vaDecimal_1.txt"),"2|0|1|mn");
-          myNex.writeStr(PSTR("vaCommand_1.txt"),"FillMaxUpTime");
-          myNex.writeStr(F("tsw 255,1"));
-        }
-
-        //Update Values
-        snprintf_P(temp,sizeof(temp),PSTR("%d"),storage.PumpsConfig[PUMP_FILL].pump_min_uptime / 60);
-        myNex.writeStr(F("vaValueSrc_0.txt"),temp);
-        snprintf_P(temp,sizeof(temp),PSTR("%d"),storage.PumpsConfig[PUMP_FILL].pump_max_uptime / 60);
-        myNex.writeStr(F("vaValueSrc_1.txt"),temp);
-      }
-      // vaControl Main Configuration
-      // Menu Type
-      // -1: Hide Control
-      //  0: SLIDER with value indication
-      //     A: <unused>
-      //     B: Minimum slider value
-      //     C: Maximum slider value
-      //  1: ON/OFF without value indication
-      //     X: Custom Command index as in "easyNexReadCustomCommand" (values returned are OFF=0, ON=1, AUTO=2)
-      //  2: ON/AUTO:OFF without value indication
-      //     X: Custom Command index as in "easyNexReadCustomCommand" (values returnedare OFF=0, ON=1, AUTO=2)
-      //  3: GAUGE with value indication
-      //     A: <unused>
-      if(myNex.currentPageId == 20)     // Empty Control Overlay page (to be initialized)
-      {
-        if(myNex.hasPageChanged()) {
-          uint32_t page_index = myNex.readNumber(F("pageOVControls.vaOverlayIndex.val"));
-          switch(page_index) {
-            case 17: // pH Regulation
-              myNex.writeStr(PSTR("vaControl_0.txt"),"2|11");
-              myNex.writeStr(PSTR("vaControl_1.txt"),"0|0|62|82");
-              myNex.writeStr(PSTR("vaControl_2.txt"),"0|0|10|50");
-              myNex.writeStr(F("click btInitialize,1"));
-              break;
-            case 18: // Orp Regulation
-              myNex.writeStr(PSTR("vaControl_0.txt"),"2|12");
-              myNex.writeStr(PSTR("vaControl_1.txt"),"0|0|120|160");
-              myNex.writeStr(PSTR("vaControl_2.txt"),"0|0|10|50");
-              myNex.writeStr(F("click btInitialize,1"));
-            break;
-          case 19: // Pump Regulation
-              myNex.writeStr(PSTR("vaControl_0.txt"),"2|13");
-              myNex.writeStr(PSTR("vaControl_1.txt"),"0|0|0|24");
-              myNex.writeStr(PSTR("vaControl_2.txt"),"0|0|0|24");
-              myNex.writeStr(F("click btInitialize,1"));
-            break;
-          case 21: // Heat Regulation
-            myNex.writeStr(PSTR("vaControl_0.txt"),"-1|14");
-            myNex.writeStr(PSTR("vaControl_1.txt"),"0|0|1|64");
-            myNex.writeStr(PSTR("vaControl_2.txt"),"0|0|1|64");
-            myNex.writeStr(F("click btInitialize,1"));
-          break;
-          case 22: // PSI Regulation
-            myNex.writeStr(PSTR("vaControl_0.txt"),"0|0|01|30");
-            myNex.writeStr(PSTR("vaControl_1.txt"),"0|0|01|30");
-            myNex.writeStr(PSTR("vaControl_2.txt"),"3|0");  // PSI Gauge
-            myNex.writeStr(F("click btInitialize,1"));
-          break;
-          case 23: // SWG Regulation
-            myNex.writeStr(PSTR("vaControl_0.txt"),"2|15");
-            myNex.writeStr(PSTR("vaControl_1.txt"),"0|0|10|20");  //temp Start
-            myNex.writeStr(PSTR("vaControl_2.txt"),"0|0|01|30");  //mn delay
-            myNex.writeStr(F("click btInitialize,1"));
-          break;
-          case 24: // Tank Status
-            myNex.writeStr(PSTR("vaControl_0.txt"),"3|0");  // Gauge pH
-            myNex.writeStr(PSTR("vaControl_1.txt"),"3|0");  //Gauge Orp
-            myNex.writeStr(PSTR("vaControl_2.txt"),"1|16");  //Send Command
-            myNex.writeStr(F("click btInitialize,1"));
-          break;
-          case 25: // Relays
-            myNex.writeStr(PSTR("vaControl_0.txt"),"1|17");  // Robot
-            myNex.writeStr(PSTR("vaControl_1.txt"),"1|18");  // Lights
-            myNex.writeStr(PSTR("vaControl_2.txt"),"1|19");  // Spare
-            myNex.writeStr(F("click btInitialize,1"));
-          break;
-          case 26: // Water Level Regulation
-            myNex.writeStr(PSTR("vaControl_0.txt"),"0|0|1|60");  // Filling Pump Min Uptime
-            myNex.writeStr(PSTR("vaControl_1.txt"),"0|0|1|60");  // Filling Pump Max Uptime
-            myNex.writeStr(PSTR("vaControl_2.txt"),"-1|0");  // Spare
-            myNex.writeStr(F("click btInitialize,1"));
-          break;
-          }
-        }
-      }
-
       ///////// ACTIONS LINKED TO HELP
-      if(myNex.currentPageId == 30)      //Help Popup
+      if(myNex.currentPageId == ENP_HELP_POPUP)      //Help Popup
       {
         if(myNex.hasPageChanged()) {    // Trigger once when page changes
           uint32_t help_index = myNex.readNumber(F("pageHelpPopup.vaHelpIndex.val"));
@@ -936,6 +573,9 @@ void UpdateTFT(void *pvParameters)
           }
         }
       }
+
+      // Handle Menu actions in the Loop
+      NexMenu_Loop(myNex);
     } else {
       period = PT10;
     }
@@ -963,26 +603,26 @@ void UpdateTFT(void *pvParameters)
  *******************************************************************/
 
 
-/**************** CUSTOME COMMANDS *********************
+/**************** CUSTOM COMMANDS *********************
  ***************************************************************/
 // Custom Command used for quick actions triggered via
-// printh 23 02 XX YY ZZ (XX=CmdGroup) then
+// printh 23 01/02/03 XX YY ZZ (XX=CmdGroup) then
 //    for Switch change, YY=SwitchIndex ZZ=Value
 //    for Graph request, YY=graphIndex
 // Read Custom Commands used to force value of configuration parameter
 void easyNexReadCustomCommand()
 {
   int value;
-  LastAction = millis();
+ // LastAction = millis();
   switch(myNex.cmdGroup)
   {
-    case 'C': // Or <case 0x43:>  If 'C' matches Direct Command 
+    case 'C': // Or <case 0x43:>  If 'C' matches Direct Command formated in JSON
     {
       // from Nextion printh 23 01 43
       char Cmd[200] = "";
       strcpy(Cmd,myNex.readStr(F(GLOBAL".vaCommand.txt")).c_str());
       xQueueSendToBack(queueIn,&Cmd,0);
-      Debug.print(DBG_INFO,"Nextion direct command: %s",Cmd);
+      Debug.print(DBG_INFO,"Nextion direct command 43: %s",Cmd);
       break;
     }
 
@@ -999,76 +639,77 @@ void easyNexReadCustomCommand()
       if(myNex.cmdLength==3) {
         value = myNex.readByte();
       } else if(myNex.cmdLength==2) {
-        value = -1; // Instruct SetValue to Toggle the switch
+        value = SETVALUE_TOGGLE; // Instruct SetValue to Toggle the switch
       }
 
-      Debug.print(DBG_VERBOSE,"Command Sent 53 %d %d",SwitchIndex,value);
+      // Set Value Usage
+      Debug.print(DBG_VERBOSE,"Nextion switch command 53: %d %d",SwitchIndex,value);
       switch(SwitchIndex)
       {
-        case 0x00:  // Filtration Mode
+        case ENMC_FILT_MODE:  // Filtration Mode
           SetValue("Mode",value);
           break;
-        case 0x01:  // pH Auto Mode
+        case ENMC_PH_AUTOMODE:  // pH Auto Mode
           SetValue("PhAutoMode",value);
           break;
-        case 0x02:  // Orp Auto Mode
+        case ENMC_ORP_AUTOMODE:  // Orp Auto Mode
           SetValue("OrpAutoMode",value);
           break;
-        case 0x03:  // Future Use for Heat Auto
+        case ENMC_HEAT:  // Future Use for Heat Auto
           break;
-        case 0x04:  // Filtration Pump -- DO NOT CHANGE IDs WITHOUTH CHANGING Nextion FTF
+        case ENMC_FILT_PUMP:  // Filtration Pump
           SetValue("FiltPump",value);
           break;
-        case 0x05:  // pH Pump
+        case ENMC_PH_PUMP:  // pH Pump
           SetValue("PhPump",value);
           break;
-        case 0x06:  // Chl Pump
+        case ENMC_CHL_PUMP:  // Chl Pump
           SetValue("ChlPump",value);
           break;
-        case 0x07:  // Heating
+        case ENMC_HEATING:  // Heating
           break;
-        case 0x08:  // Winter Mode
+        case ENMC_WINTER_MODE:  // Winter Mode
           SetValue("Winter",value);
         break;
-        case 0x0A:  // Change Language
+        case ENMC_LANGUAGE:  // Change Language
           SetValue("Lang_Locale",value);
         break;
-        case 0x11:  // pH Pump
+        case ENMC_PH_PUMP_MENU:  // pH Pump
           if(value==BUTTON_AUTO) {
             SetValue("PhAutoMode",1);
           } else {
             SetValue("PhPump",value);
           }
         break;
-        case 0x12:  // Chl Pump
+        case ENMC_CHL_PUMP_MENU:  // Chl Pump
           if(value==BUTTON_AUTO) {
             SetValue("OrpAutoMode",1);
           } else {
             SetValue("ChlPump",value);
           }
         break;
-        case 0x13:  // Pump Menu Change
+        case ENMC_FILT_PUMP_MENU:  // Pump Menu Change
           if(value==BUTTON_AUTO) {
             SetValue("Mode",1);
           } else {
             SetValue("FiltPump",value);
           }
         break;
-        case 0x14:  // Heat Regulation
+        case ENMC_HEAT_MENU:  // Heat Regulation
           if(value==BUTTON_AUTO) {
             // Not implemented
           } else {
             // Not implemented
           }
         break;
-        case 0x15:  // SWG Regulation
+        case ENMC_SWG_MODE_MENU:  // SWG Regulation
           if(value==BUTTON_AUTO) {
-            SetValue("ElectrolyseMode",1);
+            SetValue("ElectrolyseMode",true);
           } else {
             SetValue("Electrolyse",value);
           }
         break;
-        case 0x16:  // Tank Status
+        case ENMC_TANK_STATUS:  // Tank Status
           if(value==BUTTON_OFF) {  //pH
             myNex.writeStr(F("pageFillTank.vaTankBut.txt"),"pH");
             myNex.writeStr(F("page pageFillTank"));
@@ -1077,20 +718,23 @@ void easyNexReadCustomCommand()
             myNex.writeStr(F("page pageFillTank"));
           }
         break;
-        case 0x17:  // Robot
-          SetValue("RobotPump",value,-1,RobotPump.IsRunning());
+        case ENMC_ROBOT:  // Robot
+          SetValue("RobotPump",value,SETVALUE_DIRECT,RobotPump.IsRunning());
         break;
-        case 0x18:  // Lights
+        case ENMC_LIGHTS:  // Lights
           SetValue("Relay",value,0,RELAYR0.IsActive());
         break;
-        case 0x19:  // Spare
+        case ENMC_SPARE:  // Spare
           SetValue("Relay",value,1,RELAYR1.IsActive());
         break;
-        case 0x20:  // Clear Alarms
+        case ENMC_CLEAR_ALARMS:  // Clear Alarms
           SetValue("Clear",1);
         break;
-        case 0x21:  // Filling Pump
-        SetValue("FillingPump",value,-1,FillingPump.IsRunning());
+        case ENMC_FILLING_PUMP:  // Filling Pump
+        SetValue("FillingPump",value,SETVALUE_DIRECT,FillingPump.IsRunning());
+        break;
+        case ENMC_SWG_REGULATION:  // SWG Regulation Mode (fixed time or adjust)
+        SetValue("ElectroRunMode",value);
         break;
       }
       break;
@@ -1101,50 +745,31 @@ void easyNexReadCustomCommand()
       // from Nextion printh 23 02 47 XX (graph reference)
       // Read graph reference
       int graphIndex = myNex.readByte();
+      Debug.print(DBG_INFO,"Nextion graph command 47: %d",graphIndex);
       switch(graphIndex)
       {
         case 0x00:  // pH
-          Debug.print(DBG_INFO,"pH Graph Requested");
           //Change Title
           myNex.writeStr(PSTR("tTitle.txt"),Helpers::translated_word(FL_(NXT_PH_GRAPH_TITLE),storage.Lang_Locale));
           // Send samples to Nextion (default to graph object .id=2, channel=0)
-          graphTable(pH_Samples);
+          graphTable(pH_Samples,2,0);
         break;
         case 0x01:  // Orp
-          Debug.print(DBG_INFO,"Orp Graph Requested");
           //Change Title
           myNex.writeStr(PSTR("tTitle.txt"),Helpers::translated_word(FL_(NXT_ORP_GRAPH_TITLE),storage.Lang_Locale));
           // Send samples to Nextion (default to graph object .id=2, channel=0)
-          graphTable(Orp_Samples);
+          graphTable(Orp_Samples,2,0);
         break;
         case 0x02:  // Temperature
-          Debug.print(DBG_INFO,"Temp Graph Requested");
           //Change Title
           myNex.writeStr(PSTR("tTitle.txt"),Helpers::translated_word(FL_(NXT_TEMP_GRAPH_TITLE),storage.Lang_Locale));
           // Send samples to Nextion (default to graph object .id=2, channel=0)
-          graphTable(WTemp_Samples);
+          graphTable(WTemp_Samples,2,0);
         break;
       }
     } // End of Case
   }  // End of Switch
 } // End of Function
-
-/********************** MENU TRIGGERS  *********************
- ***************************************************************/
-// Main Menu Item triggered via 
-// printh 23 02 4D 00 xx (_menu_item)
-void triggermainmenu(uint8_t _menu_item)
-{
-  //MainMenu.MenuDisplay(false);  // Redraw main menu selection (useless as nothing new will be drawn, select/unselect handled by Nextion)
-  MainMenu.Select(_menu_item);
-}
-
-// Sub Menu Item triggered via
-// printh 23 02 4D 01 xx (_menu_item)
-void triggersubmenu(uint8_t _menu_item)
-{
-  MainMenu.GetItemRef()->submenu->Select(_menu_item);
-}
 
 /********************* WIFI Scanning **********************
  **********************************************************/
@@ -1206,61 +831,6 @@ void printLanguages()
   }
 }
 
-/************************ MENU DESIGN **************************
- ***************************************************************/
-void InitMenu()
-{
-  // ENM_ACTION CONFIG (on pageMenu)
-  // 1: page pageOVControls + control page index (as described in page "pageOVControls.vaOverlayIndex.val")
-  // 121: Calib
-  // 141: Lannguage
-  // 143: SysInfo
-  // 144: Date/Time
-  // 145: Wifi Settings
-  // 146: MQTT Settings
-  // 147: Alerts Settings
-
-  //Delete all previously defined menu
-  MainMenu.Reinitialize();
-  SubMenu1.Reinitialize();
-  SubMenu2.Reinitialize();
-  SubMenu3.Reinitialize();
-  SubMenu4.Reinitialize();
-
-  // Main Menu
-  MainMenu.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_MENU_LEFT1),storage.Lang_Locale),nullptr,nullptr,&SubMenu1);
-  MainMenu.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_MENU_LEFT2),storage.Lang_Locale),nullptr,nullptr,&SubMenu2);
-  MainMenu.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_MENU_LEFT3),storage.Lang_Locale),nullptr,nullptr,&SubMenu3);
-  MainMenu.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_MENU_LEFT4),storage.Lang_Locale),nullptr,nullptr,&SubMenu4);
-  MainMenu.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_MENU_LEFT5),storage.Lang_Locale),nullptr,nullptr,ENM_NONE);
-  
-  // Sub Menus
-  SubMenu1.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU1),storage.Lang_Locale),"┖",nullptr,ENM_ACTION,1,19);   // Filtration Options
-  SubMenu1.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU2),storage.Lang_Locale),"▫",nullptr,ENM_ACTION,1,22);   // PSI  Options
-  SubMenu1.AddItem([]() {ToggleValue("Winter",storage.WinterMode);},nullptr,Helpers::translated_word(FL_(NXT_SUBMENU3),storage.Lang_Locale),"┡","┢",ENM_BISTABLE, []() {return (storage.WinterMode==1);});
-  
-  SubMenu2.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU8),storage.Lang_Locale),"▦",nullptr,ENM_ACTION,121);   // Calibrate Probes
-  SubMenu2.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU9),storage.Lang_Locale),"╆",nullptr,ENM_ACTION,1,17);  // pH Regulation
-  SubMenu2.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU10),storage.Lang_Locale),"╇",nullptr,ENM_ACTION,1,18); // Orp Regulation
-  SubMenu2.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU11),storage.Lang_Locale),"▓",nullptr,ENM_ACTION,1,24); // Tank Status
-  SubMenu2.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU12),storage.Lang_Locale),"▭",nullptr,ENM_ACTION,1,23);// SWG Options
-  SubMenu2.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU13),storage.Lang_Locale),"▮",nullptr,ENM_ACTION,1,21); // Heat Options
-  SubMenu2.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU14),storage.Lang_Locale),"╒",nullptr,ENM_ACTION,1,26); // Water Level Options
-
-  SubMenu3.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU17),storage.Lang_Locale),"╂",nullptr,ENM_ACTION,1,25); // Control Relays
-  SubMenu3.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU18),storage.Lang_Locale),"╲",nullptr,ENM_ACTION,149); // Assign PINs
-
-  SubMenu4.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU22),storage.Lang_Locale),"╴",nullptr,ENM_ACTION,141); // Language
-  SubMenu4.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU23),storage.Lang_Locale),"▘",nullptr,ENM_ACTION,147); // Alerts Settings
-  SubMenu4.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU26),storage.Lang_Locale),"┮",nullptr,ENM_ACTION,145); // Wifi Settings
-  SubMenu4.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU27),storage.Lang_Locale),"▪",nullptr,ENM_ACTION,146); // MQTT Settings
-  #ifdef SMTP
-  SubMenu4.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU28),storage.Lang_Locale),"◁",nullptr,ENM_ACTION,148); // SMTP Settings
-  #endif
-  SubMenu4.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU25),storage.Lang_Locale),"╃",nullptr,ENM_ACTION,144); // Set Date/Time
-  SubMenu4.AddItem(nullptr,nullptr,Helpers::translated_word(FL_(NXT_SUBMENU24),storage.Lang_Locale),"▴",nullptr,ENM_ACTION,143); // System Info
-}
-
 /********************* HELPER Functions **********************
  *************************************************************/
 double map(double x, double in_min, double in_max, int out_min, int out_max) {
@@ -1297,37 +867,6 @@ void syncRTC2ESP() {
     (int)myNex.readNumber(F("rtc1")),
     (int)myNex.readNumber(F("rtc0"))
   );
-}
-
-// Function to send standard commands to PoolServer
-// either toggle or force set a value
-void ToggleValue(const char* _server_command, int _current_state)
-{
-  char Cmd[100];
-  _current_state = (_current_state)? false:true;
-  sprintf(Cmd,"{\"%s\":%d}",_server_command,_current_state); // Build JSON Command
-  Debug.print(DBG_INFO,"[NEXTION] Sending command to server %s = %d",_server_command,_current_state);
-  xQueueSendToBack(queueIn,&Cmd,0);
-  LastAction = millis();
-}
-
-void SetValue(const char* _server_command, int _force_state, int _state_table, int _current_state)
-{
-  // Do we need to toggle
-  if (_force_state == -1) {
-    _force_state = (_current_state)? false:true;
-  }
-  
-  char Cmd[100];
-  if(_state_table == -1) {
-    sprintf(Cmd,"{\"%s\":%d}",_server_command,_force_state); // Build JSON Command
-    Debug.print(DBG_INFO,"[NEXTION] Sending command to server %s = %d",_server_command,_force_state);
-  } else {
-    sprintf(Cmd,"{\"%s\":[%d,%d]}",_server_command,_state_table,_force_state); // Build JSON Command
-    Debug.print(DBG_INFO,"[NEXTION] Sending command to server %s = [%d,%d]",_server_command,_state_table,_force_state);
-  }
-  xQueueSendToBack(queueIn,&Cmd,0);
-  LastAction = millis();
 }
 
 // Function to graph values. It computed best scale and send to Nextion

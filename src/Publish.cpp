@@ -132,7 +132,7 @@ void SettingsPublish(void *pvParameters)
         PublishTopic(tempTopicSet, root);
     }
     else
-        Debug.print(DBG_ERROR,"[PublishSettings] Failed to connect to the MQTT broker");
+        Debug.print(DBG_ERROR,"Failed to connect to the MQTT broker");
 
     if (mqttClient.connected())
     {

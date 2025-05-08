@@ -157,8 +157,8 @@ void WiFiEvent(WiFiEvent_t event){
     case ARDUINO_EVENT_WIFI_STA_DISCONNECTED:
       Debug.print(DBG_WARNING,"[WiFi] Connection lost");
       xTimerStop(mqttReconnectTimer,0);
-      if(Wifi_Activated) xTimerStart(wifiReconnectTimer,0);
       PoolMaster_WifiReady = false;
+      if(Wifi_Activated) xTimerStart(wifiReconnectTimer,0);
       break;    
     default:
       break;  

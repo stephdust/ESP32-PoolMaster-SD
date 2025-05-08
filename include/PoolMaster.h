@@ -12,7 +12,6 @@
 #include <vector>                 // List vectors
 #include <ArduinoJson.h>          // JSON library
 #include <Pump.h>                 // Simple library to handle home-pool filtration and peristaltic pumps
-//#include <Relay.h>                 // Simple library to handle home-pool filtration and peristaltic pumps
 #include <DallasTemperature.h>    // Maxim (Dallas DS18B20) Temperature temperature sensor library
 #include <esp_task_wdt.h>         // ESP task management library
 #include <Preferences.h>          // Non Volatile Storage management (ESP)
@@ -29,7 +28,6 @@
 #include <ElegantOTA.h>
 #endif
 
-#define NO_INTERLOCK 255
 struct StorePumpConfig
 {
   uint8_t pin_number, pin_direction, pin_interlock;
@@ -52,6 +50,8 @@ struct StoreStruct
   double Ph_Kp, Ph_Ki, Ph_Kd, Orp_Kp, Orp_Ki, Orp_Kd, PhPIDOutput, OrpPIDOutput, WaterTemp, PhValue, OrpValue, PSIValue;
   //double AcidFill, ChlFill, pHTankVol, ChlTankVol, pHPumpFR, ChlPumpFR;
   uint8_t SecureElectro, DelayElectro; //ajout
+  bool ElectroRunMode;
+  uint8_t ElectroRuntime;
   bool ElectrolyseMode,pHAutoMode,OrpAutoMode, FillAutoMode;
   uint8_t Lang_Locale;
   IPAddress MQTT_IP;

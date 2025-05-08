@@ -24,7 +24,7 @@
 #ifdef DEVT
   #define HOSTNAME "PoolMaster_Dev"
 #else
-  #define HOSTNAME "PoolMaster"
+  #define HOSTNAME "MonjoliVexin"
 #endif 
 
 // Mail parameters and credentials
@@ -101,18 +101,20 @@
 // Default values if nothing better is recorded at runtime
 #define POOLTOPIC "Home/Pool/"
 #define MQTTID "PoolMaster"
-
 // ElegantOTA Config
-#define ELEGANT_OTA
-#ifdef ELEGANT_OTA
-#define ELEGANT_OTA_AUTH
-#define ELEGANT_OTA_USERNAME  "username"
-#define ELEGANT_OTA_PASSWORD  "password"
-#endif
+//#define ELEGANT_OTA
 
+#ifdef ELEGANT_OTA
+  //#define ELEGANT_OTA_AUTH
+  //#define ELEGANT_OTA_USERNAME  "username"
+  //#define ELEGANT_OTA_PASSWORD  "password"
+#endif
 // Robot pump timing
 #define ROBOT_DELAY 60     // Robot start delay after filtration in mn
 #define ROBOT_DURATION 90  // Robot cleaning duration
+
+#define SWG_MODE_ADJUST 0   // Adjust SWG production time according to the pool ORP
+#define SWG_MODE_FIXED 1    // Fixed time for SWG production (in hours)
 
 // Default values Maxi and Mini Running time for the Pumps (mn)
 #define FILLING_PUMP_MIN_UPTIME 15   // Default swimming Pool Filling Valve minimum runtime
@@ -184,7 +186,11 @@
                                     // loop to reach linearly the theorical value produced by this
                                     // output after one hour
 
-
 // *************************
 // Addons on Extension Ports
+#define _EXTENSIONS_                // Comment this line when no extensions
 #include "Extension_Ports.h"
+// *************************
+
+
+

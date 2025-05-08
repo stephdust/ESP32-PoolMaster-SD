@@ -13,6 +13,18 @@ EasyNextionMenus::EasyNextionMenus(EasyNex* _nextion_display, int _max_number_of
     max_number_of_items = _max_number_of_items;
 }
 
+EasyNextionMenus::EasyNextionMenus(int _max_number_of_items, int _menu_type)
+{
+    menu_type = _menu_type;
+    max_number_of_items = _max_number_of_items;
+}
+
+
+void EasyNextionMenus::SetNextionScreen(EasyNex* _nextion_display)
+{
+    nextion_display = _nextion_display;
+}
+
 void EasyNextionMenus::SetNxtObjectName(const char* _object_name)
 {
     menu_nxt_obj_name = _object_name;
@@ -181,7 +193,9 @@ void EasyNextionMenus::MenuDisplay(bool _full_menu_drawing)
 
 void EasyNextionMenus::Refresh()
 {
-    menu_items[selected_item].submenu->MenuDisplay(false);
+    if(menu_items[selected_item].submenu != nullptr) {
+        menu_items[selected_item].submenu->MenuDisplay(false);
+    } 
 }
 
 void EasyNextionMenus::Select(uint8_t _menu_item_index)
@@ -191,7 +205,9 @@ void EasyNextionMenus::Select(uint8_t _menu_item_index)
     }
 
     if (menu_type==ENM_MAIN) {
-        menu_items[selected_item].submenu->MenuDisplay(true);
+        if(menu_items[selected_item].submenu != nullptr) {
+            menu_items[selected_item].submenu->MenuDisplay(true);
+        }
     }
     if (menu_type==ENM_SUB) {
         switch(menu_items[selected_item].mnu_item_type){

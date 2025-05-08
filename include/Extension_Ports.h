@@ -1,5 +1,5 @@
-#ifndef _EXTENSIONS_
-#define _EXTENSIONS_
+#ifndef _EXTENSIONS_H
+#define _EXTENSIONS_H
 
 typedef void (*function) (void*);
 

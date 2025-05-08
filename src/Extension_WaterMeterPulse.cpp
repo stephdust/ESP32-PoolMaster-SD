@@ -1,6 +1,6 @@
 
-// Credits :
-
+// Credits : 
+//  https://github.com/hugokernel/esphome-water-meter/blob/master/README.md
 
 #include <Arduino.h>
 #include "Config.h"
@@ -13,8 +13,8 @@
 
 ExtensionStruct myWaterMeterPulse = {0};
 
-static int myWMPulsePerLiter = 1;       // 1 pulse each liter
-static long int myWaterMeterCounter = 0;
+static int      myWMPulsePerLiter   = 1;       // 1 pulse each liter
+static int16_t  myWaterMeterCounter = 0;
 
 void ExtensionsPublishTopic(char*, JsonDocument&);
 int ExtensionsReadRetainedTopic(char*, JsonDocument&);
@@ -24,10 +24,12 @@ void WaterMeterPulseSaveMeasures(void *pvParameters)
     if (!myWaterMeterPulse.detected) return;
 
     //send a JSON to MQTT broker. /!\ Split JSON if longer than 100 bytes
-    const int capacity = JSON_OBJECT_SIZE(1); // only 1 value to publish
+    const int capacity = JSON_OBJECT_SIZE(2); // only 2 values to publish
     StaticJsonDocument<capacity> root;
-    root["Counter"]     = myWaterMeterCounter;
-    root["Pulse-Liter"] = myWMPulsePerLiter;
+    
+    if (myWaterMeterCounter)    root["Counter"]       = myWaterMeterCounter;
+    if (myWMPulsePerLiter)      root["PulsePerLiter"] = myWMPulsePerLiter;
+
     ExtensionsPublishTopic(myWaterMeterPulse.MQTTTopicMeasures, root);
 }
 
@@ -41,34 +43,38 @@ void WaterMeterPulseLoadMeasures(void *pvParameters)
     if (!ExtensionsReadRetainedTopic(myWaterMeterPulse.MQTTTopicMeasures, root)) 
         return;
 
-    myWaterMeterCounter = root["Counter"];
-    myWMPulsePerLiter   = root["Pulse-Liter"];
+    int value = root["Counter"];
+    if (value) myWaterMeterCounter = value;
+    value = root["PulsePerLiter"];
+    if (value) myWMPulsePerLiter   = value;
 }
 
 void WaterMeterPulseTask(void *pvParameters)
 {
    // Debug.print(DBG_INFO,"[WaterMeterPulseTask] Start");
     if (!myWaterMeterPulse.detected) return;
-    int16_t pulseCount=0, InitPulseCount=0;
+    int16_t pulseCount      = 0;
+    int16_t InitPulseCount  = 0;
 
-    Debug.print(DBG_INFO,"[WaterMeterPulseTask] Load measures");
+    Debug.print(DBG_DEBUG,"[WaterMeterPulseTask] Load measures");
     WaterMeterPulseLoadMeasures(pvParameters);  // read mqtt values, might be externally updated
 
     // loop till counter does not change anymore
     pcnt_get_counter_value(PCNT_UNIT_0, &pulseCount);
-    Debug.print(DBG_INFO,"[WaterMeterPulseTask] pcnt_get_counter_value %d",pulseCount );
+    Debug.print(DBG_DEBUG,"[WaterMeterPulseTask] pcnt_get_counter_value %d %d",pulseCount, InitPulseCount );
     if (!pulseCount) return;
 
     while (pulseCount != InitPulseCount) {
         InitPulseCount = pulseCount;
         delay(2000);
         pcnt_get_counter_value(PCNT_UNIT_0, &pulseCount);
+        Debug.print(DBG_DEBUG,"[WaterMeterPulseTask in the loop] pcnt_get_counter_value %d",pulseCount );
     }
   
     // save Counter to MQTT and ready for next loop
     myWaterMeterCounter += pulseCount * myWMPulsePerLiter;
     WaterMeterPulseSaveMeasures(pvParameters);
-    Debug.print(DBG_INFO,"[WaterMeterPulseTask] counter=%d", myWaterMeterCounter);
+    Debug.print(DBG_DEBUG,"[WaterMeterPulseTask] counter=%d", myWaterMeterCounter);
     
     pcnt_counter_pause(PCNT_UNIT_0);
     pcnt_counter_clear(PCNT_UNIT_0);
@@ -78,6 +84,9 @@ void WaterMeterPulseTask(void *pvParameters)
 ExtensionStruct WaterMeterPulseInit(const char *name, int IO)
 {
     // PCNT counter
+#define PCNT_H_LIM_VAL      1000        //  review these values, based on your watermerter  
+#define PCNT_THRESH1_VAL    500         //
+#define PCNT_THRESH0_VAL   -500         //
 
     // *************verif pullup ?
     // *************verif sens input 
@@ -90,11 +99,17 @@ ExtensionStruct WaterMeterPulseInit(const char *name, int IO)
     pcnt_config.neg_mode = PCNT_COUNT_DIS;
     pcnt_config.lctrl_mode = PCNT_MODE_KEEP;
     pcnt_config.hctrl_mode = PCNT_MODE_KEEP;
+    pcnt_config.counter_h_lim = PCNT_H_LIM_VAL;
     pcnt_unit_config(&pcnt_config);
 
     // *************verif filter
-    pcnt_set_filter_value(PCNT_UNIT_0, 1);
+    pcnt_set_filter_value(PCNT_UNIT_0, 100);
     pcnt_filter_enable(PCNT_UNIT_0);
+    pcnt_set_event_value(PCNT_UNIT_0, PCNT_EVT_THRES_1, PCNT_THRESH1_VAL);
+    pcnt_event_enable(PCNT_UNIT_0, PCNT_EVT_THRES_1);
+    /* Enable events on zero, maximum and minimum limit values */
+    pcnt_event_enable(PCNT_UNIT_0, PCNT_EVT_ZERO);
+    pcnt_event_enable(PCNT_UNIT_0, PCNT_EVT_H_LIM);
     pcnt_counter_pause(PCNT_UNIT_0);
     pcnt_counter_clear(PCNT_UNIT_0);
     pcnt_counter_resume(PCNT_UNIT_0);

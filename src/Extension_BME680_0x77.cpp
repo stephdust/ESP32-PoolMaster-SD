@@ -44,10 +44,15 @@ void BME680_0x77_SaveMeasures (void *pvParameters)
     StaticJsonDocument<capacity> root;
 
     if (!myBME680_0x77.detected) return;
-
-    root["Temperature"] = myBME680_0x77_Temperature;
-    root["Humidity"]    = myBME680_0x77_Humidity;
-    root["Pressure"]    = myBME680_0x77_Pressure;
+ 
+    char value[15];
+    sprintf(value, "%.1f", myBME680_0x77_Temperature);
+    root["Temperature"] = value;
+    sprintf(value, "%.1f", myBME680_0x77_Humidity);
+    root["Humidity"]    = value;
+    sprintf(value, "%.2f", myBME680_0x77_Pressure);
+    root["Pressure"]    = value;
+   // sprintf(value, "%6.1f", myBME680_0x77_Gaz);
     root["Gaz"]         = myBME680_0x77_Gaz;
 
     ExtensionsPublishTopic(myBME680_0x77.MQTTTopicMeasures, root);

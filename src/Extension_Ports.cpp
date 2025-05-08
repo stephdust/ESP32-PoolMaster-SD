@@ -3,6 +3,9 @@
 #include "Config.h"
 #include "PoolMaster.h"
 
+
+#if defined(_EXTENSIONS_)
+
 // *************************
 // Addons on Extension Ports
 // *************************
@@ -120,9 +123,16 @@ void onExtensionsMqttUnsubscribe(uint16_t packetId) {
 // Extension MQTT callback reading RETAINED values
 void onExtensionsMqttMessage(char *topic, char *payload, AsyncMqttClientMessageProperties properties, size_t len, size_t index, size_t total)
 {
+    if (!ExtensionsMqttMsgTopic) return;
+    if (!topic) return;
+       
+Debug.print(DBG_DEBUG,"[onExtensionsMqttMessage]  topic=%s mqttsmg=%s",topic, ExtensionsMqttMsgTopic );
+
     if (strcmp(topic, ExtensionsMqttMsgTopic) == 0)
         for (uint8_t i = 0; i < len; i++)
             ExtensionsMqttMsg[i] = payload[i];
+
+Debug.print(DBG_DEBUG,"[onExtensionsMqttMessage]  ExtensionsMqttMsg=%s ",ExtensionsMqttMsg );            
 }
 void onExtensionsMqttPublish(uint16_t packetId) {
   Serial.println("Extensions Publish acknowledged.");
@@ -345,3 +355,5 @@ int ExtensionsNb()
 {
     return _NbExtensions;
 }
+
+#endif
