@@ -75,7 +75,7 @@ An extended board is also available which includes additional interfaces as well
 - Alarm Buzzer included onto the board
 - External 5V output to power additional device
 
-![Project Extended Hardware](https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/Extended_Board2.jpg)
+![Project Extended Hardware](https://github.com/christophebelmont/ESP32-PoolMaster/blob/main/docs/ExtendedBoard_PCB.png)
 
 ### Software
 The ESP32 project isn't a fork of the ATmega2560 original one due to the different structure of source files with PlatformIO ((.cpp, .h). 
